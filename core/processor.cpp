@@ -98,32 +98,25 @@ namespace
     0,
   };
 
-  // Register definitions
+  // Register definitions. These are used as indexes into an array; the first enum Reg8 indexes into one view of a union
+  // to that array, the second enum Reg16 indexes into another view of that union into that array. For that reason it's
+  // not an 'enum class'.
+
+  // clang-format off
   enum Reg8
   {
-    C,
-    B,
-    E,
-    D,
-    L,
-    H,
-    F,
-    A,
-    IXL,
-    IXH,
-    IYL,
-    IYH
+    C, B, E, D, L, H, F, A,
+    IXL, IXH,
+    IYL, IYH,
+    // No 8-bit access to SP
   };
   enum Reg16
   {
-    BC,
-    DE,
-    HL,
-    AF,
-    IX,
-    IY,
+    BC, DE, HL, AF,
+    IX, IY,
     SP
   };
+  // clang-format on
 
 } // namespace
 
@@ -136,8 +129,6 @@ namespace ZCPM
     ::memset(m_registers.byte, 0, sizeof(m_registers));
     ::memset(m_alternates, 0, sizeof(m_alternates));
   }
-
-  /* Shortcuts for flags and registers. */
 
   void Processor::reset()
   {
