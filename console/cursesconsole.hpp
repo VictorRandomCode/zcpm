@@ -43,6 +43,18 @@ namespace ZCPM::Console
     // and erase them.
     void process_pending();
 
+    // VT100 sequences as per http://ascii-table.com/ansi-escape-sequences-vt-100.php
+    void ansi_cub() const;             // Move cursor left n lines
+    void ansi_cup(int v, int h) const; // Move cursor to screen location v,h
+    void ansi_ed0() const;             // Clear screen from cursor down
+    void ansi_ed2() const;             // Clear entire screen
+    void ansi_el0() const;             // Clear line from cursor right
+    void ansi_el2() const;             // Clear entire line
+    void ansi_sgr0() const;            // Turn off character attributes
+    void ansi_sgr1() const;            // Turn bold mode on
+    void ansi_sgr5() const;            // Turn blinking mode on
+    void ansi_sgr7() const;            // Turn reverse video on
+
     static const int KeyboardDelayMs = 1;
 
     // When we get character-by-character output, it can include escape sequences.  We

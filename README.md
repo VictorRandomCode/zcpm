@@ -72,7 +72,9 @@ Both of these have various optional command line options, see the `--help` outpu
 
 `runner` can either use simplistic input/output, or can be told to use a curses display. The
 simplistic display is simpler and faster, the curses display allows for running programs such as
-WordStar.
+WordStar. This supports CP/M binaries which target a VT100 ("ANSI") console, so as long as
+you're running a CP/M binary of WordStar that has already been patched to support VT100,
+then `runner` can correctly render this via ncurses.
 
 The `debugger` makes use of the [replxx](https://github.com/AmokHuginnsson/replxx) library
 to make the debugger interface more usable.
@@ -90,8 +92,14 @@ where sensible.
 Not all BDOS and BIOS functions are implemented, I'm gradually improving this but trying to focus
 just on those which are commonly used first.
 
+At this stage, programs which make use of BDOS READSTR (which in turn uses BIOS CONIN) need to
+be executed using the "--curses=1" flag. I hope to make this be less of a speedbump in the future.
+
 `zcpm` implements CP/M 2.2. I did initially target CP/M 3.x, but that was considerably more
 work, and very little CP/M software is CP/M 3 specific anyway.
+
+The terminal translation code allows a CP/M binary which targets a VT100 "ANSI" terminal to work
+on any host system which is supported by ncurses. This translation is a work in progress...
 
 Longer term, I hope to include a graphical debugger with integrated console using Qt. My earlier
 `xcpm` implementation had this, I'd like to revisit this with `zcpm`.

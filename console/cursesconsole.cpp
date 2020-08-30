@@ -10,61 +10,66 @@
 
 namespace
 {
-  // Helper for parsing sequences such as "<ESC>[H" or "<ESC>[line;colH" or "<ESC>[countD".  If the supplied string
-  // appears to be one of this form, puts the extracted line/col into the reference parameters as well as the
-  // terminating character (one of H/r/f/A/B/C/D), and the return value is the length of the parsed sequence which
-  // could now be erased.
-  size_t parse_sequence_line_col(const std::string& s, int& line, int& col, char& ch)
+  // Parses an escape sequence (which may yet be incomplete) and returns <count, values, ch> where:
+  // - count is the number of characters parsed that can now be erased,
+  // - values is a vector of semicolon-separated numbers
+  // - ch is the terminating character.
+  // So given "<ESC>[0;4;5m" count=8 values=[0,4,5] ch='m'
+  // Or       "<ESC>[m" count=3 values=[] ch='m'
+  // Returns nullopt if nothing can (yet) be parsed
+  using ParsedSequence = std::tuple<size_t, std::vector<int>, char>;
+  std::optional<ParsedSequence> parse_sequence(const std::string& s)
   {
     const auto len = s.length();
 
-    // Check for a minimum usable length
-    if (len < 3)
+    // Check for a minimum usable length and that it starts with "<ESC>["
+    if ((len < 3) || !s.starts_with("\x1B["))
     {
       // Can't be a complete sequence yet
-      return 0;
+      return std::nullopt;
     }
 
-    // Make sure the sequence starts with "<ESC>["
-    if (!s.starts_with("\x1B["))
-    {
-      // No match, immediate return
-      return 0;
-    }
-
-    // Does it appear to end with one of the characters of interest?
     const auto last = s[len - 1];
-    if (std::string("rHfABCD").find(last) == std::string::npos)
+    const auto terminators = std::string("rHfABCDmJKLM");
+
+    // Check for a valid sequence with *no* numeric values (common occurrence, so optimise for this path)
+    if ((len == 3) && terminators.find(last) != std::string::npos)
     {
-      // It isn't something we yet recognise
-      return 0;
+      // Empty value list
+      return ParsedSequence{ len, {}, last };
+    }
+
+    if (terminators.find(last) == std::string::npos)
+    {
+      // It isn't something we yet recognise, most like a sequence which hasn't yet been fully collated
+      return std::nullopt;
+    }
+
+    // Is all the intervening content digits or semicolons only?
+    if (s.find_first_not_of("0123456789;", 3) != len - 1)
+    {
+      BOOST_LOG_TRIVIAL(trace) << "Warning: not just a numeric sequence in '" << s << "'";
+      return std::nullopt;
     }
 
     // Looks good; extract what we need
-    line = col = -1; // Until further notice
-    ch = last;
 
-    // Does there appear to be valid "line;col", and if so extract it
-    if (len > 3)
+    std::vector<int> values;
+
+    // payload could be e.g. '3;14'.  Use a regular expression to extract what we need
+    const auto payload = s.substr(2, len - 3);
+
+    std::regex regex("(\\d+)");
+    for (auto i = std::sregex_iterator(payload.begin(), payload.end(), regex); i != std::sregex_iterator(); ++i)
     {
-      const auto payload = s.substr(2, len - 3);
-
-      // payload could be e.g. '3;14'.  Use a regular expression to extract what we need
-      std::regex regex("(\\d+)");
-      auto nbegin = std::sregex_iterator(payload.begin(), payload.end(), regex);
-      auto nend = std::sregex_iterator();
-      if (std::distance(nbegin, nend) == 2)
-      {
-        auto i = nbegin;
-        const auto s1 = (*i++).str();
-        const auto s2 = (*i++).str();
-        line = std::atoi(s1.c_str()); // NOLINT(cert-err34-c)
-        col = std::atoi(s2.c_str());  // NOLINT(cert-err34-c)
-      }
+      const auto match = (*i).str();
+      const auto value = std::atoi(match.c_str()); // NOLINT(cert-err34-c)
+      values.push_back(value);
     }
 
-    return len;
+    return ParsedSequence{ len, values, last };
   }
+
 } // namespace
 
 namespace ZCPM::Console
@@ -282,7 +287,7 @@ namespace ZCPM::Console
     }
     else // Anything else
     {
-      // Make sure that a 7F is displayed as a space, for compatability with our reference system
+      // Make sure that a 7F is displayed as a space, for compatibility with our reference system
       if (ch == 0x7F)
       {
         ch = ' ';
@@ -293,123 +298,198 @@ namespace ZCPM::Console
 
   void Curses::process_pending()
   {
-    // TODO: This is currently somewhat brute-force until I can flesh this out more so
-    // that patterns become more apparent and then the approach can be rationalised.
+    // Map VT100 sequences (see http://ascii-table.com/ansi-escape-sequences-vt-100.php)
+    // to ncurses commands. Sequences are added only as needed, not all of them upfront.
 
-    // For now, I'm mapping VT100 sequences (see http://ascii-table.com/ansi-escape-sequences-vt-100.php)
-    // to ncurses commands.  I'm only adding VT100 sequences as-needed.
-
-    int line, col;
-    char ch;
-    const auto nparsed = parse_sequence_line_col(m_pending, line, col, ch);
-    if (nparsed > 0)
+    if (auto parsed = parse_sequence(m_pending); parsed)
     {
+      const auto [num_parsed, values, ch] = *parsed;
+
       switch (ch)
       {
+      case 'D': ansi_cub(); break;
+
       case 'H':
       {
-        if ((line >= 1) && (col >= 1))
+        if (values.size() == 2)
         {
-          BOOST_LOG_TRIVIAL(trace) << boost::format("CURSES cup (line=%d col=%d)") % line % col;
-          ::move(line - 1, col - 1);
+          ansi_cup(values[0], values[1]);
         }
-        else
+        else if (values.empty())
         {
           BOOST_LOG_TRIVIAL(trace) << "CURSES cursorhome";
           ::move(0, 0);
         }
+        else
+        {
+          BOOST_LOG_TRIVIAL(trace) << "Warning: 'H' has " << values.size();
+        }
       }
       break;
-      case 'r':
-        BOOST_LOG_TRIVIAL(trace) << "CURSES TODO1";
-        // TODO (Set top and bottom lines of a window)
+
+      case 'J':
+      {
+        if (values.empty())
+        {
+          ansi_ed0();
+        }
+        else
+        {
+          if (values.size() > 1)
+          {
+            BOOST_LOG_TRIVIAL(trace) << "Warning: Unexpected value count";
+          }
+          switch (values[0])
+          {
+          case 0: ansi_ed0(); break;
+          case 2: ansi_ed2(); break;
+          default: BOOST_LOG_TRIVIAL(trace) << "Warning: n=" << values[0] << " unhandled for EDn";
+          }
+        }
+      }
+      break;
+
+      case 'K':
+      {
+        if (values.empty())
+        {
+          ansi_el0();
+        }
+        else
+        {
+          if (values.size() > 1)
+          {
+            BOOST_LOG_TRIVIAL(trace) << "Warning: Unexpected value count";
+          }
+          switch (values[0])
+          {
+          case 0: ansi_el0(); break;
+          case 2: ansi_el2(); break;
+          default: BOOST_LOG_TRIVIAL(trace) << "Warning: n=" << values[0] << " unhandled for ELn";
+          }
+        }
+      }
+      break;
+
+      case 'L': // WS.COM uses this; seems to be insert line
+        BOOST_LOG_TRIVIAL(trace) << "CURSES INSERTLINE";
+        ::insertln();
         break;
+
+      case 'M': // WS.COM uses this; seems to be delete line
+        BOOST_LOG_TRIVIAL(trace) << "CURSES DELETELINE";
+        ::deleteln();
+        break;
+
       case 'f':
         BOOST_LOG_TRIVIAL(trace) << "CURSES TODO2";
         // TODO (Move cursor to screen location); same as H???
         break;
-      case 'D':
+
+      case 'm':
       {
-        BOOST_LOG_TRIVIAL(trace) << "CURSES CUB  (line=" << line << ",col=" << col << ')';
-        auto x = 0, y = 0;
-        getsyx(y, x);
-        ::move(y, x - 1);
+        if (values.empty())
+        {
+          ansi_sgr0();
+        }
+        else
+        {
+          for (const auto value : values)
+          {
+            switch (value)
+            {
+            case 0: ansi_sgr0(); break;
+            case 1: ansi_sgr1(); break;
+            case 5: ansi_sgr5(); break;
+            case 7: ansi_sgr7(); break;
+            default: BOOST_LOG_TRIVIAL(trace) << "Warning: n=" << value << " unhandled for SGRn";
+            }
+          }
+        }
       }
       break;
+
+      case 'r':
+        BOOST_LOG_TRIVIAL(trace) << "CURSES TODO1";
+        // TODO (Set top and bottom lines of a window)
+        break;
+
       default: BOOST_LOG_TRIVIAL(trace) << "Warning: Unimplemented escape sequence, TODO!"; break;
       }
-      m_pending.erase(0, nparsed);
+      m_pending.erase(0, num_parsed);
     }
-    else if ((m_pending == "\x1B[J") || (m_pending == "\x1B[0J")) // "ED0" (clear screen from cursor down)
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES ED0";
-      ::clrtobot();
-      m_pending.erase();
-    }
-    else if (m_pending == "\x1B[2J") // "ED2" (clear entire screen)
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES ED2";
-      // Note that ncurses ::clear() seems to home the cursor which is NOT what we want, so
-      // we need to manually work around that
-      auto x = 0, y = 0;
-      getsyx(y, x);
-      ::clear();
-      ::move(y, x);
-      m_pending.erase();
-    }
-    else if ((m_pending == "\x1B[K") || (m_pending == "\x1B[0K")) // "EL0" (clear line from cursor right)
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES EL0";
-      ::clrtoeol();
-      m_pending.erase();
-    }
-    else if (m_pending == "\x1B[2K") // "EL2" (clear entire line)
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES EL2";
-      // There is no direct ncurses equivalent, so we need to do this in a few steps
-      auto x = 0, y = 0;
-      getsyx(y, x);
-      ::move(y, 0);
-      ::clrtoeol();
-      ::move(y, x);
-      m_pending.erase();
-    }
-    else if (m_pending == "\x1B[L") // WS.COM uses this; seems to be insert line
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES INSERTLINE";
-      ::insertln();
-      m_pending.erase();
-    }
-    else if (m_pending == "\x1B[M") // WS.COM uses this; seems to be delete line
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES DELETELINE";
-      ::deleteln();
-      m_pending.erase();
-    }
-    else if (m_pending == "\x1B[0m") // "SCR0" (turn off character attributes)
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES SCR0";
-      ::attrset(A_NORMAL);
-      m_pending.erase();
-    }
-    else if (m_pending == "\x1B[1m") // "SGR1" (turn bold mode on)
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES SGR1";
-      ::attron(A_BOLD);
-      m_pending.erase();
-    }
-    else if (m_pending == "\x1B[5m") // "SGR5" (turn blink mode on)
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES SGR5";
-      ::attron(A_BLINK);
-      m_pending.erase();
-    }
-    else if (m_pending == "\x1B[7m") // "SGR7" (turn reverse video on)
-    {
-      BOOST_LOG_TRIVIAL(trace) << "CURSES SGR7";
-      ::attron(A_REVERSE);
-      m_pending.erase();
-    }
+  }
+
+  void Curses::ansi_cub() const
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES CUB";
+    auto x = 0, y = 0;
+    getsyx(y, x);
+    ::move(y, x - 1);
+  }
+
+  void Curses::ansi_cup(int v, int h) const
+  {
+    BOOST_LOG_TRIVIAL(trace) << boost::format("CURSES cup (v=%d h=%d)") % v % h;
+    ::move(v - 1, h - 1);
+  }
+
+  void Curses::ansi_ed0() const
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES ED0";
+    ::clrtobot();
+  }
+
+  void Curses::ansi_ed2() const
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES ED2";
+    // Note that ncurses ::clear() seems to home the cursor which is NOT what we want, so we need to manually work
+    // around that
+    auto x = 0, y = 0;
+    getsyx(y, x);
+    ::clear();
+    ::move(y, x);
+  }
+
+  void Curses::ansi_el0() const
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES EL0";
+    ::clrtoeol();
+  }
+
+  void Curses::ansi_el2() const
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES EL2";
+    // There is no direct ncurses equivalent, so we need to do this in a few steps
+    auto x = 0, y = 0;
+    getsyx(y, x);
+    ::move(y, 0);
+    ::clrtoeol();
+    ::move(y, x);
+  }
+
+  void Curses::ansi_sgr0() const
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR0";
+    ::attrset(A_NORMAL);
+  }
+
+  void Curses::ansi_sgr1() const
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR1";
+    ::attron(A_BOLD);
+  }
+
+  void Curses::ansi_sgr5() const
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR5";
+    ::attron(A_BLINK);
+  }
+
+  void Curses::ansi_sgr7() const
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR7";
+    ::attron(A_REVERSE);
   }
 
 } // namespace ZCPM::Console
