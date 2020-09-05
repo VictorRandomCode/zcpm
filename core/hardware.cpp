@@ -10,9 +10,11 @@
 
 #include <zcpm/console/iconsole.hpp>
 
+#include "bdos.hpp"
 #include "bios.hpp"
 #include "hardware.hpp"
 #include "processor.hpp"
+#include "registers.hpp"
 
 namespace
 {
@@ -41,77 +43,6 @@ namespace
     return false;
   }
 
-  std::tuple<std::string, bool> get_bdos_name(uint8_t c)
-  {
-    std::string bdos_name("???");
-    bool show_fcb = false;
-
-    switch (c)
-    {
-    case 0: bdos_name = "P_TERMCPM"; break;
-    case 1: bdos_name = "C_READ"; break;
-    case 2: bdos_name = "C_WRITE"; break;
-    case 6: bdos_name = "C_RAWIO"; break;
-    case 9: bdos_name = "C_WRITESTR"; break;
-    case 10: bdos_name = "C_READSTR"; break;
-    case 11: bdos_name = "C_STAT"; break;
-    case 12: bdos_name = "S_BDOSVER"; break;
-    case 13: bdos_name = "DRV_ALLRESET"; break;
-    case 14: bdos_name = "DRV_SET"; break;
-    case 15:
-      bdos_name = "F_OPEN";
-      show_fcb = true;
-      break;
-    case 16:
-      bdos_name = "F_CLOSE";
-      show_fcb = true;
-      break;
-    case 17: bdos_name = "F_SFIRST"; break;
-    case 18: bdos_name = "F_SNEXT"; break;
-    case 19:
-      bdos_name = "F_DELETE";
-      show_fcb = true;
-      break;
-    case 20: bdos_name = "F_READ"; break;
-    case 21: bdos_name = "F_WRITE"; break;
-    case 22: bdos_name = "F_MAKE"; break;
-    case 23:
-      bdos_name = "F_RENAME";
-      show_fcb = true;
-      break;
-    case 24: bdos_name = "DRV_LOGINVEC"; break;
-    case 25: bdos_name = "DRV_GET"; break;
-    case 26: bdos_name = "F_DMAOFF"; break;
-    case 27: bdos_name = "DRV_ALLOCVEC"; break;
-    case 29: bdos_name = "DRV_ROVEC"; break;
-    case 30:
-      bdos_name = "F_ATTRIB";
-      show_fcb = true;
-      break;
-    case 31: bdos_name = "DRV_DPB"; break;
-    case 32: bdos_name = "F_USERNUM"; break;
-    case 33:
-      bdos_name = "F_READRAND";
-      show_fcb = true;
-      break;
-    case 34:
-      bdos_name = "F_WRITERAND";
-      show_fcb = true;
-      break;
-    case 35:
-      bdos_name = "F_SIZE";
-      show_fcb = true;
-      break;
-    case 36:
-      bdos_name = "F_RANDREC";
-      show_fcb = true;
-      break;
-    case 45: bdos_name = "F_ERRMODE"; break;
-    default: break;
-    }
-
-    return std::make_tuple(bdos_name, show_fcb);
-  }
 } // namespace
 
 namespace ZCPM
@@ -208,24 +139,29 @@ namespace ZCPM
 
   bool Hardware::check_and_handle_bdos_and_bios(uint16_t address) const
   {
+    // Note that BDOS calls are logged but not intercepted.  But BIOS calls are logged *and* intercepted. This is
+    // because our BDOS is implemented via a binary blob (a real BDOS implementation), which will in turn make calls
+    // into our own custom BIOS implementation. So BDOS calls are checked & logged but not intercepted, but BIOS
+    // calls need to be intercepted and translated to (e.g.) host system calls.
+
     // Does this appear to be a BDOS call?  i.e., a jump to FBASE from 0005?
     if (address == m_fbase)
     {
-      // Note that BDOS calls are logged but not intercepted.  But BIOS calls are logged *and* intercepted.
-      // This is because we're using a "standard" BDOS which calls our custom BIOS.
-      const uint8_t c = m_processor->get_c();
-
-      const auto [bdos_name, show_fcb] = get_bdos_name(c);
-
-      BOOST_LOG_TRIVIAL(trace) << boost::format("BDOS fn#%d %s") % static_cast<unsigned short>(c) % bdos_name
-                               << show_stack_info();
-      if (show_fcb)
+      // TODO: the following code is just for logging/debugging. If performance becomes an issue, execution of this
+      // block should be conditional on a new boolean. Although this is only executed on each entry to BDOS, which
+      // isn't that bad...
+      if (true) // TODO: execution to be controlled by a new run-time option
       {
-        const auto fcb_address = m_processor->reg_de();
-        dump(fcb_address, 0x0020);
+        // "Parse" the pending BDOS call into various bits of useful information
+        const auto registers = m_processor->get_registers();
+        const auto [bdos_name, description] = Bdos::describe_call(registers, *this);
+
+        // Log the information
+        BOOST_LOG_TRIVIAL(trace) << "BDOS: " << bdos_name << format_stack_info();
+        BOOST_LOG_TRIVIAL(trace) << "BDOS: " << description;
       }
 
-      return false;
+      return false; // BIOS was not intercepted
     }
 
     if (m_pbios)
@@ -451,7 +387,7 @@ namespace ZCPM
     }
   }
 
-  std::string Hardware::show_stack_info() const
+  std::string Hardware::format_stack_info() const
   {
     // Ideally we'd just iterate via SP back to user memory, but many programs manually
     // set/restore SP, so we need to limit it.  So we walk back from stack top until we

@@ -3,6 +3,7 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 
 #include "fcb.hpp"
 
@@ -106,21 +107,92 @@ namespace ZCPM
     m_u.m_bytes[i++] = 0xFB;
   }
 
-  void Fcb::set(const std::vector<std::string>& s)
+  Fcb::Fcb(const IMemory& memory, uint16_t address) : m_u()
   {
-    if (!s.empty())
+    for (unsigned int i = 0; i < size(); ++i)
     {
-      set_first(s[0]);
-      if (s.size() > 1)
-      {
-        set_second(s[1]);
-      }
+      m_u.m_bytes[i] = memory.read_byte(address + i);
     }
+  }
+
+  void Fcb::set(const std::string& s1)
+  {
+    set_first(s1);
+  }
+
+  void Fcb::set(const std::string& s1, const std::string& s2)
+  {
+    set_first(s1);
+    set_second(s2);
   }
 
   const uint8_t* Fcb::get() const
   {
     return m_u.m_bytes;
+  }
+
+  std::string Fcb::describe(bool show_both_filenames) const
+  {
+    std::string name1;
+    const auto& dr = m_u.m_fields.m_dr;
+    if (dr)
+    {
+      name1 += char('A' + dr - 1);
+      name1 += ':';
+    }
+    for (unsigned char ch : m_u.m_fields.m_f)
+    {
+      if (ch != ' ')
+      {
+        name1 += ch;
+      }
+    }
+    name1 += '.';
+    for (unsigned char ch : m_u.m_fields.m_t)
+    {
+      if (ch != ' ')
+      {
+        name1 += ch;
+      }
+    }
+
+    std::string name2;
+    if (show_both_filenames)
+    {
+      // Note that drive code for second filename is ignored, as per CP/M documentation for rename file
+      for (unsigned int i = 1; i <= 8; ++i)
+      {
+        char ch = m_u.m_fields.m_d[i];
+        if (ch != ' ')
+        {
+          name2 += ch;
+        }
+      }
+      name2 += '.';
+      for (unsigned int i = 1; i <= 3; ++i)
+      {
+        char ch = m_u.m_fields.m_d[8 + i];
+        if (ch != ' ')
+        {
+          name2 += ch;
+        }
+      }
+    }
+
+    auto numbers = (boost::format("EX=%d RC=%d CR=%d R=%d/%d/%d") % static_cast<unsigned short>(m_u.m_fields.m_ex) %
+                    static_cast<unsigned short>(m_u.m_fields.m_rc) % static_cast<unsigned short>(m_u.m_fields.m_cr) %
+                    static_cast<unsigned short>(m_u.m_fields.m_r[0]) %
+                    static_cast<unsigned short>(m_u.m_fields.m_r[1]) % static_cast<unsigned short>(m_u.m_fields.m_r[2]))
+                     .str();
+
+    if (show_both_filenames)
+    {
+      return (boost::format("\"%s\",\"%s\" %s") % name1 % name2 % numbers).str();
+    }
+    else
+    {
+      return (boost::format("\"%s\" %s") % name1 % numbers).str();
+    }
   }
 
   void Fcb::set_first(const std::string& s)

@@ -405,7 +405,7 @@ namespace ZCPM
 
   void Bios::log_bios_call(const std::string& prefix, const std::string& message) const
   {
-    BOOST_LOG_TRIVIAL(trace) << "  " << prefix << message << m_phardware->show_stack_info();
+    BOOST_LOG_TRIVIAL(trace) << "  " << prefix << message << m_phardware->format_stack_info();
   }
 
 } // namespace ZCPM

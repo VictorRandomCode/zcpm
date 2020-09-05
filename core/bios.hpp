@@ -23,10 +23,9 @@ namespace ZCPM
 
     bool is_bios(uint16_t address) const;
 
-    // Check if the specified address is within our custom BIOS implementation (and
-    // hence should be intercepted).  If so, works out what the intercepted BIOS call
-    // is trying to do and does whatever is needed, and then allows the caller to return
-    // to normal processing.  Returns true if BIOS was intercepted.
+    // Check if the specified address is within our custom BIOS implementation (and hence should be intercepted). If so,
+    // work out what the intercepted BIOS call is trying to do and do whatever is needed, and then allows the caller to
+    // return to normal processing.  Returns true if BIOS was intercepted.
     bool check_and_handle(uint16_t address);
 
     // BIOS function implementations

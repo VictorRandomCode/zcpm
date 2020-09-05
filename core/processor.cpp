@@ -406,8 +406,10 @@ namespace ZCPM
     return m_pc;
   }
 
-  void Processor::get_registers(Registers& r) const
+  Registers Processor::get_registers() const
   {
+    Registers r{};
+
     r.AF = get_af();
     r.BC = get_bc();
     r.DE = get_de();
@@ -421,6 +423,8 @@ namespace ZCPM
     r.altBC = m_alternates[Reg16::BC];
     r.altDE = m_alternates[Reg16::DE];
     r.altHL = m_alternates[Reg16::HL];
+
+    return r;
   }
 
   std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> Processor::get_opcodes_at(uint16_t pc, uint16_t offset) const

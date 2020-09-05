@@ -17,6 +17,7 @@ set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 
 set(LIBSOURCE
+  bdos.cpp
   bios.cpp
   debugaction.cpp
   disk.cpp
@@ -28,6 +29,7 @@ set(LIBSOURCE
   )
 
 set(LIBHEADER
+  bdos.hpp
   bios.hpp
   debugaction.hpp
   disk.hpp

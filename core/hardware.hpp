@@ -88,7 +88,7 @@ namespace ZCPM
     //
 
     // Return human-readable info about the stack state
-    std::string show_stack_info() const;
+    std::string format_stack_info() const;
 
     void dump_symbol_table() const;
 

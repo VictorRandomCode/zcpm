@@ -194,9 +194,13 @@ Running WordStar (after copying WS*.* into current directory):
 
     ../../build/runner/runner --bdossym ../bdos/bdos.lab --curses 1 WS.COM
 
-grepping the resultant log file to see what API calls were made:
+grepping the resultant log file for all BDOS calls (with some detail on each):
 
-    grep -E 'BIOS fn|BDOS fn' zcpm.log
+    grep -A 1 'BDOS: fn' zcpm.log
+
+grepping the resultant log file to see a summary of what BDOS & BIOS calls were made:
+
+    grep -E 'BIOS fn|BDOS: fn' zcpm.log
 
 Using the gcc10 analyser
 ------------------------

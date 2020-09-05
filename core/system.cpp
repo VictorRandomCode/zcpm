@@ -86,9 +86,14 @@ namespace ZCPM
     const uint16_t fcb_base = 0x005C; // Base of the FCB
 
     Fcb fcb;
-    if (!args.empty())
+    if (args.size() == 1)
     {
-      fcb.set(args);
+      fcb.set(args[0]);
+    }
+    else if (args.size() > 1)
+    {
+      // CP/M only deals with two arguments
+      fcb.set(args[0], args[1]);
     }
     m_hardware.copy_to_ram(fcb.get(), fcb.size(), fcb_base);
 

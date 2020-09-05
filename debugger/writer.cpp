@@ -471,8 +471,7 @@ void Writer::examine() const
 {
   m_memory.check_memory_accesses(false);
 
-  ZCPM::Registers registers{};
-  m_pdebuggable->get_registers(registers);
+  const auto registers = m_pdebuggable->get_registers();
   const auto [op1, op2, op3, op4] = m_pdebuggable->get_opcodes_at(registers.PC, 0);
   auto [_, s1, s2] = disassemble(op1, op2, op3, op4, registers.PC);
 
@@ -483,8 +482,7 @@ void Writer::examine() const
 
 void Writer::list(int start, size_t instructions) const
 {
-  ZCPM::Registers registers{};
-  m_pdebuggable->get_registers(registers);
+  const auto registers = m_pdebuggable->get_registers();
   const uint16_t base = (start < 0) ? registers.PC : start;
 
   size_t offset = 0;
@@ -504,8 +502,7 @@ void Writer::dump(int start, size_t bytes) const
     return;
   }
 
-  ZCPM::Registers registers{};
-  m_pdebuggable->get_registers(registers);
+  const auto registers = m_pdebuggable->get_registers();
   const uint16_t base = (start < 0) ? registers.PC : start;
 
   std::string hex_bytes, ascii_bytes;

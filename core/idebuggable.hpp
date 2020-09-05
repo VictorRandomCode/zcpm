@@ -16,7 +16,7 @@ namespace ZCPM
     virtual ~IDebuggable() = default;
 
     // Single getter for all registers in one step
-    virtual void get_registers(Registers& registers) const = 0;
+    virtual Registers get_registers() const = 0;
 
     // Get the next 4 bytes that pc+offset is pointing at
     virtual std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> get_opcodes_at(uint16_t pc, uint16_t offset) const = 0;
