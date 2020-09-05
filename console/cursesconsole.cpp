@@ -70,6 +70,97 @@ namespace
     return ParsedSequence{ len, values, last };
   }
 
+  // VT100 sequences as per http://ascii-table.com/ansi-escape-sequences-vt-100.php
+
+  // Move cursor left n lines
+  void ansi_cub()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES CUB";
+    auto x = 0, y = 0;
+    getsyx(y, x);
+    ::move(y, x - 1);
+  }
+
+  // Move cursor to screen location v,h
+  void ansi_cup(int v, int h)
+  {
+    BOOST_LOG_TRIVIAL(trace) << boost::format("CURSES cup (v=%d h=%d)") % v % h;
+    ::move(v - 1, h - 1);
+  }
+
+  // Clear screen from cursor down
+  void ansi_ed0()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES ED0";
+    ::clrtobot();
+  }
+
+  // Clear entire screen
+  void ansi_ed2()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES ED2";
+    // Note that ncurses ::clear() seems to home the cursor which is NOT what we want, so we need to manually work
+    // around that
+    auto x = 0, y = 0;
+    getsyx(y, x);
+    ::clear();
+    ::move(y, x);
+  }
+
+  // Clear line from cursor right
+  void ansi_el0()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES EL0";
+    ::clrtoeol();
+  }
+
+  // Clear entire line
+  void ansi_el2()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES EL2";
+    // There is no direct ncurses equivalent, so we need to do this in a few steps
+    auto x = 0, y = 0;
+    getsyx(y, x);
+    ::move(y, 0);
+    ::clrtoeol();
+    ::move(y, x);
+  }
+
+  // Turn off character attributes
+  void ansi_sgr0()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR0";
+    ::attrset(A_NORMAL);
+  }
+
+  // Turn bold mode on
+  void ansi_sgr1()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR1";
+    ::attron(A_BOLD);
+  }
+
+  // Turn blinking mode on
+  void ansi_sgr5()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR5";
+    ::attron(A_BLINK);
+  }
+
+  // Turn reverse video on
+  void ansi_sgr7()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR7";
+    ::attron(A_REVERSE);
+  }
+
+  // Set alternate keypad mode
+  void ansi_deckpam()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES DECKPAM";
+    // Not implemented
+  }
+
 } // namespace
 
 namespace ZCPM::Console
@@ -301,7 +392,7 @@ namespace ZCPM::Console
     // Map VT100 sequences (see http://ascii-table.com/ansi-escape-sequences-vt-100.php)
     // to ncurses commands. Sequences are added only as needed, not all of them upfront.
 
-    if (auto parsed = parse_sequence(m_pending); parsed)
+    if (auto parsed = parse_sequence(m_pending); parsed) // Handle e.g. "<ESC>[fooH" here
     {
       const auto [num_parsed, values, ch] = *parsed;
 
@@ -418,78 +509,11 @@ namespace ZCPM::Console
       }
       m_pending.erase(0, num_parsed);
     }
-  }
-
-  void Curses::ansi_cub() const
-  {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES CUB";
-    auto x = 0, y = 0;
-    getsyx(y, x);
-    ::move(y, x - 1);
-  }
-
-  void Curses::ansi_cup(int v, int h) const
-  {
-    BOOST_LOG_TRIVIAL(trace) << boost::format("CURSES cup (v=%d h=%d)") % v % h;
-    ::move(v - 1, h - 1);
-  }
-
-  void Curses::ansi_ed0() const
-  {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES ED0";
-    ::clrtobot();
-  }
-
-  void Curses::ansi_ed2() const
-  {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES ED2";
-    // Note that ncurses ::clear() seems to home the cursor which is NOT what we want, so we need to manually work
-    // around that
-    auto x = 0, y = 0;
-    getsyx(y, x);
-    ::clear();
-    ::move(y, x);
-  }
-
-  void Curses::ansi_el0() const
-  {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES EL0";
-    ::clrtoeol();
-  }
-
-  void Curses::ansi_el2() const
-  {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES EL2";
-    // There is no direct ncurses equivalent, so we need to do this in a few steps
-    auto x = 0, y = 0;
-    getsyx(y, x);
-    ::move(y, 0);
-    ::clrtoeol();
-    ::move(y, x);
-  }
-
-  void Curses::ansi_sgr0() const
-  {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR0";
-    ::attrset(A_NORMAL);
-  }
-
-  void Curses::ansi_sgr1() const
-  {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR1";
-    ::attron(A_BOLD);
-  }
-
-  void Curses::ansi_sgr5() const
-  {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR5";
-    ::attron(A_BLINK);
-  }
-
-  void Curses::ansi_sgr7() const
-  {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR7";
-    ::attron(A_REVERSE);
+    else if (m_pending == "\x1B=")
+    {
+      ansi_deckpam();
+      m_pending.erase();
+    }
   }
 
 } // namespace ZCPM::Console
