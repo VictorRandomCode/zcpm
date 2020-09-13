@@ -44,7 +44,7 @@ The Z80 core is based on https://github.com/anotherlin/z80emu  That core is _"Th
 do whatever you want with it."_. I've since rewritten it as C++ and it is now hugely different to
 work with, but the same concepts remain. Over time I'm gradually converting it to modern C++.
 
-As for the BDOS (and CCP), I'm loading a binary into `zcpm`'s memory map. This binary is assembled
+As for the BDOS (and CCP), `zcpm` loads a binary into `zcpm`'s memory map. This binary is assembled
 from reconstructed Z80 source code of BDOS. See the `bdos` directory for this, eventually this
 assembly process should be hooked into the overall build process. When the BDOS calls methods in
 the BIOS, this happens via a jump table at known locations in the memory map. `zcpm` intercepts
@@ -95,8 +95,8 @@ just on those which are commonly used first.
 At this stage, programs which make use of BDOS READSTR (which in turn uses BIOS CONIN) need to
 be executed using the "--curses=1" flag. I hope to make this be less of a speedbump in the future.
 
-`zcpm` implements CP/M 2.2. I did initially target CP/M 3.x, but that was considerably more
-work, and very little CP/M software is CP/M 3 specific anyway.
+`zcpm` implements CP/M 2.2. `zcpm` did initially target CP/M 3.x, but that was considerably more
+work, and very little CP/M software needs CP/M 3 anyway.
 
 The terminal translation code allows a CP/M binary which targets a VT100 "ANSI" terminal to work
 on any host system which is supported by ncurses. This translation is a work in progress...

@@ -604,7 +604,7 @@ namespace ZCPM
 
     void flush_changed_file(const SectorInfo& value, uint16_t block, uint8_t offset, const Entry& f) const
     {
-      const auto byte_offset = ((block - f.m_first_block) + offset) * SectorSize;
+      const auto byte_offset = (((block - f.m_first_block) << BSH) + offset) * SectorSize;
 
       // Note that we open/modify/close the file for *each* modified sector.  In a big system with lots of changes
       // this is very inefficient, but in the typical use case for ZCPM we see just a handful of *modified* sectors,

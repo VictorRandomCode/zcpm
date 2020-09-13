@@ -21,8 +21,8 @@ namespace ZCPM
     static const inline uint16_t SectorSize = 0x0080;
     using SectorData = std::array<uint8_t, SectorSize>; // 128 bytes each sector
 
-    static const inline uint8_t BSH = 0x04;
-    static const inline uint8_t BLM = 0x0F;
+    static const inline uint8_t BSH = 0x04; // Block shift: 16 sectors per block
+    static const inline uint8_t BLM = 0x0F; // Block mask
     // Given the disk geometry that we've specified in the DPH, this means that track 0 (sectors 00..7F)
     // and track 1 (sectors 00..7F) are directory entries, anything else is file data.
 
