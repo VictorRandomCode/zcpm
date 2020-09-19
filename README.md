@@ -70,6 +70,10 @@ Currently, two binaries are produced:
 
 Both of these have various optional command line options, see the `--help` output for details.
 
+By default, both of them look for needed files in `${HOME}/zcpm/` but this can be overridden
+by using command line options. This directory is where `zcpm` looks for the BDOS binary and
+also the (optional) BDOS symbol file.
+
 `runner` can either use simplistic input/output, or can be told to use a curses display. The
 simplistic display is simpler and faster, the curses display allows for running programs such as
 WordStar. This supports CP/M binaries which target a VT100 ("ANSI") console, so as long as
@@ -159,27 +163,28 @@ Although you may run in to linker issues that I haven't yet resolved.
 Running
 -------
 
-Running the Debugger. For now, I'm assuming your your `pwd` is in the debugger source directory and that
-you've got some CP/M test binaries in `~/xcpm`
+First make sure you've created `~/zcpm/` containing both `bdos.bin` and `bdos.lab` copied from the
+source directory. Or, if you'd prefer you can manually specify the location of these files via command
+line options.
 
-    cd ~/zcpm/debugger
-    ../build/debugger/debugger ~/xcpm/drivea/CLS.COM
+Running the Debugger. I'm assuming that you've got some CP/M test binaries in `~/xcpm`
+
+    ~/path/to/debugger ~/xcpm/drivea/CLS.COM
     ZCPM> go
     ZPPM> quit
 
 It can be helpful to use symbol tables to add information to the log. We can use the symbol table
 from the BDOS that we use as well as the one from the assembled binary that we're testing like this:
 
-    ../../build/debugger/debugger --bdossym ../bdos/bdos.lab --usersym ~/Coding/z80/emutests/test05.lab ~/Coding/z80/emutests/test05.com blah.txt
+    ~/path/to/debugger --bdossym ../bdos/bdos.lab --usersym ~/Coding/z80/emutests/test05.lab ~/Coding/z80/emutests/test05.com blah.txt
 
-Using the Runner. Similarly, we start in its source directory.
+Using the Runner.
 
-    cd ~/zcpm/runner
-    ../../build/runner/runner ~/xcpm/drivea/HELLO.COM
+    ~/path/to/runner ~/xcpm/drivea/HELLO.COM
 
 Or with loading assembler-produced symbols:
 
-    ../../build/runner/runner --bdossym ../bdos/bdos.lab --usersym ~/Coding/z80/emutests/test06.lab ~/Coding/z80/emutests/test06.com
+    ~/path/to/runner --bdossym ../bdos/bdos.lab --usersym ~/Coding/z80/emutests/test06.lab ~/Coding/z80/emutests/test06.com
 
 There's also an optional `USE_PROFILE` cmake option that enables profiling at build time. (With GCC only)
 
@@ -192,7 +197,7 @@ Setting up a build with static analysis enabled:
 
 Running WordStar (after copying WS*.* into current directory):
 
-    ../../build/runner/runner --bdossym ../bdos/bdos.lab --curses 1 WS.COM
+    ~/path/to/runner --curses 1 WS.COM
 
 grepping the resultant log file for all BDOS calls (with some detail on each):
 

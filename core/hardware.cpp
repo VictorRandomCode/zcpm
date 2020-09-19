@@ -468,7 +468,7 @@ namespace ZCPM
       // TODO: Try and find the root cause for this situation, and maybe handle this more gracefully?
       if (is_fatal_write(address))
       {
-        throw std::runtime_error("Aborting runaway processor");
+        throw std::runtime_error("Aborting: illegal memory write");
       }
     }
     if ((mode == Access::WRITE) && m_pbios && (m_pbios->is_bios(address)))
@@ -503,7 +503,7 @@ namespace ZCPM
       {
         // We've detected an attempt to clobber very low addresses, panic.  Either the program under test is
         // naughty, or we've got a logic bug.
-        throw std::runtime_error("Aborting runaway processor");
+        throw std::runtime_error("Aborting: illegal memory write");
       }
     }
     if ((mode == Access::WRITE) && m_pbios && (m_pbios->is_bios(address + 0) || m_pbios->is_bios(address + 1)))
