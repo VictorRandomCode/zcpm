@@ -96,9 +96,6 @@ where sensible.
 Not all BDOS and BIOS functions are implemented, I'm gradually improving this but trying to focus
 just on those which are commonly used first.
 
-At this stage, programs which make use of BDOS READSTR (which in turn uses BIOS CONIN) need to
-be executed using the "--curses=1" flag. I hope to make this be less of a speedbump in the future.
-
 `zcpm` implements CP/M 2.2. `zcpm` did initially target CP/M 3.x, but that was considerably more
 work, and very little CP/M software needs CP/M 3 anyway.
 
