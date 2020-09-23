@@ -141,6 +141,7 @@ namespace ZCPM
     // tweak or two. The assembled binary is what is loaded here. ZCPM intercepts calls to the BIOS from the BDOS.
     if (!p_machine->load_binary(bdos_file_base, bdos_file_name))
     {
+      p_machine.reset();
       std::cerr << "Failed to load base memory image" << std::endl;
       return nullptr;
     }
@@ -153,12 +154,14 @@ namespace ZCPM
     }
     catch (const std::exception& e)
     {
+      p_machine.reset();
       std::cerr << "Exception: " << e.what() << std::endl;
       return nullptr;
     }
 
     if (!p_machine->load_binary(0x0100, binary)) // CP/M binaries are ALWAYS loaded at 0x0100
     {
+      p_machine.reset();
       std::cerr << "Failed to load binary" << std::endl;
       return nullptr;
     }
