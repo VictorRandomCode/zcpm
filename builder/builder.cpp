@@ -3,19 +3,55 @@
 #include <memory>
 #include <vector>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup.hpp>
 #include <boost/program_options.hpp>
 
-#include <zcpm/console/cursesconsole.hpp>
 #include <zcpm/console/iconsole.hpp>
-#include <zcpm/console/plainconsole.hpp>
+#include <zcpm/console/plain.hpp>
+#include <zcpm/console/televideo.hpp>
+#include <zcpm/console/vt100.hpp>
 #include <zcpm/core/system.hpp>
 
 #include "builder.hpp"
 
 namespace ZCPM
 {
+  enum class Terminal
+  {
+    PLAIN,    // Terminal type which relies on the host terminal doing any needed translation; usually supports ANSI
+    VT100,    // Full-featured VT100 emulation translates CP/M VT100 directives to portable ncurses commands
+    TELEVIDEO // Coming soon...
+  };
+
+  std::istream& operator>>(std::istream& in, Terminal& terminal)
+  {
+    std::string token;
+    in >> token;
+
+    boost::to_upper(token);
+
+    if (token == "PLAIN")
+    {
+      terminal = Terminal::PLAIN;
+    }
+    else if (token == "VT100")
+    {
+      terminal = Terminal::VT100;
+    }
+    else if (token == "TELEVIDEO")
+    {
+      terminal = Terminal::TELEVIDEO;
+    }
+    else
+    {
+      throw boost::program_options::validation_error(boost::program_options::validation_error::invalid_option_value,
+                                                     "Invalid terminal");
+    }
+
+    return in;
+  }
 
   std::string home_plus(const std::string& addendum)
   {
@@ -33,7 +69,7 @@ namespace ZCPM
     uint16_t bdos_file_base = 0xDC00;               // Where to load that binary image
     uint16_t wboot = 0xF203;                        // Address of WBOOT in loaded binary BDOS
     uint16_t fbase = 0xE406;                        // Address of FBASE in loaded binary BDOS
-    bool use_curses = false;                        // Should we use a curses-based console?
+    Terminal terminal = Terminal::PLAIN;            // Terminal type
     bool memcheck = true;                           // Enable RAM read/write checks?
     std::string binary;                             // The CP/M binary that we try to load and execute
     std::vector<std::string> arguments;
@@ -49,7 +85,7 @@ namespace ZCPM
         "bdosbase", po::value<uint16_t>(), "Base address for binary BDOS file")(
         "wboot", po::value<uint16_t>(), "Address of WBOOT in loaded binary BDOS")(
         "fbase", po::value<uint16_t>(), "Address of FBASE in loaded binary BDOS")(
-        "curses", po::value<bool>(), "Use a curses-based console?")(
+        "terminal", po::value<Terminal>(), "Terminal type to emulate")(
         "memcheck", po::value<bool>(), "Enable memory access checks?")(
         "logfile", po::value<std::string>(), "Name of logfile")(
         "binary", po::value<std::string>(), "CP/M binary input file to execute")(
@@ -83,9 +119,9 @@ namespace ZCPM
       {
         fbase = vm["fbase"].as<uint16_t>();
       }
-      if (vm.count("curses"))
+      if (vm.count("terminal"))
       {
-        use_curses = vm["curses"].as<bool>();
+        terminal = vm["terminal"].as<Terminal>();
       }
       if (vm.count("memcheck"))
       {
@@ -125,16 +161,16 @@ namespace ZCPM
     boost::log::add_file_log(boost::log::keywords::file_name = logfile, boost::log::keywords::auto_flush = true);
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
 
+    // Create the terminal emulation of choice
     std::unique_ptr<Console::IConsole> p_console;
-    if (use_curses)
+    switch (terminal)
     {
-      p_console = std::make_unique<Console::Curses>();
-    }
-    else
-    {
-      p_console = std::make_unique<Console::Plain>();
+    case Terminal::PLAIN: p_console = std::make_unique<Console::Plain>(); break;
+    case Terminal::VT100: p_console = std::make_unique<Console::Vt100>(); break;
+    case Terminal::TELEVIDEO: p_console = std::make_unique<Console::Televideo>(); break;
     }
 
+    // Put it all together
     auto p_machine(std::make_unique<ZCPM::System>(std::move(p_console), memcheck, bdos_sym, user_sym));
 
     // The BDOS/CCP binary is built from Z80 source code which was reconstructed from a CP/M 2.2 disassembly plus a

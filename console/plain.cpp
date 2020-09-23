@@ -5,7 +5,7 @@
 #include <poll.h>
 #include <termios.h>
 
-#include "plainconsole.hpp"
+#include "plain.hpp"
 
 namespace ZCPM::Console
 {

@@ -18,14 +18,16 @@ set(CURSES_NEED_NCURSES TRUE)
 find_package(Curses)
 
 set(LIBSOURCE
-  cursesconsole.cpp
-  plainconsole.cpp
+  vt100.cpp
+  plain.cpp
+  televideo.cpp
   )
 
 set(LIBHEADER
   iconsole.hpp
-  cursesconsole.hpp
-  plainconsole.hpp
+  vt100.hpp
+  plain.hpp
+  televideo.hpp
   )
 
 add_library(${PROJECT_NAME} ${LIBSOURCE} ${LIBHEADER})

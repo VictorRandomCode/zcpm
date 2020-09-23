@@ -6,10 +6,12 @@
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
-#include "cursesconsole.hpp"
+#include "vt100.hpp"
 
 namespace
 {
+  static const int KeyboardDelayMs = 1;
+
   // Parses an escape sequence (which may yet be incomplete) and returns <count, values, ch> where:
   // - count is the number of characters parsed that can now be erased,
   // - values is a vector of semicolon-separated numbers
@@ -166,7 +168,7 @@ namespace
 namespace ZCPM::Console
 {
 
-  Curses::Curses()
+  Vt100::Vt100()
   {
     ::initscr();
 
@@ -180,7 +182,7 @@ namespace ZCPM::Console
     ::scrollok(stdscr, true); // Allow scrolling
   }
 
-  Curses::~Curses()
+  Vt100::~Vt100()
   {
     // If there's been no user *input* and we don't block here, the user will
     // not see anything displayed at all, so we need to do this before teardown.
@@ -195,13 +197,13 @@ namespace ZCPM::Console
     }
   }
 
-  void Curses::print(char ch)
+  void Vt100::print(char ch)
   {
     outch(ch);
     ::refresh();
   }
 
-  void Curses::print(const std::string& s)
+  void Vt100::print(const std::string& s)
   {
     const auto len = s.size();
     for (size_t i = 0; i < len; i++)
@@ -211,7 +213,7 @@ namespace ZCPM::Console
     ::refresh();
   }
 
-  std::string Curses::read_console_buffer(size_t mx, const std::string& initial)
+  std::string Vt100::read_console_buffer(size_t mx, const std::string& initial)
   {
     // Remember the starting cursor position
     auto x = 0, y = 0;
@@ -273,7 +275,7 @@ namespace ZCPM::Console
     return result;
   }
 
-  bool Curses::is_character_ready() const
+  bool Vt100::is_character_ready() const
   {
     // Is there a character available?
     const auto ch = ::getch();
@@ -290,7 +292,7 @@ namespace ZCPM::Console
     }
   }
 
-  char Curses::get_char()
+  char Vt100::get_char()
   {
     // This method might be called after a is_character_ready() which told the caller that
     // data is now ready to be returned, in which case we should read and return it immediately.
@@ -316,13 +318,13 @@ namespace ZCPM::Console
     return static_cast<char>(ch);
   }
 
-  void Curses::put_char(char ch)
+  void Vt100::put_char(char ch)
   {
     outch(ch);
     ::refresh();
   }
 
-  void Curses::outch(char ch)
+  void Vt100::outch(char ch)
   {
     // If we've already got an escape sequence in progress, add this character to it.  process_pending()
     // will then consider the collected data, and if it can deal with it then it will do so
@@ -331,7 +333,7 @@ namespace ZCPM::Console
     {
       // If it appears that we're starting a *new* escape sequence with one already in progress, warn
       // the maintainer via the log file and drop the unhandled one.
-      if (ch == '\033')
+      if (ch == '\033') // ESC
       {
         BOOST_LOG_TRIVIAL(trace) << "Warning: unimplemented escape sequence <ESC>" << m_pending.substr(1) << " dropped";
         m_pending.erase();
@@ -387,7 +389,7 @@ namespace ZCPM::Console
     }
   }
 
-  void Curses::process_pending()
+  void Vt100::process_pending()
   {
     // Map VT100 sequences (see http://ascii-table.com/ansi-escape-sequences-vt-100.php)
     // to ncurses commands. Sequences are added only as needed, not all of them upfront.

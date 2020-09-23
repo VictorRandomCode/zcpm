@@ -74,11 +74,17 @@ By default, both of them look for needed files in `${HOME}/zcpm/` but this can b
 by using command line options. This directory is where `zcpm` looks for the BDOS binary and
 also the (optional) BDOS symbol file.
 
-`runner` can either use simplistic input/output, or can be told to use a curses display. The
-simplistic display is simpler and faster, the curses display allows for running programs such as
-WordStar. This supports CP/M binaries which target a VT100 ("ANSI") console, so as long as
-you're running a CP/M binary of WordStar that has already been patched to support VT100,
-then `runner` can correctly render this via ncurses.
+`runner` can either use simplistic input/output, or can be told to use terminal emulation. The
+simplistic display is simpler and faster, the terminal emulation allows for running programs
+such as WordStar. This supports CP/M binaries which target a VT100 ("ANSI") console assuming
+that you're running a CP/M binary of WordStar that has been configured to support VT100.
+Initial support has been added for Televideo terminals, but this is incomplete.
+
+If your host terminal program supports ANSI terminals, then you may be able to get away
+with using the 'plain' terminal type, allowing the host terminal program to do any needed
+handling of VT100 sequences. Otherwise, selecting e.g. `--terminal=vt100` tells `zcpm` to
+translate any VT100 sequences to curses commands, allowing the CP/M display to correctly
+render on any host system that is supported by curses.
 
 The `debugger` makes use of the [replxx](https://github.com/AmokHuginnsson/replxx) library
 to make the debugger interface more usable.
@@ -100,9 +106,9 @@ just on those which are commonly used first.
 work, and very little CP/M software needs CP/M 3 anyway.
 
 The terminal translation code allows a CP/M binary which targets a VT100 "ANSI" terminal to work
-on any host system which is supported by ncurses. This translation is a work in progress...
+on any host system which is supported by ncurses. Televideo support is a work in progress.
 
-Longer term, I hope to include a graphical debugger with integrated console using Qt. My earlier
+Longer term plans include a graphical debugger with integrated console using Qt. The earlier
 `xcpm` implementation had this, I'd like to revisit this with `zcpm`.
 
 Building
@@ -194,7 +200,7 @@ Setting up a build with static analysis enabled:
 
 Running WordStar (after copying WS*.* into current directory):
 
-    ~/path/to/runner --curses 1 WS.COM
+    ~/path/to/runner --terminal=vt100 1 WS.COM
 
 grepping the resultant log file for all BDOS calls (with some detail on each):
 

@@ -7,11 +7,11 @@
 namespace ZCPM::Console
 {
 
-  class Curses final : public IConsole
+  class Televideo final : public IConsole
   {
   public:
-    Curses();
-    ~Curses();
+    Televideo();
+    ~Televideo();
 
     // Send a single character to the console; also handles tabs, start/stop
     // scroll, etc
@@ -42,8 +42,6 @@ namespace ZCPM::Console
     // Check the 'pending' output characters; if we have sufficient info then handle them
     // and erase them.
     void process_pending();
-
-    static const int KeyboardDelayMs = 1;
 
     // When we get character-by-character output, it can include escape sequences.  We
     // save these incomplete sequences here until we have enough info to do something
