@@ -13,9 +13,9 @@
 namespace ZCPM
 {
 
-  namespace Console
+  namespace Terminal
   {
-    class IConsole;
+    class ITerminal;
   }
   class Bios;
   class IDebuggable;
@@ -26,7 +26,7 @@ namespace ZCPM
     , public IMemory
   {
   public:
-    Hardware(std::unique_ptr<Console::IConsole> p_console,
+    Hardware(std::unique_ptr<Terminal::ITerminal> p_terminal,
              bool memcheck,
              const std::string& bdos_sym = "",
              const std::string& user_sym = "");
@@ -120,7 +120,7 @@ namespace ZCPM
     // Optional handler to call when we do a Z80 'OUT'
     OutputHandler m_output_handler;
 
-    std::unique_ptr<Console::IConsole> m_pconsole;
+    std::unique_ptr<Terminal::ITerminal> m_pterminal;
 
     std::array<uint8_t, 0x10000> m_memory;
 

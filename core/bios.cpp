@@ -5,7 +5,7 @@
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <zcpm/console/iconsole.hpp>
+#include <zcpm/terminal/iterminal.hpp>
 
 #include "bios.hpp"
 #include "disk.hpp"
@@ -27,7 +27,7 @@
 namespace ZCPM
 {
 
-  Bios::Bios(Hardware* p_hardware, Console::IConsole* p_console) : m_phardware(p_hardware), m_pconsole(p_console)
+  Bios::Bios(Hardware* p_hardware, Terminal::ITerminal* p_terminal) : m_phardware(p_hardware), m_pterminal(p_terminal)
   {
     const size_t table_size = 33; // As per "CP/M 3 System Guide", Table 2-1
 
@@ -189,14 +189,14 @@ namespace ZCPM
       msg = "CONST()";
       log_bios_call(prefix, msg);
       // Return A=FF if a character is ready to be read, A=00 otherwise
-      m_phardware->m_processor->reg_a() = m_pconsole->is_character_ready() ? 0xFF : 0x00;
+      m_phardware->m_processor->reg_a() = m_pterminal->is_character_ready() ? 0xFF : 0x00;
     }
     break;
     case 3:
     {
       BOOST_LOG_TRIVIAL(trace) << prefix << "CONIN()";
       // Block until a character is ready, and then return it in A
-      m_phardware->m_processor->reg_a() = m_pconsole->get_char();
+      m_phardware->m_processor->reg_a() = m_pterminal->get_char();
       const auto ch = m_phardware->m_processor->get_a();
       msg = (boost::format("CONIN(%02X)") % static_cast<unsigned short>(ch)).str();
       log_bios_call(prefix, msg);
@@ -214,7 +214,7 @@ namespace ZCPM
         msg = (boost::format("CONOUT(%02X)") % static_cast<unsigned short>(ch)).str();
       }
       log_bios_call(prefix, msg);
-      m_pconsole->print(ch);
+      m_pterminal->print(ch);
     }
     break;
     case 8:

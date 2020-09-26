@@ -8,7 +8,7 @@
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <zcpm/console/iconsole.hpp>
+#include <zcpm/terminal/iterminal.hpp>
 
 #include "bdos.hpp"
 #include "bios.hpp"
@@ -48,12 +48,12 @@ namespace
 namespace ZCPM
 {
 
-  Hardware::Hardware(std::unique_ptr<Console::IConsole> p_console,
+  Hardware::Hardware(std::unique_ptr<Terminal::ITerminal> p_terminal,
                      bool memcheck,
                      const std::string& bdos_sym,
                      const std::string& user_sym)
     : m_processor(std::make_unique<Processor>(*this, *this)),
-      m_pconsole(std::move(p_console)),
+      m_pterminal(std::move(p_terminal)),
       m_enable_memory_checks(memcheck)
   {
     m_memory.fill(0);
@@ -106,7 +106,7 @@ namespace ZCPM
 
     // Find the start of the BIOS in the current memory image, and then manipulate the
     // jump tables etc so that we can intercept BIOS calls ourselves.
-    m_pbios = std::make_unique<Bios>(this, m_pconsole.get());
+    m_pbios = std::make_unique<Bios>(this, m_pterminal.get());
   }
 
   void Hardware::call_bios_boot()

@@ -13,7 +13,7 @@ namespace
 
 } // namespace
 
-namespace ZCPM::Console
+namespace ZCPM::Terminal
 {
 
   // Implementation notes on Televideo 920/925 within ZCPM
@@ -342,4 +342,4 @@ namespace ZCPM::Console
     // another character will get appended to the buffer before this method is called again.
   }
 
-} // namespace ZCPM::Console
+} // namespace ZCPM::Terminal

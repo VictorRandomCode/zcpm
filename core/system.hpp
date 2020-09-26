@@ -11,15 +11,15 @@
 namespace ZCPM
 {
 
-  namespace Console
+  namespace Terminal
   {
-    class IConsole;
+    class ITerminal;
   }
 
   class System final
   {
   public:
-    System(std::unique_ptr<Console::IConsole> p_console,
+    System(std::unique_ptr<Terminal::ITerminal> p_terminal,
            bool memcheck,
            const std::string& bdos_sym = "",
            const std::string& user_sym = "");

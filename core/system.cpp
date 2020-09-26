@@ -9,7 +9,7 @@
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <zcpm/console/iconsole.hpp>
+#include <zcpm/terminal/iterminal.hpp>
 
 #include "fcb.hpp"
 #include "hardware.hpp"
@@ -19,11 +19,11 @@
 namespace ZCPM
 {
 
-  System::System(std::unique_ptr<Console::IConsole> p_console,
+  System::System(std::unique_ptr<Terminal::ITerminal> p_terminal,
                  bool memcheck,
                  const std::string& bdos_sym,
                  const std::string& user_sym)
-    : m_hardware(std::move(p_console), memcheck, bdos_sym, user_sym)
+    : m_hardware(std::move(p_terminal), memcheck, bdos_sym, user_sym)
   {
   }
 

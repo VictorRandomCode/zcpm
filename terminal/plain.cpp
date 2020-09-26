@@ -7,7 +7,7 @@
 
 #include "plain.hpp"
 
-namespace ZCPM::Console
+namespace ZCPM::Terminal
 {
 
   Plain::~Plain()
@@ -80,4 +80,4 @@ namespace ZCPM::Console
     std::cout.flush();
   }
 
-} // namespace ZCPM::Console
+} // namespace ZCPM::Terminal

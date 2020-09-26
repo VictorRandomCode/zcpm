@@ -18,4 +18,4 @@ set(CLIHEADER
 add_executable(${PROJECT_NAME} ${CLISOURCE} ${CLIHEADER})
 
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} builder console core ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} builder terminal core ${Boost_LIBRARIES})

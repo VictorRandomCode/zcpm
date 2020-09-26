@@ -28,4 +28,4 @@ set(DBGHEADER
 add_executable(${PROJECT_NAME} ${DBGSOURCE} ${DBGHEADER})
 
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} builder console core replxx)
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} builder terminal core replxx)

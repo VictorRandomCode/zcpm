@@ -1,4 +1,4 @@
-project(console)
+project(terminal)
 
 SetupCompiler("-g;-Wno-unused-parameter")
 
@@ -24,7 +24,7 @@ set(LIBSOURCE
   )
 
 set(LIBHEADER
-  iconsole.hpp
+  iterminal.hpp
   vt100.hpp
   plain.hpp
   televideo.hpp

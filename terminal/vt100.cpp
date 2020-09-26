@@ -165,7 +165,7 @@ namespace
 
 } // namespace
 
-namespace ZCPM::Console
+namespace ZCPM::Terminal
 {
 
   Vt100::Vt100()
@@ -518,4 +518,4 @@ namespace ZCPM::Console
     }
   }
 
-} // namespace ZCPM::Console
+} // namespace ZCPM::Terminal

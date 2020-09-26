@@ -76,7 +76,7 @@ also the (optional) BDOS symbol file.
 
 `runner` can either use simplistic input/output, or can be told to use terminal emulation. The
 simplistic display is simpler and faster, the terminal emulation allows for running programs
-such as WordStar. This supports CP/M binaries which target a VT100 ("ANSI") console assuming
+such as WordStar. This supports CP/M binaries which target a VT100 ("ANSI") terminal assuming
 that you're running a CP/M binary of WordStar that has been configured to support VT100.
 Initial support has been added for Televideo terminals, but this is incomplete.
 

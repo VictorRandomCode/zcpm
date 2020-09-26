@@ -2,16 +2,16 @@
 
 #include <string>
 
-#include "iconsole.hpp"
+#include "iterminal.hpp"
 
-namespace ZCPM::Console
+namespace ZCPM::Terminal
 {
 
-  class Televideo final : public IConsole
+  class Vt100 final : public ITerminal
   {
   public:
-    Televideo();
-    ~Televideo();
+    Vt100();
+    ~Vt100();
 
     // Send a single character to the console; also handles tabs, start/stop
     // scroll, etc
@@ -49,4 +49,4 @@ namespace ZCPM::Console
     std::string m_pending;
   };
 
-} // namespace ZCPM::Console
+} // namespace ZCPM::Terminal

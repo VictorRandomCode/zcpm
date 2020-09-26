@@ -84,7 +84,7 @@ endfunction()
 
 
 add_subdirectory(builder)
-add_subdirectory(console)
+add_subdirectory(terminal)
 add_subdirectory(core)
 add_subdirectory(debugger)
 add_subdirectory(runner)
