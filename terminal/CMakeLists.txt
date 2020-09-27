@@ -21,6 +21,7 @@ set(LIBSOURCE
   vt100.cpp
   plain.cpp
   televideo.cpp
+  type.cpp
   )
 
 set(LIBHEADER
@@ -28,6 +29,7 @@ set(LIBHEADER
   vt100.hpp
   plain.hpp
   televideo.hpp
+  type.hpp
   )
 
 add_library(${PROJECT_NAME} ${LIBSOURCE} ${LIBHEADER})

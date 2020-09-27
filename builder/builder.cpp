@@ -3,7 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup.hpp>
 #include <boost/program_options.hpp>
@@ -12,46 +11,13 @@
 #include <zcpm/terminal/iterminal.hpp>
 #include <zcpm/terminal/plain.hpp>
 #include <zcpm/terminal/televideo.hpp>
+#include <zcpm/terminal/type.hpp>
 #include <zcpm/terminal/vt100.hpp>
 
 #include "builder.hpp"
 
 namespace ZCPM
 {
-  enum class TerminalType
-  {
-    PLAIN,    // Terminal type which relies on the host terminal doing any needed translation; usually supports ANSI
-    VT100,    // Full-featured VT100 emulation translates CP/M VT100 directives to portable ncurses commands
-    TELEVIDEO // Coming soon...
-  };
-
-  std::istream& operator>>(std::istream& in, TerminalType& terminal)
-  {
-    std::string token;
-    in >> token;
-
-    boost::to_upper(token);
-
-    if (token == "PLAIN")
-    {
-      terminal = TerminalType::PLAIN;
-    }
-    else if (token == "VT100")
-    {
-      terminal = TerminalType::VT100;
-    }
-    else if (token == "TELEVIDEO")
-    {
-      terminal = TerminalType::TELEVIDEO;
-    }
-    else
-    {
-      throw boost::program_options::validation_error(boost::program_options::validation_error::invalid_option_value,
-                                                     "Invalid terminal");
-    }
-
-    return in;
-  }
 
   std::string home_plus(const std::string& addendum)
   {
@@ -63,15 +29,15 @@ namespace ZCPM
   {
     // Command line parameters and their defaults
     std::string logfile = "zcpm.log";
-    std::string bdos_file_name = "~/zcpm/bdos.bin"; // The file that provides a binary BDOS (and CCP etc)
-    std::string bdos_sym = "~/zcpm/bdos.lab";       // Filename of .lab file which lists symbols in BDOS implementation
-    std::string user_sym;                           // Filename of .lab file which lists symbols in user's executable
-    uint16_t bdos_file_base = 0xDC00;               // Where to load that binary image
-    uint16_t wboot = 0xF203;                        // Address of WBOOT in loaded binary BDOS
-    uint16_t fbase = 0xE406;                        // Address of FBASE in loaded binary BDOS
-    TerminalType terminal = TerminalType::PLAIN;    // Terminal type
-    bool memcheck = true;                           // Enable RAM read/write checks?
-    std::string binary;                             // The CP/M binary that we try to load and execute
+    std::string bdos_file_name = "~/zcpm/bdos.bin";  // The file that provides a binary BDOS (and CCP etc)
+    std::string bdos_sym = "~/zcpm/bdos.lab";        // Filename of .lab file which lists symbols in BDOS implementation
+    std::string user_sym;                            // Filename of .lab file which lists symbols in user's executable
+    uint16_t bdos_file_base = 0xDC00;                // Where to load that binary image
+    uint16_t wboot = 0xF203;                         // Address of WBOOT in loaded binary BDOS
+    uint16_t fbase = 0xE406;                         // Address of FBASE in loaded binary BDOS
+    Terminal::Type terminal = Terminal::Type::PLAIN; // Terminal type
+    bool memcheck = true;                            // Enable RAM read/write checks?
+    std::string binary;                              // The CP/M binary that we try to load and execute
     std::vector<std::string> arguments;
 
     try
@@ -85,7 +51,7 @@ namespace ZCPM
         "bdosbase", po::value<uint16_t>(), "Base address for binary BDOS file")(
         "wboot", po::value<uint16_t>(), "Address of WBOOT in loaded binary BDOS")(
         "fbase", po::value<uint16_t>(), "Address of FBASE in loaded binary BDOS")(
-        "terminal", po::value<TerminalType>(), "Terminal type to emulate")(
+        "terminal", po::value<Terminal::Type>(), "Terminal type to emulate")(
         "memcheck", po::value<bool>(), "Enable memory access checks?")(
         "logfile", po::value<std::string>(), "Name of logfile")(
         "binary", po::value<std::string>(), "CP/M binary input file to execute")(
@@ -121,7 +87,7 @@ namespace ZCPM
       }
       if (vm.count("terminal"))
       {
-        terminal = vm["terminal"].as<TerminalType>();
+        terminal = vm["terminal"].as<Terminal::Type>();
       }
       if (vm.count("memcheck"))
       {
@@ -165,9 +131,9 @@ namespace ZCPM
     std::unique_ptr<Terminal::ITerminal> p_terminal;
     switch (terminal)
     {
-    case TerminalType::PLAIN: p_terminal = std::make_unique<Terminal::Plain>(); break;
-    case TerminalType::VT100: p_terminal = std::make_unique<Terminal::Vt100>(); break;
-    case TerminalType::TELEVIDEO: p_terminal = std::make_unique<Terminal::Televideo>(); break;
+    case Terminal::Type::PLAIN: p_terminal = std::make_unique<Terminal::Plain>(); break;
+    case Terminal::Type::VT100: p_terminal = std::make_unique<Terminal::Vt100>(); break;
+    case Terminal::Type::TELEVIDEO: p_terminal = std::make_unique<Terminal::Televideo>(); break;
     }
 
     // Put it all together
