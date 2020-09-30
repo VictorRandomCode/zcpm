@@ -13,13 +13,13 @@ namespace ZCPM
 
   namespace Terminal
   {
-    class ITerminal;
+    class Terminal;
   }
 
   class System final
   {
   public:
-    System(std::unique_ptr<Terminal::ITerminal> p_terminal,
+    System(std::unique_ptr<Terminal::Terminal> p_terminal,
            bool memcheck,
            const std::string& bdos_sym = "",
            const std::string& user_sym = "");

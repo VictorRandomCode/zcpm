@@ -10,6 +10,10 @@
 namespace ZCPM::Terminal
 {
 
+  Plain::Plain(int rows, int columns) : Terminal(rows, columns)
+  {
+  }
+
   Plain::~Plain()
   {
     // Make sure we don't leave an unfinished output line

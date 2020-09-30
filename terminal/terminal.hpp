@@ -5,10 +5,14 @@
 namespace ZCPM::Terminal
 {
 
-  class ITerminal
+  class Terminal
   {
   public:
-    virtual ~ITerminal() = default;
+    Terminal(int rows, int columns) : m_rows(rows), m_columns(columns)
+    {
+    }
+
+    virtual ~Terminal() = default;
 
     // Send a single character to the console; also handles tabs, start/stop
     // scroll, etc
@@ -31,7 +35,9 @@ namespace ZCPM::Terminal
     // Put a single character to the console, unfiltered
     virtual void put_char(char ch) = 0;
 
-  private:
+  protected:
+    const int m_rows;
+    const int m_columns;
   };
 
 } // namespace ZCPM::Terminal

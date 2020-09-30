@@ -25,7 +25,7 @@ set(LIBSOURCE
   )
 
 set(LIBHEADER
-  iterminal.hpp
+  terminal.hpp
   vt100.hpp
   plain.hpp
   televideo.hpp

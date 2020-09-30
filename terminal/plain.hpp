@@ -2,15 +2,17 @@
 
 #include <string>
 
-#include "iterminal.hpp"
+#include "terminal.hpp"
 
 namespace ZCPM::Terminal
 {
 
-  class Plain final : public ITerminal
+  // This is a "pass-through" terminal emulation; it doesn't attempt to interpret any specific escape sequences, just
+  // letting the host terminal program do the work.
+  class Plain final : public Terminal
   {
   public:
-    Plain() = default;
+    Plain(int rows, int columns);
     ~Plain();
 
     // Send a single character to the console; also handles tabs, start/stop

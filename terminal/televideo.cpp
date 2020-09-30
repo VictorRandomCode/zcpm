@@ -19,8 +19,9 @@ namespace ZCPM::Terminal
   // Implementation notes on Televideo 920/925 within ZCPM
   // - Only sequences actually encountered are being implemented, no point going crazy
   // - Not yet worrying about "protected areas", e.g. a ^Z should be "Clear unprotected to insert character"
+  // - Character addressing is 80x24; the docs use "from 1" counting, so valid row numbers are 1..24, etc.
 
-  Televideo::Televideo()
+  Televideo::Televideo(int rows, int columns) : Terminal(rows, columns)
   {
     ::initscr();
 
@@ -199,24 +200,20 @@ namespace ZCPM::Terminal
       return;
     }
 
+    auto col = 0, row = 0;
+    getsyx(row, col);
+
     if (ch == '\015') // CR
     {
-      auto x = 0, y = 0;
-      getsyx(y, x);
-      ::move(y, 0);
+      ::move(row, 0);
     }
     else if (ch == '\012') // LF
     {
       // Normally, on a LF we simply go down one row.  But if we're already at the
       // bottom row we need to force a scroll in order to have the same behaviour
       // as a CP/M console.
-      auto col = 0, row = 0;
-      getsyx(row, col);
 
-      auto maxrow = 0, maxcol = 0;
-      getmaxyx(stdscr, maxrow, maxcol);
-
-      if (row + 1 < maxrow)
+      if (row + 1 < m_rows)
       {
         // Not yet at last row, so move down one row
         ::move(row + 1, col);
@@ -233,9 +230,9 @@ namespace ZCPM::Terminal
     }
     else if (ch == '\032') // Control-Z
     {
-      // Manual says "Clear unprotected to insert character" which is not well-defined, so for now a simplistic
-      // "clear rest of screen" is used
-      ::clrtobot();
+      BOOST_LOG_TRIVIAL(trace) << "CURSES clear all";
+      ::clear(); // Note that this also homes the cursor
+      ::attrset(A_BOLD); // Televideo uses half/full intensity, default is full
     }
     else if (ch == '\016') // Control-N
     {
@@ -253,7 +250,24 @@ namespace ZCPM::Terminal
       {
         ch = ' ';
       }
+
       ::addch(ch);
+
+      // If we were already at the maximum column, force a 'wrap' to the start of the next row so that the next
+      // character output is in the right place. And if we're at the maximum row as well, force a scroll.
+      if (col + 1 == m_columns)
+      {
+        col = 0;
+        if (row + 1 < m_rows)
+        {
+          ++row;
+        }
+        else
+        {
+          ::scrl(1);
+        }
+        ::move(row, col);
+      }
     }
   }
 
@@ -267,17 +281,15 @@ namespace ZCPM::Terminal
     BOOST_ASSERT(m_pending.size() > 1);
     BOOST_ASSERT(m_pending[0] == '\033');
 
-    // TODO: Currently this is brute-force until patterns start becoming apparent, after which it can be refactored.
-    // Until then it's basically a big switch statement.
-
     const auto& first = m_pending[1]; // First pending character *after* the ESC
 
-    if (first == '*')
+    if ((first == ':') || (first == ';') || (first == '+') || (first == '*'))
     {
-      // Refer Televideo doc at 4.9.2.4
-      BOOST_LOG_TRIVIAL(trace) << "CURSES clear all to nulls";
+      // Refer Televideo doc at 4.9.2.4; zcpm treats all 4 flavours the same, although in theory there should be subtle
+      // differences with the way that spaces/nulls/protected fields are handled.
+      BOOST_LOG_TRIVIAL(trace) << "CURSES clear all";
       ::clear(); // Note that this also homes the cursor
-      ::attrset(A_NORMAL);
+      ::attrset(A_BOLD); // Televideo uses half/full intensity, default is full
       m_pending.erase();
       return;
     }
@@ -335,6 +347,36 @@ namespace ZCPM::Terminal
       BOOST_LOG_TRIVIAL(trace) << "CURSES half intensity on";
       m_pending.erase();
       ::attroff(A_BOLD);
+      return;
+    }
+    if (first == '>')
+    {
+      // Keyclick on [NOT IMPLEMENTED]
+      BOOST_LOG_TRIVIAL(trace) << "CURSES keyclick on";
+      m_pending.erase();
+      return;
+    }
+    if (first == '<')
+    {
+      // Keyclick off [NOT IMPLEMENTED]
+      BOOST_LOG_TRIVIAL(trace) << "CURSES keyclick off";
+      m_pending.erase();
+      return;
+    }
+    if ((first == 'j') || (m_pending == "\x1BG4"))
+    {
+      // End of reverse video
+      BOOST_LOG_TRIVIAL(trace) << "CURSES reverse video";
+      m_pending.erase();
+      ::attron(A_REVERSE);
+      return;
+    }
+    if ((first == 'k') || (m_pending == "\x1BG0"))
+    {
+      // End of reverse video
+      BOOST_LOG_TRIVIAL(trace) << "CURSES reverse video end";
+      m_pending.erase();
+      ::attroff(A_REVERSE);
       return;
     }
 

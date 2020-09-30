@@ -9,7 +9,7 @@
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <zcpm/terminal/iterminal.hpp>
+#include <zcpm/terminal/terminal.hpp>
 
 #include "fcb.hpp"
 #include "hardware.hpp"
@@ -19,7 +19,7 @@
 namespace ZCPM
 {
 
-  System::System(std::unique_ptr<Terminal::ITerminal> p_terminal,
+  System::System(std::unique_ptr<Terminal::Terminal> p_terminal,
                  bool memcheck,
                  const std::string& bdos_sym,
                  const std::string& user_sym)

@@ -163,12 +163,19 @@ namespace
     // Not implemented
   }
 
+  // Enter/exit ANSI mode (VT52)
+  void ansi_setansi()
+  {
+    BOOST_LOG_TRIVIAL(trace) << "CURSES setansi";
+    // Not implemented
+  }
+
 } // namespace
 
 namespace ZCPM::Terminal
 {
 
-  Vt100::Vt100()
+  Vt100::Vt100(int rows, int columns) : Terminal(rows, columns)
   {
     ::initscr();
 
@@ -346,24 +353,20 @@ namespace ZCPM::Terminal
       return;
     }
 
+    auto col = 0, row = 0;
+    getsyx(row, col);
+
     if (ch == '\015') // CR
     {
-      auto x = 0, y = 0;
-      getsyx(y, x);
-      ::move(y, 0);
+      ::move(row, 0);
     }
     else if (ch == '\012') // LF
     {
       // Normally, on a LF we simply go down one row.  But if we're already at the
       // bottom row we need to force a scroll in order to have the same behaviour
       // as a CP/M console.
-      auto col = 0, row = 0;
-      getsyx(row, col);
 
-      auto maxrow = 0, maxcol = 0;
-      getmaxyx(stdscr, maxrow, maxcol);
-
-      if (row + 1 < maxrow)
+      if (row + 1 < m_rows)
       {
         // Not yet at last row, so move down one row
         ::move(row + 1, col);
@@ -385,7 +388,21 @@ namespace ZCPM::Terminal
       {
         ch = ' ';
       }
+
       ::addch(ch);
+
+      // If we were already at the maximum column, force a 'wrap' to the start of the next row so that the next
+      // character output is in the right place
+      if (col + 1 == m_columns)
+      {
+        col = 0;
+        if (row + 1 < m_rows)
+        {
+          // TODO: Unsure of correct behaviour here; simply stick with the bottom row, or should we scroll?
+          ++row;
+        }
+        ::move(row, col);
+      }
     }
   }
 
@@ -514,6 +531,11 @@ namespace ZCPM::Terminal
     else if (m_pending == "\x1B=")
     {
       ansi_deckpam();
+      m_pending.erase();
+    }
+    else if (m_pending == "\x1B<")
+    {
+      ansi_setansi();
       m_pending.erase();
     }
   }

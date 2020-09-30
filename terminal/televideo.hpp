@@ -2,15 +2,15 @@
 
 #include <string>
 
-#include "iterminal.hpp"
+#include "terminal.hpp"
 
 namespace ZCPM::Terminal
 {
 
-  class Televideo final : public ITerminal
+  class Televideo final : public Terminal
   {
   public:
-    Televideo();
+    Televideo(int rows, int columns);
     ~Televideo();
 
     // Send a single character to the console; also handles tabs, start/stop

@@ -10,14 +10,14 @@ namespace ZCPM
 
   namespace Terminal
   {
-    class ITerminal;
+    class Terminal;
   }
   class Hardware;
 
   class Bios final
   {
   public:
-    Bios(Hardware* p_hardware, Terminal::ITerminal* p_terminal);
+    Bios(Hardware* p_hardware, Terminal::Terminal* p_terminal);
 
     ~Bios();
 
@@ -45,7 +45,7 @@ namespace ZCPM
 
     Hardware* m_phardware;
 
-    Terminal::ITerminal* m_pterminal;
+    Terminal::Terminal* m_pterminal;
 
     Disk m_disk;
 

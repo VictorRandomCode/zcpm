@@ -2,15 +2,15 @@
 
 #include <string>
 
-#include "iterminal.hpp"
+#include "terminal.hpp"
 
 namespace ZCPM::Terminal
 {
 
-  class Vt100 final : public ITerminal
+  class Vt100 final : public Terminal
   {
   public:
-    Vt100();
+    Vt100(int rows, int columns);
     ~Vt100();
 
     // Send a single character to the console; also handles tabs, start/stop

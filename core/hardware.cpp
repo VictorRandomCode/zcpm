@@ -8,7 +8,7 @@
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <zcpm/terminal/iterminal.hpp>
+#include <zcpm/terminal/terminal.hpp>
 
 #include "bdos.hpp"
 #include "bios.hpp"
@@ -48,7 +48,7 @@ namespace
 namespace ZCPM
 {
 
-  Hardware::Hardware(std::unique_ptr<Terminal::ITerminal> p_terminal,
+  Hardware::Hardware(std::unique_ptr<Terminal::Terminal> p_terminal,
                      bool memcheck,
                      const std::string& bdos_sym,
                      const std::string& user_sym)

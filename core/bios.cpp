@@ -5,7 +5,7 @@
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <zcpm/terminal/iterminal.hpp>
+#include <zcpm/terminal/terminal.hpp>
 
 #include "bios.hpp"
 #include "disk.hpp"
@@ -27,7 +27,7 @@
 namespace ZCPM
 {
 
-  Bios::Bios(Hardware* p_hardware, Terminal::ITerminal* p_terminal) : m_phardware(p_hardware), m_pterminal(p_terminal)
+  Bios::Bios(Hardware* p_hardware, Terminal::Terminal* p_terminal) : m_phardware(p_hardware), m_pterminal(p_terminal)
   {
     const size_t table_size = 33; // As per "CP/M 3 System Guide", Table 2-1
 

@@ -8,9 +8,9 @@
 #include <boost/program_options.hpp>
 
 #include <zcpm/core/system.hpp>
-#include <zcpm/terminal/iterminal.hpp>
 #include <zcpm/terminal/plain.hpp>
 #include <zcpm/terminal/televideo.hpp>
+#include <zcpm/terminal/terminal.hpp>
 #include <zcpm/terminal/type.hpp>
 #include <zcpm/terminal/vt100.hpp>
 
@@ -36,6 +36,8 @@ namespace ZCPM
     uint16_t wboot = 0xF203;                         // Address of WBOOT in loaded binary BDOS
     uint16_t fbase = 0xE406;                         // Address of FBASE in loaded binary BDOS
     Terminal::Type terminal = Terminal::Type::PLAIN; // Terminal type
+    int columns = 80;                                // Number of display columns
+    int rows = 24;                                   // Number of display rows
     bool memcheck = true;                            // Enable RAM read/write checks?
     std::string binary;                              // The CP/M binary that we try to load and execute
     std::vector<std::string> arguments;
@@ -52,6 +54,7 @@ namespace ZCPM
         "wboot", po::value<uint16_t>(), "Address of WBOOT in loaded binary BDOS")(
         "fbase", po::value<uint16_t>(), "Address of FBASE in loaded binary BDOS")(
         "terminal", po::value<Terminal::Type>(), "Terminal type to emulate")(
+        "columns", po::value<int>(), "Terminal column count")("rows", po::value<int>(), "Terminal row count")(
         "memcheck", po::value<bool>(), "Enable memory access checks?")(
         "logfile", po::value<std::string>(), "Name of logfile")(
         "binary", po::value<std::string>(), "CP/M binary input file to execute")(
@@ -88,6 +91,14 @@ namespace ZCPM
       if (vm.count("terminal"))
       {
         terminal = vm["terminal"].as<Terminal::Type>();
+      }
+      if (vm.count("columns"))
+      {
+        columns = vm["columns"].as<int>();
+      }
+      if (vm.count("rows"))
+      {
+        rows = vm["rows"].as<int>();
       }
       if (vm.count("memcheck"))
       {
@@ -128,12 +139,12 @@ namespace ZCPM
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
 
     // Create the terminal emulation of choice
-    std::unique_ptr<Terminal::ITerminal> p_terminal;
+    std::unique_ptr<Terminal::Terminal> p_terminal;
     switch (terminal)
     {
-    case Terminal::Type::PLAIN: p_terminal = std::make_unique<Terminal::Plain>(); break;
-    case Terminal::Type::VT100: p_terminal = std::make_unique<Terminal::Vt100>(); break;
-    case Terminal::Type::TELEVIDEO: p_terminal = std::make_unique<Terminal::Televideo>(); break;
+    case Terminal::Type::PLAIN: p_terminal = std::make_unique<Terminal::Plain>(rows, columns); break;
+    case Terminal::Type::VT100: p_terminal = std::make_unique<Terminal::Vt100>(rows, columns); break;
+    case Terminal::Type::TELEVIDEO: p_terminal = std::make_unique<Terminal::Televideo>(rows, columns); break;
     }
 
     // Put it all together

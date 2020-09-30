@@ -75,16 +75,14 @@ by using command line options. This directory is where `zcpm` looks for the BDOS
 also the (optional) BDOS symbol file.
 
 `runner` can either use simplistic input/output, or can be told to use terminal emulation. The
-simplistic display is simpler and faster, the terminal emulation allows for running programs
-such as WordStar. This supports CP/M binaries which target a VT100 ("ANSI") terminal assuming
-that you're running a CP/M binary of WordStar that has been configured to support VT100.
-Initial support has been added for Televideo terminals, but this is incomplete.
+simplistic display is simpler and faster, it just passes the escape sequences straight through
+for the host terminal program to handle. Whereas terminal emulation (which currently supports
+either VT100/ANSI or Televideo) will reinterpret escape sequences for those terminals into
+generic `ncurses` commands to suit the host system.
 
-If your host terminal program supports ANSI terminals, then you may be able to get away
-with using the 'plain' terminal type, allowing the host terminal program to do any needed
-handling of VT100 sequences. Otherwise, selecting e.g. `--terminal=vt100` tells `zcpm` to
-translate any VT100 sequences to curses commands, allowing the CP/M display to correctly
-render on any host system that is supported by curses.
+Note that the VT100 emulation is more complete than the Televideo one; both of these are being
+gradually improved as time allows, but if you have the option, use binaries that target VT100
+(aka "ANSI") in preference to Televideo ones. Both emulations are a long way from being complete!
 
 The `debugger` makes use of the [replxx](https://github.com/AmokHuginnsson/replxx) library
 to make the debugger interface more usable.
@@ -92,12 +90,11 @@ to make the debugger interface more usable.
 Status
 ------
 
-At this stage this all largely works, but there's a lot more that could/should be done. For example I
-haven't worried about performance too much yet. `zcpm` does lots of checking of memory accesses
-at run time, this is reasonably expensive and could be optimised. Also the 
-
-The use of `ncurses` could be optimised, to reduce the number of API calls by coalescing sequences
-where sensible.
+At this stage this all largely works, but there's a lot more that could/should be done. For
+example I haven't worried about performance too much yet. `zcpm` does lots of checking of memory
+accesses at run time, this is reasonably expensive and could be optimised. And the the use of
+`ncurses` could be optimised to reduce the number of API calls by coalescing sequences where
+sensible.
 
 Not all BDOS and BIOS functions are implemented, I'm gradually improving this but trying to focus
 just on those which are commonly used first.
@@ -105,8 +102,9 @@ just on those which are commonly used first.
 `zcpm` implements CP/M 2.2. `zcpm` did initially target CP/M 3.x, but that was considerably more
 work, and very little CP/M software needs CP/M 3 anyway.
 
-The terminal translation code allows a CP/M binary which targets a VT100 "ANSI" terminal to work
-on any host system which is supported by ncurses. Televideo support is a work in progress.
+The terminal translation code allows a CP/M binary which targets either a VT100 "ANSI" terminal or
+a Televideo terminal to work on any host system which is supported by ncurses, both of these are
+a work in progress.
 
 Longer term plans include a graphical debugger with integrated console using Qt. The earlier
 `xcpm` implementation had this, I'd like to revisit this with `zcpm`.
@@ -198,7 +196,7 @@ Setting up a build with static analysis enabled:
 
     cmake -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm/ -DUSE_TIDY=ON
 
-Running WordStar (after copying WS*.* into current directory):
+Running WordStar (after copying `WS*.*` into current directory):
 
     ~/path/to/runner --terminal=vt100 1 WS.COM
 
