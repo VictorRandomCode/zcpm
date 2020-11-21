@@ -161,6 +161,13 @@ On macOS if you install gcc via `brew install gcc`, you can configure & build li
 
 Although you may run in to linker issues that I haven't yet resolved.
 
+Another issue that I've encountered recently is that Boost 1.71.0 (which is the default for
+some package managers) doesn't play nicely with clang 11.0, resulting in compilation errors.
+To resolve that, download the current version of Boost and build it from source, and then
+tell CMake where to find it, e.g. :
+
+    BOOST_ROOT=${HOME}/local cmake -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm/
+
 Running
 -------
 
