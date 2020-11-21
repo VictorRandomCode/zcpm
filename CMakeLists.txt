@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(USE_TIDY "Enable clang's static analyser" OFF)
-option(USE_SANITISERS "Enable ASAN and UBSAN" ON)
+option(USE_SANITISERS "Enable ASAN and UBSAN" OFF)
 option(USE_PROFILE "Enable profiling" OFF)
 option(USE_ANALYSER "Enable GCC10 static analyser" OFF)
 
