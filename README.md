@@ -166,6 +166,7 @@ some package managers) doesn't play nicely with clang 11.0, resulting in compila
 To resolve that, download the current version of Boost and build it from source, and then
 tell CMake where to find it, e.g. :
 
+    export PATH=/path/to/preferred/cmake/bin:$PATH
     BOOST_ROOT=${HOME}/local cmake -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm/
 
 Running
@@ -205,7 +206,7 @@ Setting up a build with static analysis enabled:
 
 Running WordStar (after copying `WS*.*` into current directory):
 
-    ~/path/to/runner --terminal=vt100 1 WS.COM
+    ~/path/to/runner --terminal=vt100 WS.COM
 
 grepping the resultant log file for all BDOS calls (with some detail on each):
 
