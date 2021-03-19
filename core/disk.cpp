@@ -16,19 +16,19 @@ namespace
 {
 
   // Convert e.g. 'foo','txt' to 'FOO     TXT'
-  std::string convert(const std::string& filename, const std::string& extn)
+  std::string convert(const std::string& filename, const std::string& extension)
   {
     const size_t n_name = 8;
-    const size_t n_extn = 3;
+    const size_t n_extension = 3;
     // Make a copy of the filename which is limited to 8 characters and is uppercase
     const auto f(boost::to_upper_copy(filename.substr(0, n_name)));
-    // Make a copy of the extn which is limited to 3 characters and is uppercase, taking
+    // Make a copy of the extension which is limited to 3 characters and is uppercase, taking
     // care to skip the leading '.' if it is present.
-    const auto has_dot = !extn.empty() && extn[0] == '.';
-    const auto e(boost::to_upper_copy(extn.substr(has_dot ? 1 : 0, n_extn)));
+    const auto has_dot = !extension.empty() && extension[0] == '.';
+    const auto e(boost::to_upper_copy(extension.substr(has_dot ? 1 : 0, n_extension)));
 
     // Build and return a 11-character space-padded version
-    std::string result(n_name + n_extn, ' ');
+    std::string result(n_name + n_extension, ' ');
     std::memcpy(&(result[0]), f.c_str(), f.size());
     std::memcpy(&(result[n_name]), e.c_str(), e.size());
     return result;
@@ -38,7 +38,7 @@ namespace
   static const inline uint16_t BlockSize = 0x0800;
   static const inline uint16_t SectorsPerBlock = BlockSize / ZCPM::Disk::SectorSize;
 
-  using Location = std::pair<uint16_t, uint16_t>; // Track/Sector which identify a particular sector on the disk
+  using Location = std::tuple<uint16_t, uint16_t>; // Track/Sector which identify a particular sector on the disk
 
   // Given a block number and a sector offset, works out the actual track/sector. Assumes that sector_offset is strictly
   // within that same block, not overflowing into an adjacent block!
@@ -47,17 +47,17 @@ namespace
     const auto s = block * SectorsPerBlock + sector_offset;
     const auto track_index = s / ZCPM::Disk::SectorSize;
     const auto sector_index = s - track_index * ZCPM::Disk::SectorSize;
-    return Location(track_index, sector_index);
+    return { track_index, sector_index };
   }
 
-  // Map a track/sector pair to a block number and offset, where the offset is the index of the sequence within the
-  // block (first sector is zero, second sector is one, etc)
+  // Map a track/sector to a block number and offset, where the offset is the index of the sequence within the block
+  // (first sector is zero, second sector is one, etc)
   std::tuple<uint16_t, uint8_t> track_sector_to_block_and_offset(uint16_t track, uint16_t sector)
   {
     const auto n = track * ZCPM::Disk::SectorSize + sector;
     const auto block = n >> ZCPM::Disk::BSH;
     const auto offset = n & ZCPM::Disk::BLM;
-    return std::pair(block, offset);
+    return { block, offset };
   }
 
 } // namespace
@@ -184,7 +184,7 @@ namespace ZCPM
     void read(SectorData& buffer, uint16_t track, uint16_t sector) const
     {
       // First see if the specific sector is in the sector cache
-      const auto location(std::make_pair(track, sector));
+      const Location location{ track, sector };
       const auto it = m_sector_cache.find(location);
       if (it != m_sector_cache.end())
       {
@@ -322,7 +322,7 @@ namespace ZCPM
     void write_disk_data(const SectorData& buffer, uint16_t track, uint16_t sector)
     {
       // Do we have a cache entry for this sector?
-      Location location(std::make_pair(track, sector));
+      const auto location(Location{ track, sector });
 
       const auto it = m_sector_cache.find(location);
       if (it != m_sector_cache.end())
@@ -506,10 +506,10 @@ namespace ZCPM
                 BOOST_LOG_TRIVIAL(trace) << "Writing " << sectors_this_block << " sector from block #" << b;
                 for (auto i = 0; i < sectors_this_block; i++)
                 {
-                  const auto location = find_location_within_block(b, i);
+                  const auto [track, sector] = find_location_within_block(b, i);
                   BOOST_LOG_TRIVIAL(trace)
-                    << boost::format("  Using data from TRACK:%04X SECTOR:%04X") % location.first % location.second;
-                  const auto it = m_sector_cache.find(location);
+                    << boost::format("  Using data from TRACK:%04X SECTOR:%04X") % track % sector;
+                  const auto it = m_sector_cache.find({ track, sector });
                   if (it != m_sector_cache.end())
                   {
                     SectorData data{};
@@ -568,8 +568,7 @@ namespace ZCPM
       {
         if (value.m_dirty)
         {
-          const auto track(key.first);
-          const auto sector(key.second);
+          const auto& [track, sector] = key;
           if (track > 1)
           {
             // Work out what file owns this sector

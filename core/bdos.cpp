@@ -14,7 +14,7 @@ namespace ZCPM::Bdos
     std::string cpm_string_at(const IMemory& memory, uint16_t address)
     {
       // Build the result, but limit the length in case the CP/M code is trying to print something particularly long or
-      // is pointing at rubbish (which isn't our problem, but we don't want logging of that to break us! This function
+      // is pointing at rubbish (which isn't our problem, but we don't want logging of that to break us!). This function
       // also escapes any non-printables so as not to mess up the logfile.
       std::string result;
       for (auto offset = 0; offset < 30; ++offset)

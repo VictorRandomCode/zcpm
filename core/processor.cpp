@@ -433,7 +433,7 @@ namespace ZCPM
     const auto op2 = m_memory.read_byte(pc + offset + 1);
     const auto op3 = m_memory.read_byte(pc + offset + 2);
     const auto op4 = m_memory.read_byte(pc + offset + 3);
-    return std::make_tuple(op1, op2, op3, op4);
+    return { op1, op2, op3, op4 };
   }
 
   void Processor::add_action(std::unique_ptr<DebugAction> p_action)
@@ -2398,8 +2398,8 @@ namespace ZCPM
       {
         // Yes, we have one or more, find them and evaluate them.  If any evaluate to false,
         // then we stop the emulation (typically to return to the debugger).
-        const auto range = m_debug_actions.equal_range(pc);
-        if (std::any_of(range.first, range.second, [pc](const auto& a) { return a.second->evaluate(pc) == false; }))
+        const auto [start, stop] = m_debug_actions.equal_range(pc);
+        if (std::any_of(start, stop, [pc](const auto& a) { return a.second->evaluate(pc) == false; }))
         {
           m_processor_observer.set_finished(true);
           goto stop_emulation; // NOLINT: imported 3rd-party code

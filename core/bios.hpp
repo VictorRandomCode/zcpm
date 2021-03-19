@@ -49,22 +49,21 @@ namespace ZCPM
 
     Disk m_disk;
 
-    // Where the current memory image has the start of the BIOS jump table
-    // which we determine by inspecting the WBOOT vector.
+    // Where the current memory image has the start of the BIOS jump table which we determine by inspecting the WBOOT
+    // vector.
     uint16_t m_discovered_base = 0; // Typically ends up being FC00
 
-    // Calculated relative to discovered BIOS base, this is the start of the address
-    // range where we point the set of BIOS vectors to jump to, and we intercept this
-    // address range at runtime
+    // Calculated relative to the discovered BIOS base, this is the start of the address range where we point the set of
+    // BIOS vectors to jump to, and we intercept this address range at runtime.
     uint16_t m_stubs_base = 0; // Typically ends up being FD00
 
-    // The highest address in the range of our BIOS "jump to" addresses
+    // The highest address in the range of our BIOS "jump to" addresses.
     uint16_t m_stubs_top = 0; // Typically ends up being FD62
 
     uint16_t m_dph_base = 0; // Base of the (single) DPH we create.
-    // TODO: We currently use a single DPH which means that we treat everything as one big disk.  But
-    // later on we may need to have multiple virtual disks, which means multiple DPH tables that all
-    // point to the same DPB.  Needs more thought and/or experiments.
+    // TODO: We currently use a single DPH which means that we treat everything as one big disk.  But later on we may
+    // need to have multiple virtual disks, which means multiple DPH tables that all point to the same DPB.  Needs more
+    // thought and/or experiments.
     uint16_t m_dph_top = 0; // Top address of DPH and related data structures
 
     uint16_t m_track = 0;    // Current track number on the current disk
