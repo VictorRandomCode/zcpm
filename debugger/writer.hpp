@@ -7,9 +7,9 @@
 
 namespace ZCPM
 {
-  class IDebuggable;
-  class Registers;
-  class System;
+    class IDebuggable;
+    class Registers;
+    class System;
 } // namespace ZCPM
 
 // A class which encapsulates the knowledge of how to display information for our machine, without having that
@@ -22,29 +22,29 @@ namespace ZCPM
 class Writer final
 {
 public:
-  Writer(const ZCPM::IDebuggable* p_debuggable, ZCPM::IMemory& memory, std::ostream& os);
+    Writer(const ZCPM::IDebuggable* p_debuggable, ZCPM::IMemory& memory, std::ostream& os);
 
-  // Display the current registers and the pending instruction
-  void examine() const;
+    // Display the current registers and the pending instruction
+    void examine() const;
 
-  // Display disassembly from PC onwards.
-  // start < 0 means to use PC, otherwise to use that actual address value
-  void list(int start, size_t instructions) const;
+    // Display disassembly from PC onwards.
+    // start < 0 means to use PC, otherwise to use that actual address value
+    void list(int start, size_t instructions) const;
 
-  // Display memory from PC onwards.
-  // start < 0 means to use PC, otherwise to use that actual address value
-  void dump(int start, size_t bytes) const;
+    // Display memory from PC onwards.
+    // start < 0 means to use PC, otherwise to use that actual address value
+    void dump(int start, size_t bytes) const;
 
 private:
-  // For displaying a line in a 'list' output
-  void display(uint16_t address, const std::string& s1, const std::string& s2) const;
+    // For displaying a line in a 'list' output
+    void display(uint16_t address, const std::string& s1, const std::string& s2) const;
 
-  // For displaying a line in an 'examine' output
-  void display(const ZCPM::Registers& registers, const std::string& s1, const std::string& s2) const;
+    // For displaying a line in an 'examine' output
+    void display(const ZCPM::Registers& registers, const std::string& s1, const std::string& s2) const;
 
-  std::string flags_to_string(uint8_t f) const;
+    std::string flags_to_string(uint8_t f) const;
 
-  const ZCPM::IDebuggable* m_pdebuggable;
-  ZCPM::IMemory& m_memory;
-  std::ostream& m_os;
+    const ZCPM::IDebuggable* m_pdebuggable;
+    ZCPM::IMemory& m_memory;
+    std::ostream& m_os;
 };

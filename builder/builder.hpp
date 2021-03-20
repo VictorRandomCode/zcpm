@@ -8,5 +8,5 @@
 // and return a ready-to-use machine instance.
 namespace ZCPM
 {
-  std::unique_ptr<ZCPM::System> build_machine(int argc, char** argv);
+    std::unique_ptr<ZCPM::System> build_machine(int argc, char** argv);
 }
