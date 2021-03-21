@@ -382,6 +382,10 @@ namespace ZCPM::Terminal
         {
             m_pending += std::string(1, ch);
         }
+        else if (ch == '\007') // Control-G aka Bell
+        {
+            ::beep();
+        }
         else // Anything else
         {
             // Make sure that a 7F is displayed as a space, for compatibility with our reference system

@@ -224,6 +224,31 @@ namespace ZCPM::Terminal
                 ::scrl(1);
             }
         }
+        else if (ch == '\010') // Control-H (Backspace?)
+        {
+            if (col > 0)
+            {
+                ::move(row, col - 1);
+            }
+            else if (row > 0)
+            {
+                ::move(row - 1, m_columns - 1);
+            }
+            else
+            {
+                // Unsure about this situation, needs experiments...
+                ::move(0, 0);
+            }
+        }
+        else if (ch == '\011') // Control-I (TAB?)
+        {
+            // TODO: Currently assuming standard 8 column tabs, this is too simplistic
+            if (col < m_columns)
+            {
+                const auto new_column = ((col + 1) / 8) * 8;
+                ::move(row, new_column);
+            }
+        }
         else if (ch == '\033') // ESC
         {
             m_pending += std::string(1, ch);
@@ -237,6 +262,10 @@ namespace ZCPM::Terminal
         else if (ch == '\016') // Control-N
         {
             // "Protect mode off" (zcpm doesn't (yet) implement protected mode anyway)
+        }
+        else if (ch == '\007') // Control-G aka Bell
+        {
+            ::beep();
         }
         else // Anything else
         {

@@ -134,3 +134,38 @@ The installed binary can then be run like this (depending on the selected emulat
     ~/path/to/runner --terminal=vt100 MP.COM
 
 Currently, better results are to be had with VT100 rather than Televideo.
+
+Nemesis
+-------
+
+A D&D style game, starting at http://www.retroarchive.org/cpm/games/games.htm download `nemesis.zip`
+
+Unzip that file into a new directory, and from there start things like this:
+
+    ~/path/to/runner --terminal=televideo termdef.com
+
+Set up a new `term.def`, setting up the system for a Televideo terminal and a CPU speed of 4 MHz. Then set up a character
+using this:
+
+    ~/path/to/runner --terminal=televideo person.com
+
+Assuming that you've named your new character as 'fred', start the game:
+
+    ~/path/to/runner --terminal=televideo nemesis.com fred
+
+This appears to work correctly. Refer to the PDF file in the zip contents for more information.
+
+dBase II
+--------
+
+From http://www.retroarchive.org/cpm/dbase/dbase.htm download `ashtonpak.zip`
+
+Unzip it into a new directory, and within that `cd` to `DBASE-II/CPM80/V2-41/D1` and then:
+
+    ~/path/to/runner INSTALL.COM
+
+Configure for a VT-100, and save the configuration.
+
+    ~/path/to/runner --terminal=vt100 DBASE.COM
+
+This appears to work as it should, based on my ancient memories of using dBase II!
