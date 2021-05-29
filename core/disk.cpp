@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <map>
 #include <string>
 #include <system_error>
 
@@ -77,8 +78,7 @@ namespace ZCPM
               m_size(std::filesystem::file_size(e)),
               m_sectors(std::min<size_t>(sectors, 0x0080)),
               m_extent(extent),
-              m_first_block(first_block),
-              m_modified(false) // At this point this entry does not exist in the host filesystem
+              m_first_block(first_block)
         {
         }
 

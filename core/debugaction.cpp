@@ -2,7 +2,6 @@
 #include <iostream>
 #include <memory>
 #include <ostream>
-#include <string>
 #include <utility>
 
 #include <boost/format.hpp>

@@ -3,12 +3,14 @@ cmake_minimum_required(VERSION 3.16)
 option(USE_TIDY "Enable clang's static analyser" OFF)
 option(USE_SANITISERS "Enable ASAN and UBSAN" OFF)
 option(USE_PROFILE "Enable profiling" OFF)
-option(USE_ANALYSER "Enable GCC10 static analyser" OFF)
+option(USE_ANALYSER "Enable GCC11 static analyser" OFF)
 
 # Typical invocations:
 #   cmake -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm
+# or for gcc via brew on macOS:
+#   cmake -D CMAKE_C_COMPILER=gcc-11 -D CMAKE_CXX_COMPILER=g++-11 ../zcpm
 # If needed, append e.g. -DUSE_SANITISERS=OFF or -DUSE_TIDY=ON or -DUSE_PROFILE=ON
-# Or to use gcc 10 analyser:
+# Or to use gcc 11 analyser:
 #   cmake -DUSE_ANALYSER=ON ../zcpm
 
 project(zcpm_project)

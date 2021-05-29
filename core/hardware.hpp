@@ -122,7 +122,7 @@ namespace ZCPM
 
         std::unique_ptr<Terminal::Terminal> m_pterminal;
 
-        std::array<uint8_t, 0x10000> m_memory;
+        std::array<uint8_t, 0x10000> m_memory{};
 
         bool m_finished = false;
 
