@@ -128,14 +128,8 @@ namespace ZCPM
     {
         ::memset(m_registers.byte, 0, sizeof(m_registers));
         ::memset(m_alternates, 0, sizeof(m_alternates));
-    }
 
-    void Processor::reset()
-    {
-        reg_af() = 0xffff;
-        reg_sp() = 0xffff;
-        m_i = m_pc = m_iff1 = m_iff2 = m_effective_pc = 0;
-        m_im = InterruptMode::IM0;
+        reset_state();
 
         /* Build register decoding tables for both 3-bit encoded 8-bit registers and 2-bit
          * encoded 16-bit registers. When an opcode is prefixed by 0xdd, HL is replaced by
@@ -188,6 +182,14 @@ namespace ZCPM
         m_fd_register_table[6] = &m_registers.word[Reg16::IY];
         m_fd_register_table[10] = &m_registers.word[Reg16::IY];
         m_fd_register_table[14] = &m_registers.word[Reg16::IY];
+    }
+
+    void Processor::reset_state()
+    {
+        reg_af() = 0xffff;
+        reg_sp() = 0xffff;
+        m_i = m_pc = m_iff1 = m_iff2 = m_effective_pc = 0;
+        m_im = InterruptMode::IM0;
     }
 
     size_t Processor::interrupt(uint8_t data_on_bus)

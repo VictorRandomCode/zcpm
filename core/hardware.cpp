@@ -124,7 +124,7 @@ namespace ZCPM
 
     void Hardware::reset()
     {
-        m_processor->reset();
+        m_processor->reset_state();
     }
 
     void Hardware::set_finished(bool finished)

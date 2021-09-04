@@ -40,7 +40,7 @@ namespace ZCPM
         ~Processor() = default;
 
         // Initialise processor's state to power-on default
-        void reset();
+        void reset_state();
 
         // Trigger an interrupt according to the current interrupt mode and return the number of cycles elapsed to
         // accept it. If maskable interrupts are disabled, this will return zero. In interrupt mode 0, data_on_bus must
@@ -51,9 +51,11 @@ namespace ZCPM
         size_t non_maskable_interrupt();
 
         // Execute instructions until completion or a breakpoint
+        // Returns the number of cycles consumed
         size_t emulate();
 
         // Execute a single instruction
+        // Returns the number of cycles consumed
         size_t emulate_instruction();
 
         // Individual read-only getters for registers
