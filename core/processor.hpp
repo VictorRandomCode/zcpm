@@ -163,10 +163,10 @@ namespace ZCPM
         [[nodiscard]] uint16_t& SS(int ss) const;
         [[nodiscard]] uint16_t& HL_IX_IY() const;
 
-        // Run until either a breakpoint or termination or elapsed_cycles (+emulated cycles) >= number_cycles.
-        // Using a 'number_cycles' value of zero is equivalent to emulating a single instruction.
-        // 'unbounded' means to ignore any cycle limits.
-        size_t emulate(uint8_t opcode, bool unbounded, size_t elapsed_cycles = 0, size_t number_cycles = 0);
+        // Run until either a breakpoint or termination or elapsed_cycles (+emulated cycles) >= max_cycles.
+        // Using a 'max_cycles' value of zero is equivalent to emulating a single instruction.
+        // 'unbounded' means to run continuously until a HALT or similar is encountered.
+        size_t emulate(uint8_t opcode, bool unbounded, size_t elapsed_cycles = 0, size_t max_cycles = 0);
 
         // Helper methods which were originally macros which accessed global data. As a result some of these have
         // somewhat ugly signatures & semantics, but that's because they're gradually being changed from macros which

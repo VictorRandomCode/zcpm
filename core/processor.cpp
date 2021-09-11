@@ -516,7 +516,7 @@ namespace ZCPM
         return *(static_cast<uint16_t*>(m_current_register_table[6]));
     }
 
-    size_t Processor::emulate(uint8_t opcode, bool unbounded, size_t elapsed_cycles, size_t number_cycles)
+    size_t Processor::emulate(uint8_t opcode, bool unbounded, size_t elapsed_cycles, size_t max_cycles)
     {
         uint16_t pc = m_pc;
         uint8_t r = m_r & 0x7f;
@@ -867,7 +867,7 @@ namespace ZCPM
                         break;
                     }
 
-                    if (unbounded || (elapsed_cycles < number_cycles))
+                    if (unbounded || (elapsed_cycles < max_cycles) || (max_cycles == 0))
                     {
                         continue;
                     }
@@ -945,7 +945,7 @@ namespace ZCPM
                         break;
                     }
 
-                    if (unbounded || (elapsed_cycles < number_cycles))
+                    if (unbounded || (elapsed_cycles < max_cycles) || (max_cycles == 0))
                     {
                         continue;
                     }
@@ -1306,9 +1306,9 @@ namespace ZCPM
                  * is generated. Basically nothing happens for the remaining number of cycles.
                  */
 
-                if (elapsed_cycles < number_cycles)
+                if (elapsed_cycles < max_cycles)
                 {
-                    elapsed_cycles = number_cycles;
+                    elapsed_cycles = max_cycles;
                 }
 
                 goto stop_emulation; // NOLINT: imported 3rd-party code
@@ -1319,13 +1319,13 @@ namespace ZCPM
                 m_iff1 = m_iff2 = 0;
 
                 /* No interrupt can be accepted right after a DI or EI instruction on an actual Z80
-                 * processor. By adding 4 cycles to number_cycles, at least one more instruction
+                 * processor. By adding 4 cycles to max_cycles, at least one more instruction
                  * will be executed. However, this will fail if the next instruction has multiple
                  * 0xdd or 0xfd prefixes and Z80_PREFIX_FAILSAFE is defined, but that is an
                  * unlikely pathological case.
                  */
 
-                number_cycles += 4;
+                max_cycles += 4;
                 break;
             }
 
@@ -1335,7 +1335,7 @@ namespace ZCPM
 
                 /* See comment for DI. */
 
-                number_cycles += 4;
+                max_cycles += 4;
                 break;
             }
 
@@ -2218,7 +2218,7 @@ namespace ZCPM
                         break;
                     }
 
-                    if (unbounded || (elapsed_cycles < number_cycles))
+                    if (unbounded || (elapsed_cycles < max_cycles) || (max_cycles == 0))
                     {
                         continue;
                     }
@@ -2308,7 +2308,7 @@ namespace ZCPM
                         break;
                     }
 
-                    if (unbounded || (elapsed_cycles < number_cycles))
+                    if (unbounded || (elapsed_cycles < max_cycles) || (max_cycles == 0))
                     {
                         continue;
                     }
@@ -2392,7 +2392,7 @@ namespace ZCPM
             }
 
             // Have we reached the specified maximum cycle count?
-            if (!unbounded && (elapsed_cycles >= number_cycles))
+            if (!unbounded && (elapsed_cycles >= max_cycles))
             {
                 goto stop_emulation; // NOLINT: imported 3rd-party code
             }
