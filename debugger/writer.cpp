@@ -179,11 +179,16 @@ namespace
         return { 0, (boost::format("?? CB %02X") % static_cast<unsigned short>(op2)).str(), "" };
     }
 
-    std::tuple<size_t, std::string, std::string> disassemble_dd(uint8_t op2, uint8_t op3, uint8_t /*op4*/)
+    std::tuple<size_t, std::string, std::string> disassemble_dd(uint8_t op2, uint8_t op3, uint8_t op4)
     {
         // First check for specific opcodes
         switch (op2)
         {
+        case 0x09: return { 2, "ADD", "IX,BC"};
+        case 0x19: return { 2, "ADD", "IX,DE"};
+        case 0x21: return { 2, "LD", "IX,"+(boost::format("%04X") % ((op3 << 8) | op4)).str()};
+        case 0x29: return { 2, "ADD", "IX,IX"};
+        case 0x39: return { 2, "ADD", "IX,SP"};
         case 0xE1: return { 2, "POP", "IX" };
         case 0xE5: return { 2, "PUSH", "IX" };
         default:
@@ -248,11 +253,16 @@ namespace
         return { 0, (boost::format("?? ED %02X") % static_cast<unsigned short>(op2)).str(), "" };
     }
 
-    std::tuple<size_t, std::string, std::string> disassemble_fd(uint8_t op2, uint8_t /*op3*/, uint8_t /*op4*/)
+    std::tuple<size_t, std::string, std::string> disassemble_fd(uint8_t op2, uint8_t op3, uint8_t op4)
     {
         // First check for specific opcodes
         switch (op2)
         {
+        case 0x09: return { 2, "ADD", "IY,BC"};
+        case 0x19: return { 2, "ADD", "IY,DE"};
+        case 0x21: return { 2, "LD", "IY,"+(boost::format("%04X") % ((op3 << 8) | op4)).str()};
+        case 0x29: return { 2, "ADD", "IY,IY"};
+        case 0x39: return { 2, "ADD", "IY,SP"};
         case 0xE1: return { 2, "POP", "IY" };
         case 0xE5: return { 2, "PUSH", "IY" };
         default:
@@ -296,6 +306,7 @@ namespace
         case 0x1A: return { 1, "LD", "A,(DE)" }; // Special case, can't use the usual lookups
         case 0x1F: return { 1, "RRA", "" };
         case 0x22: return { 3, "LD", nn_string(op2, op3, "HL") };
+        case 0x27: return { 1, "DAA", "" };
         case 0x2A: return { 3, "LD", string_nn(op2, op3, "HL") };
         case 0x2F: return { 1, "CPL", "" };
         case 0x32: return { 3, "LD", nn_string(op2, op3, "A") };
@@ -313,8 +324,10 @@ namespace
         case 0xDD: return disassemble_dd(op2, op3, op4);
         case 0xD6: return { 2, "SUB", byte(op2) };
         case 0xD9: return { 1, "EXX", "" };
+        case 0xDE: return { 2, "SBC", "A," + byte(op2)};
         case 0xE3: return { 1, "EX", "(SP),HL" };
         case 0xE6: return { 2, "AND", byte(op2) };
+        case 0xEE: return { 2, "XOR", byte(op2) };
         case 0xF3: return { 1, "DI", "" };
         case 0xF6: return { 2, "OR", byte(op2) };
         case 0xFB: return { 1, "EI", "" };
