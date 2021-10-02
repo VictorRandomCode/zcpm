@@ -1283,14 +1283,15 @@ namespace ZCPM
             case CCF:
             {
                 const uint8_t c = reg_f() & C_FLAG_MASK;
-                reg_f() = (reg_f() & SZPV_FLAG_MASK) | (c << H_FLAG_BIT) | (reg_a() & YX_FLAG_MASK) | (c ^ C_FLAG_MASK);
+                reg_f() = (reg_f() & (SZPV_FLAG_MASK | YX_FLAG_MASK)) | (c << H_FLAG_BIT) | (reg_a() & YX_FLAG_MASK) |
+                          (c ^ C_FLAG_MASK);
 
                 break;
             }
 
             case SCF:
             {
-                reg_f() = (reg_f() & SZPV_FLAG_MASK) | (reg_a() & YX_FLAG_MASK) | C_FLAG_MASK;
+                reg_f() = (reg_f() & (SZPV_FLAG_MASK | YX_FLAG_MASK)) | (reg_a() & YX_FLAG_MASK) | C_FLAG_MASK;
 
                 break;
             }
