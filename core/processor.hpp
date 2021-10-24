@@ -94,7 +94,9 @@ namespace ZCPM
         // Implementation of IDebuggable
 
         Registers get_registers() const override;
-        std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> get_opcodes_at(uint16_t pc, uint16_t offset) const override;
+        std::tuple<uint8_t, uint8_t, uint8_t, uint8_t, std::vector<uint8_t>> get_opcodes_at(
+            uint16_t pc,
+            uint16_t offset) const override;
         void add_action(std::unique_ptr<DebugAction> p_action) override;
         void show_actions(std::ostream& os) const override;
         bool remove_action(size_t index) override;

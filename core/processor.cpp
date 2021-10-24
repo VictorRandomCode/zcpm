@@ -103,19 +103,39 @@ namespace
     // reason it's not an 'enum class'.
 
     // clang-format off
-  enum Reg8
-  {
-    C, B, E, D, L, H, F, A,
-    IXL, IXH,
-    IYL, IYH,
-    // No 8-bit access to SP
-  };
-  enum Reg16
-  {
-    BC, DE, HL, AF,
-    IX, IY,
-    SP
-  };
+    enum Reg8
+    {
+        C, B, E, D, L, H, F, A,
+        IXL, IXH,
+        IYL, IYH,
+        // No 8-bit access to SP
+    };
+
+    enum Reg16
+    {
+        BC, DE, HL, AF,
+        IX, IY,
+        SP
+    };
+
+    const std::set<uint8_t> DdFdPrefixable = {
+        0x09,
+        0x19,
+        0x21, 0x22, 0x23, 0x24, 0x25, 0x26,             0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e,
+        0x34, 0x35, 0x36,             0x39,
+        0x44, 0x45, 0x46,                               0x4c, 0x4d, 0x4e,
+        0x54, 0x55, 0x56,                               0x5c, 0x5d, 0x5e,
+        0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+        0x70, 0x71, 0x72, 0x73, 0x74, 0x75,       0x77,                         0x7c, 0x7d, 0x7e,
+        0x84, 0x85, 0x86,                               0x8c, 0x8d, 0x8e,
+        0x94, 0x95, 0x96,                               0x9c, 0x9d, 0x9e,
+        0xa4, 0xa5, 0xa6,                               0xac, 0xad, 0xae,
+        0xb4, 0xb5, 0xb6,                               0xbc, 0xbd, 0xbe,
+        0xcb,
+        0xe1,       0xe3,       0xe5,                   0xe9,
+        0xf9
+    };
+
     // clang-format on
 
 } // namespace
@@ -429,13 +449,53 @@ namespace ZCPM
         return r;
     }
 
-    std::tuple<uint8_t, uint8_t, uint8_t, uint8_t> Processor::get_opcodes_at(uint16_t pc, uint16_t offset) const
+    std::tuple<uint8_t, uint8_t, uint8_t, uint8_t, std::vector<uint8_t>> Processor::get_opcodes_at(
+        uint16_t pc,
+        uint16_t offset) const
     {
-        const auto op1 = m_memory.read_byte(pc + offset + 0);
-        const auto op2 = m_memory.read_byte(pc + offset + 1);
-        const auto op3 = m_memory.read_byte(pc + offset + 2);
-        const auto op4 = m_memory.read_byte(pc + offset + 3);
-        return { op1, op2, op3, op4 };
+        // Find the first non-prefix byte from the requested position (ie, byte other than DD/FD)
+        std::vector<uint8_t> skipped;
+        uint16_t skip_count = 0;
+        uint8_t non_prefix_byte = 0;
+        while (pc + offset + skip_count <= 0xFFFF)
+        {
+            const auto b = m_memory.read_byte(pc + offset + skip_count);
+            if ((b == 0xDD) || (b == 0xFD))
+            {
+                ++skip_count;
+            }
+            else
+            {
+                non_prefix_byte = b;
+                break;
+            }
+        }
+
+        // Was there any DD/FD bytes at the start of the sequence?
+        if (skip_count)
+        {
+            // This means that pc+offset points at one or more DD/FD bytes
+            if (DdFdPrefixable.contains(non_prefix_byte))
+            {
+                // The use of DD/FD is valid, nothing to be ignored
+                skip_count = 0;
+            }
+            else
+            {
+                // The DD/FD sequence is invalid (they precede an opcode that doesn't "need" a prefix).
+                // Let the caller know about this DD/FD sequence.
+                for (auto i = 0; i < skip_count; i++)
+                {
+                    skipped.push_back(m_memory.read_byte(pc + offset + i));
+                }
+            }
+        }
+
+        const auto op1 = m_memory.read_byte(pc + offset + skip_count + 0);
+        const auto op2 = m_memory.read_byte(pc + offset + skip_count + 1);
+        const auto op3 = m_memory.read_byte(pc + offset + skip_count + 2);
+        const auto op4 = m_memory.read_byte(pc + offset + skip_count + 3);
+        return { op1, op2, op3, op4, skipped };
     }
 
     void Processor::add_action(std::unique_ptr<DebugAction> p_action)

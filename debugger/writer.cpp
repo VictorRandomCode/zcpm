@@ -17,6 +17,12 @@ namespace
     const std::array<const char*, 4> WordRegMask{ "BC", "DE", "HL", "SP" };
     const std::array<const char*, 4> WordRegMaskQq{ "BC", "DE", "HL", "AF" };
     const std::array<const char*, 8> CondMask{ "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
+    const std::array<const char*, 8> DDByteRegMask{ "B", "C", "D", "E", "IXH", "IXL", "(HL)", "A" };
+    const std::array<const char*, 8> FDByteRegMask{ "B", "C", "D", "E", "IYH", "IYL", "(HL)", "A" };
+    const std::map<uint8_t, const char*> DdFdCbLogicals = {
+        { 0x06, "RLC" }, { 0x0E, "RRC" }, { 0x16, "RL" },  { 0x1E, "RR" },
+        { 0x26, "SLA" }, { 0x2E, "SRA" }, { 0x36, "SLL" }, { 0x3E, "SRL" },
+    };
 
     // A 8-bit literal as a 2 digit hex string
     auto byte(uint8_t x)
@@ -28,6 +34,20 @@ namespace
     auto word(uint8_t low, uint8_t high)
     {
         return (boost::format("%04X") % (high << 8 | low)).str();
+    }
+
+    std::string byte_array_to_string(const std::vector<uint8_t>& bytes)
+    {
+        std::string result;
+        for (const auto& b : bytes)
+        {
+            if (!result.empty())
+            {
+                result += " ";
+            }
+            result += byte(b);
+        }
+        return "[" + result + "]";
     }
 
     // Dereference NN from (string)
@@ -154,6 +174,18 @@ namespace
         }
 
         // Now check for bytefields
+        if ((op2 & 0xC0) == 0x80)
+        {
+            const uint16_t b = (op2 >> 3) & 0x07;
+            const uint8_t r = op2 & 0x07;
+            return { 2, "RES", (boost::format("%d,") % b).str() + ByteRegMask[r] };
+        }
+        if ((op2 & 0xC0) == 0xC0)
+        {
+            const uint16_t b = (op2 >> 3) & 0x07;
+            const uint8_t r = op2 & 0x07;
+            return { 2, "SET", (boost::format("%d,") % b).str() + ByteRegMask[r] };
+        }
         if ((op2 & 0xF8) == 0x00)
         {
             const uint8_t r = op2 & 0x07;
@@ -164,10 +196,30 @@ namespace
             const uint8_t r = op2 & 0x07;
             return { 2, "RRC", ByteRegMask[r] };
         }
+        if ((op2 & 0xF8) == 0x10)
+        {
+            const uint8_t r = op2 & 0x07;
+            return { 2, "RL", ByteRegMask[r] };
+        }
         if ((op2 & 0xF8) == 0x18)
         {
             const uint8_t r = op2 & 0x07;
             return { 2, "RR", ByteRegMask[r] };
+        }
+        if ((op2 & 0xF8) == 0x20)
+        {
+            const uint8_t r = op2 & 0x07;
+            return { 2, "SLA", ByteRegMask[r] };
+        }
+        if ((op2 & 0xF8) == 0x28)
+        {
+            const uint8_t r = op2 & 0x07;
+            return { 2, "SRA", ByteRegMask[r] };
+        }
+        if ((op2 & 0xF8) == 0x30)
+        {
+            const uint8_t r = op2 & 0x07;
+            return { 2, "SLL", ByteRegMask[r] };
         }
         if ((op2 & 0xF8) == 0x38)
         {
@@ -179,37 +231,110 @@ namespace
         return { 0, (boost::format("?? CB %02X") % static_cast<unsigned short>(op2)).str(), "" };
     }
 
-    std::tuple<size_t, std::string, std::string> disassemble_dd(uint8_t op2, uint8_t op3, uint8_t op4)
+    std::tuple<size_t, std::string, std::string> disassemble_ddfd(const std::string& xy,
+                                                                  uint8_t op1,
+                                                                  uint8_t op2,
+                                                                  uint8_t op3,
+                                                                  uint8_t op4)
     {
         // First check for specific opcodes
         switch (op2)
         {
-        case 0x09: return { 2, "ADD", "IX,BC"};
-        case 0x19: return { 2, "ADD", "IX,DE"};
-        case 0x21: return { 2, "LD", "IX,"+(boost::format("%04X") % ((op3 << 8) | op4)).str()};
-        case 0x29: return { 2, "ADD", "IX,IX"};
-        case 0x39: return { 2, "ADD", "IX,SP"};
-        case 0xE1: return { 2, "POP", "IX" };
-        case 0xE5: return { 2, "PUSH", "IX" };
+        case 0x09: return { 2, "ADD", xy + ",BC" };
+        case 0x19: return { 2, "ADD", xy + ",DE" };
+        case 0x21: return { 2, "LD", (boost::format("%S,%04X") % xy % ((op4 << 8) | op3)).str() };
+        case 0x23: return { 2, "INC", xy };
+        case 0x24: return { 2, "INC", xy + "H" };
+        case 0x25: return { 2, "DEC", xy + "H" };
+        case 0x26: return { 2, "LD", (boost::format("%SH,%02X") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x29: return { 2, "ADD", xy + "," + xy };
+        case 0x2B: return { 2, "DEC", xy };
+        case 0x2C: return { 2, "INC", xy + "L" };
+        case 0x2D: return { 2, "DEC", xy + "L" };
+        case 0x2E: return { 2, "LD", (boost::format("%SL,%02X") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x34: return { 2, "INC", (boost::format("(IX+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x39: return { 2, "ADD", xy + ",SP" };
+        case 0xCB:
+        {
+            // TODO: move to a new method of its own? We'll see how well this scales...
+            if (DdFdCbLogicals.contains(op4))
+            {
+                return { 4,
+                         DdFdCbLogicals.at(op4),
+                         (boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+            }
+            else if ((op4 & 0xC0) == 0x80)
+            {
+                const auto b = (op4 >> 3) & 0x07;
+                return { 4,
+                         "RES",
+                         (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
+            }
+            else if ((op4 & 0xC0) == 0xC0)
+            {
+                const auto b = (op4 >> 3) & 0x07;
+                return { 4,
+                         "SET",
+                         (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
+            }
+            else
+            {
+                // Unimplemented sequence
+                const auto message = boost::format("Unimplemented %02X %02X %02X %02X") % static_cast<uint16_t>(op1) %
+                                     static_cast<uint16_t>(op2) % static_cast<uint16_t>(op3) %
+                                     static_cast<uint16_t>(op4);
+                throw std::logic_error(message.str());
+            }
+        }
+        case 0xE1: return { 2, "POP", xy };
+        case 0xE5: return { 2, "PUSH", xy };
         default:
             // Fall through to bytefield checks below
             break;
         }
 
         // Now check for bytefields
+        if ((op2 & 0xC0) == 0x40)
+        {
+            // Refer 'Undocumented Z80', page 24
+            const auto p1 = (op2 >> 3) & 0x07;
+            const auto p2 = op2 & 0x07;
+            const auto table = (op1 == 0xDD) ? DDByteRegMask : FDByteRegMask;
+            if (p1 == 0x06)
+            {
+                const auto lhs = boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3);
+                return { 3, "LD", lhs.str() + "," + std::string(ByteRegMask[p2]) };
+            }
+            else if (p2 == 0x06)
+            {
+                const auto rhs = boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3);
+                return { 3, "LD", std::string(ByteRegMask[p1]) + "," + rhs.str() };
+            }
+            else
+            {
+                return { 2, "LD", std::string(table[p1]) + "," + std::string(table[p2]) };
+            }
+        }
+        if ((op4 & 0xC0) == 0x40)
+        {
+            const auto b = (op4 >> 3) & 0x07;
+            return { 4, "BIT", (boost::format("%X,(%S+%02X)") % xy % b % static_cast<uint16_t>(op3)).str() };
+        }
         if ((op2 & 0xC7) == 0x46)
         {
             const uint8_t r = (op2 >> 3) & 0x07;
-            return { 3, "LD", r_ind_offset(r, "IX", op3) };
+            return { 3, "LD", r_ind_offset(r, xy, op3) };
         }
         if ((op2 & 0xF8) == 0x70)
         {
             const uint8_t r = op2 & 0x07;
-            return { 3, "LD", ind_offset_r(r, "IX", op3) };
+            return { 3, "LD", ind_offset_r(r, xy, op3) };
         }
 
-        // No match
-        return { 0, (boost::format("?? DD %02X") % static_cast<unsigned short>(op2)).str(), "" };
+        // Unimplemented sequence
+        const auto message = boost::format("Unimplemented %02X %02X %02X %02X") % static_cast<uint16_t>(op1) %
+                             static_cast<uint16_t>(op2) % static_cast<uint16_t>(op3) % static_cast<uint16_t>(op4);
+        throw std::logic_error(message.str());
     }
 
     std::tuple<size_t, std::string, std::string> disassemble_ed(uint8_t op2, uint8_t op3, uint8_t op4)
@@ -218,10 +343,16 @@ namespace
         switch (op2)
         {
         case 0x44: return { 2, "NEG", "" };
+        case 0x67: return { 2, "RRD", "" };
+        case 0x6F: return { 2, "RLD", "" };
         case 0xA0: return { 2, "LDI", "" };
+        case 0xA1: return { 2, "CPI", "" };
         case 0xA8: return { 2, "LDD", "" };
+        case 0xA9: return { 2, "CPD", "" };
         case 0xB0: return { 2, "LDIR", "" };
+        case 0xB1: return { 2, "CPIR", "" };
         case 0xB8: return { 2, "LDDR", "" };
+        case 0xB9: return { 2, "CPDR", "" };
         default:
             // Fall through to bytefield checks below
             break;
@@ -251,30 +382,6 @@ namespace
 
         // No match
         return { 0, (boost::format("?? ED %02X") % static_cast<unsigned short>(op2)).str(), "" };
-    }
-
-    std::tuple<size_t, std::string, std::string> disassemble_fd(uint8_t op2, uint8_t op3, uint8_t op4)
-    {
-        // First check for specific opcodes
-        switch (op2)
-        {
-        case 0x09: return { 2, "ADD", "IY,BC"};
-        case 0x19: return { 2, "ADD", "IY,DE"};
-        case 0x21: return { 2, "LD", "IY,"+(boost::format("%04X") % ((op3 << 8) | op4)).str()};
-        case 0x29: return { 2, "ADD", "IY,IY"};
-        case 0x39: return { 2, "ADD", "IY,SP"};
-        case 0xE1: return { 2, "POP", "IY" };
-        case 0xE5: return { 2, "PUSH", "IY" };
-        default:
-            // Fall through to bytefield checks below
-            break;
-        }
-
-        // Now check for bytefields
-        // TODO
-
-        // No match
-        return { 0, (boost::format("?? FD %02X") % static_cast<unsigned short>(op2)).str(), "" };
     }
 
     // Given 4 bytes at the current PC (plus the PC), returns two human-readable "words" of disassembly,
@@ -321,10 +428,10 @@ namespace
         case 0xCD: return { 3, "CALL", word(op2, op3) };
         case 0xCE: return { 2, "ADC", "A," + byte(op2) };
         case 0xD3: return { 2, "OUT", n_string(op2, "A") };
-        case 0xDD: return disassemble_dd(op2, op3, op4);
+        case 0xDD: return disassemble_ddfd("IX", op1, op2, op3, op4);
         case 0xD6: return { 2, "SUB", byte(op2) };
         case 0xD9: return { 1, "EXX", "" };
-        case 0xDE: return { 2, "SBC", "A," + byte(op2)};
+        case 0xDE: return { 2, "SBC", "A," + byte(op2) };
         case 0xE3: return { 1, "EX", "(SP),HL" };
         case 0xE6: return { 2, "AND", byte(op2) };
         case 0xEE: return { 2, "XOR", byte(op2) };
@@ -335,7 +442,7 @@ namespace
         case 0xEB: return { 1, "EX", "DE,HL" };
         case 0xED: return disassemble_ed(op2, op3, op4);
         case 0xF9: return { 1, "LD", "SP,HL" };
-        case 0xFD: return disassemble_fd(op2, op3, op4);
+        case 0xFD: return disassemble_ddfd("IY", op1, op2, op3, op4);
         case 0xFE: return { 2, "CP", byte(op2) };
         default:
             // Fall through to bytefield checks below
@@ -485,12 +592,28 @@ void Writer::examine() const
     m_memory.check_memory_accesses(false);
 
     const auto registers = m_pdebuggable->get_registers();
-    const auto [op1, op2, op3, op4] = m_pdebuggable->get_opcodes_at(registers.PC, 0);
-    auto [_, s1, s2] = disassemble(op1, op2, op3, op4, registers.PC);
+    const auto [op1, op2, op3, op4, skipped] = m_pdebuggable->get_opcodes_at(registers.PC, 0);
+    if (!skipped.empty())
+    {
+        display(registers, byte_array_to_string(skipped) + " SKIPPED", "");
+    }
+    const auto num_skipped = skipped.size();
 
-    display(registers, s1, s2);
+    try
+    {
+        const auto [_, s1, s2] = disassemble(op1, op2, op3, op4, registers.PC + num_skipped);
 
-    m_memory.check_memory_accesses(true);
+        display(registers, s1, s2, num_skipped);
+
+        m_memory.check_memory_accesses(true);
+    }
+    catch (const std::logic_error& e)
+    {
+        // A failure to parse; display enough information to help the maintainer:
+        // Memory content around the offending area, aligned on 16's
+        dump((registers.PC - 16) & 0xFFF0, 64);
+        throw;
+    }
 }
 
 void Writer::list(int start, size_t instructions) const
@@ -501,10 +624,16 @@ void Writer::list(int start, size_t instructions) const
     size_t offset = 0;
     for (size_t i = 0; i < instructions; ++i)
     {
-        const auto [op1, op2, op3, op4] = m_pdebuggable->get_opcodes_at(base, offset);
-        const auto [nbytes, s1, s2] = disassemble(op1, op2, op3, op4, registers.PC);
-        display(base + offset, s1, s2);
-        offset += nbytes;
+        const auto [op1, op2, op3, op4, skipped] = m_pdebuggable->get_opcodes_at(base, offset);
+        if (!skipped.empty())
+        {
+            display(registers, byte_array_to_string(skipped) + " SKIPPED", "");
+            offset += skipped.size();
+        }
+        const auto num_skipped = skipped.size();
+        const auto [nbytes, s1, s2] = disassemble(op1, op2, op3, op4, registers.PC + num_skipped);
+        display(base + offset + num_skipped, s1, s2);
+        offset += nbytes + num_skipped;
     }
 }
 
@@ -548,11 +677,14 @@ void Writer::display(uint16_t address, const std::string& s1, const std::string&
     m_os << boost::format("%04X     %-5s%s") % address % s1 % s2 << std::endl;
 }
 
-void Writer::display(const ZCPM::Registers& registers, const std::string& s1, const std::string& s2) const
+void Writer::display(const ZCPM::Registers& registers,
+                     const std::string& s1,
+                     const std::string& s2,
+                     const uint16_t offset) const
 {
     m_os << boost::format("%s A=%02X B=%04X D=%04X H=%04X S=%04X P=%04X  %-5s%s") %
                 flags_to_string(registers.AF & 0xFF) % static_cast<unsigned short>(registers.AF >> 8) % registers.BC %
-                registers.DE % registers.HL % registers.SP % registers.PC % s1 % s2;
+                registers.DE % registers.HL % registers.SP % ((registers.PC + offset) & 0xFFFF) % s1 % s2;
 
     m_os << std::endl;
     m_os << boost::format("%s '=%02X '=%04X '=%04X '=%04X X=%04X Y=%04X") % flags_to_string(registers.altAF & 0xFF) %
