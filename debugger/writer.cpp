@@ -242,18 +242,29 @@ namespace
         {
         case 0x09: return { 2, "ADD", xy + ",BC" };
         case 0x19: return { 2, "ADD", xy + ",DE" };
-        case 0x21: return { 2, "LD", (boost::format("%S,%04X") % xy % ((op4 << 8) | op3)).str() };
+        case 0x21: return { 4, "LD", (boost::format("%S,%04X") % xy % ((op4 << 8) | op3)).str() };
+        case 0x22: return { 4, "LD", (boost::format("(%04X),%S") % ((op4 << 8) | op3) % xy).str() };
         case 0x23: return { 2, "INC", xy };
         case 0x24: return { 2, "INC", xy + "H" };
         case 0x25: return { 2, "DEC", xy + "H" };
-        case 0x26: return { 2, "LD", (boost::format("%SH,%02X") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x26: return { 3, "LD", (boost::format("%SH,%02X") % xy % static_cast<uint16_t>(op3)).str() };
         case 0x29: return { 2, "ADD", xy + "," + xy };
+        case 0x2A: return { 4, "LD", (boost::format("%S,(%04X)") % xy % ((op4 << 8) | op3)).str() };
         case 0x2B: return { 2, "DEC", xy };
         case 0x2C: return { 2, "INC", xy + "L" };
         case 0x2D: return { 2, "DEC", xy + "L" };
-        case 0x2E: return { 2, "LD", (boost::format("%SL,%02X") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0x34: return { 2, "INC", (boost::format("(IX+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x2E: return { 3, "LD", (boost::format("%SL,%02X") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x34: return { 3, "INC", (boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x35: return { 3, "DEC", (boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x36:
+            return {
+                4,
+                "LD",
+                (boost::format("(%S+%02X),%02X") % xy % static_cast<uint16_t>(op3) % static_cast<uint16_t>(op4)).str()
+            };
         case 0x39: return { 2, "ADD", xy + ",SP" };
+        case 0x86: return { 3, "ADD", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x96: return { 3, "SUB", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
         case 0xCB:
         {
             // TODO: move to a new method of its own? We'll see how well this scales...
@@ -266,16 +277,17 @@ namespace
             else if ((op4 & 0xC0) == 0x80)
             {
                 const auto b = (op4 >> 3) & 0x07;
-                return { 4,
-                         "RES",
-                         (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
+                return { 4, "RES", (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
+            }
+            else if ((op4 & 0xC0) == 0x40)
+            {
+                const auto b = (op4 >> 3) & 0x07;
+                return { 4, "BIT", (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
             }
             else if ((op4 & 0xC0) == 0xC0)
             {
                 const auto b = (op4 >> 3) & 0x07;
-                return { 4,
-                         "SET",
-                         (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
+                return { 4, "SET", (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
             }
             else
             {
