@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace ZCPM
+namespace zcpm
 {
 
     // This data structure is returned when querying the hardware for the current status, typically for displaying by
@@ -36,4 +36,4 @@ namespace ZCPM
         }
     };
 
-} // namespace ZCPM
+} // namespace zcpm

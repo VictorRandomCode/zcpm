@@ -6,7 +6,7 @@
 
 // Based on command line arguments, set up the logger and then construct
 // and return a ready-to-use machine instance.
-namespace ZCPM
+namespace zcpm
 {
-    std::unique_ptr<ZCPM::System> build_machine(int argc, char** argv);
+    std::unique_ptr<zcpm::System> build_machine(int argc, char** argv);
 }

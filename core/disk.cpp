@@ -37,7 +37,7 @@ namespace
 
     static const inline uint16_t EntrySize = 0x0020;
     static const inline uint16_t BlockSize = 0x0800;
-    static const inline uint16_t SectorsPerBlock = BlockSize / ZCPM::Disk::SectorSize;
+    static const inline uint16_t SectorsPerBlock = BlockSize / zcpm::Disk::SectorSize;
 
     using Location = std::tuple<uint16_t, uint16_t>; // Track/Sector which identify a particular sector on the disk
 
@@ -46,8 +46,8 @@ namespace
     Location find_location_within_block(uint16_t block, uint16_t sector_offset)
     {
         const auto s = block * SectorsPerBlock + sector_offset;
-        const auto track_index = s / ZCPM::Disk::SectorSize;
-        const auto sector_index = s - track_index * ZCPM::Disk::SectorSize;
+        const auto track_index = s / zcpm::Disk::SectorSize;
+        const auto sector_index = s - track_index * zcpm::Disk::SectorSize;
         return { track_index, sector_index };
     }
 
@@ -55,15 +55,15 @@ namespace
     // (first sector is zero, second sector is one, etc)
     std::tuple<uint16_t, uint8_t> track_sector_to_block_and_offset(uint16_t track, uint16_t sector)
     {
-        const auto n = track * ZCPM::Disk::SectorSize + sector;
-        const auto block = n >> ZCPM::Disk::BSH;
-        const auto offset = n & ZCPM::Disk::BLM;
+        const auto n = track * zcpm::Disk::SectorSize + sector;
+        const auto block = n >> zcpm::Disk::BSH;
+        const auto offset = n & zcpm::Disk::BLM;
         return { block, offset };
     }
 
 } // namespace
 
-namespace ZCPM
+namespace zcpm
 {
 
     // A directory entry.  Keep in mind that a given file can have more than one entry.
@@ -662,4 +662,4 @@ namespace ZCPM
         mPrivate->write(buffer, track, sector);
     }
 
-} // namespace ZCPM
+} // namespace zcpm

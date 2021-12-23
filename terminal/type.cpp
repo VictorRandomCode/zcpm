@@ -5,7 +5,7 @@
 
 #include "type.hpp"
 
-namespace ZCPM::Terminal
+namespace zcpm::terminal
 {
     std::istream& operator>>(std::istream& in, Type& terminal)
     {
@@ -35,4 +35,4 @@ namespace ZCPM::Terminal
         return in;
     }
 
-} // namespace ZCPM::Terminal
+} // namespace zcpm::terminal

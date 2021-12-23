@@ -62,7 +62,7 @@ namespace
 
 } // namespace
 
-namespace ZCPM
+namespace zcpm
 {
 
     Fcb::Fcb() : m_u()
@@ -188,11 +188,11 @@ namespace ZCPM
 
         if (show_both_filenames)
         {
-            return (boost::format("\"%s\",\"%s\" %s") % name1 % name2 % numbers).str();
+            return (boost::format(R"("%s","%s" %s)") % name1 % name2 % numbers).str();
         }
         else
         {
-            return (boost::format("\"%s\" %s") % name1 % numbers).str();
+            return (boost::format(R"("%s" %s)") % name1 % numbers).str();
         }
     }
 
@@ -231,4 +231,4 @@ namespace ZCPM
         }
     }
 
-} // namespace ZCPM
+} // namespace zcpm

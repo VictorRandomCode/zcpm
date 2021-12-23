@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace ZCPM::Terminal
+namespace zcpm::terminal
 {
 
     class Terminal
@@ -40,4 +40,4 @@ namespace ZCPM::Terminal
         const int m_columns;
     };
 
-} // namespace ZCPM::Terminal
+} // namespace zcpm::terminal

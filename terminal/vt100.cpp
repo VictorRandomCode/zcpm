@@ -173,7 +173,7 @@ namespace
 
 } // namespace
 
-namespace ZCPM::Terminal
+namespace zcpm::terminal
 {
 
     Vt100::Vt100(int rows, int columns) : Terminal(rows, columns)
@@ -546,4 +546,4 @@ namespace ZCPM::Terminal
         }
     }
 
-} // namespace ZCPM::Terminal
+} // namespace zcpm::terminal

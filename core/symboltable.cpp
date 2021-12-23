@@ -11,7 +11,7 @@
 
 #include "symboltable.hpp"
 
-namespace ZCPM
+namespace zcpm
 {
 
     void SymbolTable::load(const std::string& filename, const std::string& prefix)
@@ -184,4 +184,4 @@ namespace ZCPM
         }
     }
 
-} // namespace ZCPM
+} // namespace zcpm

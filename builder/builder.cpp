@@ -16,7 +16,7 @@
 
 #include "builder.hpp"
 
-namespace ZCPM
+namespace zcpm
 {
 
     std::string home_plus(const std::string& addendum)
@@ -25,7 +25,7 @@ namespace ZCPM
         return value + "/" + addendum;
     }
 
-    std::unique_ptr<ZCPM::System> build_machine(int argc, char** argv)
+    std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
     {
         // Command line parameters and their defaults
         std::string logfile = "zcpm.log";
@@ -35,7 +35,7 @@ namespace ZCPM
         uint16_t bdos_file_base = 0xDC00;         // Where to load that binary image
         uint16_t wboot = 0xF203;                  // Address of WBOOT in loaded binary BDOS
         uint16_t fbase = 0xE406;                  // Address of FBASE in loaded binary BDOS
-        Terminal::Type terminal = Terminal::Type::PLAIN; // Terminal type
+        terminal::Type terminal = terminal::Type::PLAIN; // Terminal type
         int columns = 80;                                // Number of display columns
         int rows = 24;                                   // Number of display rows
         bool memcheck = true;                            // Enable RAM read/write checks?
@@ -53,7 +53,7 @@ namespace ZCPM
                 "bdosbase", po::value<uint16_t>(), "Base address for binary BDOS file")(
                 "wboot", po::value<uint16_t>(), "Address of WBOOT in loaded binary BDOS")(
                 "fbase", po::value<uint16_t>(), "Address of FBASE in loaded binary BDOS")(
-                "terminal", po::value<Terminal::Type>(), "Terminal type to emulate")(
+                "terminal", po::value<terminal::Type>(), "Terminal type to emulate")(
                 "columns", po::value<int>(), "Terminal column count")("rows", po::value<int>(), "Terminal row count")(
                 "memcheck", po::value<bool>(), "Enable memory access checks?")(
                 "logfile", po::value<std::string>(), "Name of logfile")(
@@ -90,7 +90,7 @@ namespace ZCPM
             }
             if (vm.count("terminal"))
             {
-                terminal = vm["terminal"].as<Terminal::Type>();
+                terminal = vm["terminal"].as<terminal::Type>();
             }
             if (vm.count("columns"))
             {
@@ -139,16 +139,16 @@ namespace ZCPM
         boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
 
         // Create the terminal emulation of choice
-        std::unique_ptr<Terminal::Terminal> p_terminal;
+        std::unique_ptr<terminal::Terminal> p_terminal;
         switch (terminal)
         {
-        case Terminal::Type::PLAIN: p_terminal = std::make_unique<Terminal::Plain>(rows, columns); break;
-        case Terminal::Type::VT100: p_terminal = std::make_unique<Terminal::Vt100>(rows, columns); break;
-        case Terminal::Type::TELEVIDEO: p_terminal = std::make_unique<Terminal::Televideo>(rows, columns); break;
+        case terminal::Type::PLAIN: p_terminal = std::make_unique<terminal::Plain>(rows, columns); break;
+        case terminal::Type::VT100: p_terminal = std::make_unique<terminal::Vt100>(rows, columns); break;
+        case terminal::Type::TELEVIDEO: p_terminal = std::make_unique<terminal::Televideo>(rows, columns); break;
         }
 
         // Put it all together
-        auto p_machine(std::make_unique<ZCPM::System>(std::move(p_terminal), memcheck, bdos_sym, user_sym));
+        auto p_machine(std::make_unique<zcpm::System>(std::move(p_terminal), memcheck, bdos_sym, user_sym));
 
         // The BDOS/CCP binary is built from Z80 source code which was reconstructed from a CP/M 2.2 disassembly plus a
         // tweak or two. The assembled binary is what is loaded here. ZCPM intercepts calls to the BIOS from the BDOS.
@@ -192,4 +192,4 @@ namespace ZCPM
         return p_machine;
     }
 
-} // namespace ZCPM
+} // namespace zcpm

@@ -4,7 +4,7 @@
 #include <map>
 #include <string>
 
-namespace ZCPM
+namespace zcpm
 {
 
     class SymbolTable final
@@ -40,4 +40,4 @@ namespace ZCPM
         std::multimap<uint16_t, std::tuple<std::string, std::string>> m_symbols;
     };
 
-} // namespace ZCPM
+} // namespace zcpm

@@ -12,9 +12,9 @@ namespace {
 
     // Define a local mock to assist with testing
 
-    struct Hardware : public ZCPM::IMemory, public ZCPM::IProcessorObserver
+    struct Hardware : public zcpm::IMemory, public zcpm::IProcessorObserver
     {
-        Hardware() : m_processor(std::make_unique<ZCPM::Processor>(*this, *this))
+        Hardware() : m_processor(std::make_unique<zcpm::Processor>(*this, *this))
         {
         }
 
@@ -169,7 +169,7 @@ namespace {
             return false; // TODO
         }
 
-        std::unique_ptr<ZCPM::Processor> m_processor;
+        std::unique_ptr<zcpm::Processor> m_processor;
 
         bool m_finished = false;
 
@@ -307,9 +307,9 @@ BOOST_AUTO_TEST_CASE(test_8bit_register_operations)
     // INC A of 0x00
     test_8bit_register_instruction(0x3C, 4, 0x00, 0x01, 0x00);
     // INC A of 0x7F
-    test_8bit_register_instruction(0x3C, 4, 0x7F, 0x80, ZCPM::Processor::S_FLAG_MASK | ZCPM::Processor::H_FLAG_MASK | ZCPM::Processor::PV_FLAG_MASK);
+    test_8bit_register_instruction(0x3C, 4, 0x7F, 0x80, zcpm::Processor::S_FLAG_MASK | zcpm::Processor::H_FLAG_MASK | zcpm::Processor::PV_FLAG_MASK);
     // INC A of 0xFF
-    test_8bit_register_instruction(0x3C, 4, 0xFF, 0x00, ZCPM::Processor::Z_FLAG_MASK | ZCPM::Processor::H_FLAG_MASK);
+    test_8bit_register_instruction(0x3C, 4, 0xFF, 0x00, zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::H_FLAG_MASK);
 
     // DEC A of 0x00
     test_8bit_register_instruction(0x3D, 4, 0x00, 0xFF, 0xBA); // TODO: Enumerate expected flags

@@ -6,7 +6,7 @@
 #include "imemory.hpp"
 #include "registers.hpp"
 
-namespace ZCPM::Bdos
+namespace zcpm::bdos
 {
 
     // Helper code for displaying BDOS information. Keep in mind that ZCPM does not *implement* BDOS code, just BIOS
@@ -16,4 +16,4 @@ namespace ZCPM::Bdos
     // Returns <FunctionName,Description>
     std::tuple<std::string, std::string> describe_call(const Registers& registers, const IMemory& memory);
 
-} // namespace ZCPM::Bdos
+} // namespace zcpm::bdos

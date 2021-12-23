@@ -12,10 +12,10 @@
 
 int main(int argc, char* argv[])
 {
-    std::unique_ptr<ZCPM::System> p_machine;
+    std::unique_ptr<zcpm::System> p_machine;
     try
     {
-        p_machine = ZCPM::build_machine(argc, argv);
+        p_machine = zcpm::build_machine(argc, argv);
     }
     catch (const std::exception& e)
     {

@@ -16,10 +16,10 @@
 #include "processor.hpp"
 #include "system.hpp"
 
-namespace ZCPM
+namespace zcpm
 {
 
-    System::System(std::unique_ptr<Terminal::Terminal> p_terminal,
+    System::System(std::unique_ptr<terminal::Terminal> p_terminal,
                    bool memcheck,
                    const std::string& bdos_sym,
                    const std::string& user_sym)
@@ -165,4 +165,4 @@ namespace ZCPM
         m_hardware.set_output_handler(handler);
     }
 
-} // namespace ZCPM
+} // namespace zcpm

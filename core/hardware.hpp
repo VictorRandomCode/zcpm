@@ -10,10 +10,10 @@
 #include "processor.hpp"
 #include "symboltable.hpp"
 
-namespace ZCPM
+namespace zcpm
 {
 
-    namespace Terminal
+    namespace terminal
     {
         class Terminal;
     }
@@ -26,7 +26,7 @@ namespace ZCPM
         , public IMemory
     {
     public:
-        Hardware(std::unique_ptr<Terminal::Terminal> p_terminal,
+        Hardware(std::unique_ptr<terminal::Terminal> p_terminal,
                  bool memcheck,
                  const std::string& bdos_sym = "",
                  const std::string& user_sym = "");
@@ -120,7 +120,7 @@ namespace ZCPM
         // Optional handler to call when we do a Z80 'OUT'
         OutputHandler m_output_handler;
 
-        std::unique_ptr<Terminal::Terminal> m_pterminal;
+        std::unique_ptr<terminal::Terminal> m_pterminal;
 
         std::array<uint8_t, 0x10000> m_memory{};
 
@@ -146,4 +146,4 @@ namespace ZCPM
         SymbolTable m_symbols;
     };
 
-} // namespace ZCPM
+} // namespace zcpm

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace ZCPM
+namespace zcpm
 {
 
     class IMemory
@@ -44,4 +44,4 @@ namespace ZCPM
         virtual void check_memory_accesses(bool protect) = 0;
     };
 
-} // namespace ZCPM
+} // namespace zcpm

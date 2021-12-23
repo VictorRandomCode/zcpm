@@ -24,10 +24,10 @@
 //   Scratchpads etc
 // m_dph_top
 
-namespace ZCPM
+namespace zcpm
 {
 
-    Bios::Bios(Hardware* p_hardware, Terminal::Terminal* p_terminal) : m_phardware(p_hardware), m_pterminal(p_terminal)
+    Bios::Bios(Hardware* p_hardware, terminal::Terminal* p_terminal) : m_phardware(p_hardware), m_pterminal(p_terminal)
     {
         const size_t table_size = 33; // As per "CP/M 3 System Guide", Table 2-1
 
@@ -411,4 +411,4 @@ namespace ZCPM
         BOOST_LOG_TRIVIAL(trace) << "  " << prefix << message << m_phardware->format_stack_info();
     }
 
-} // namespace ZCPM
+} // namespace zcpm

@@ -8,10 +8,10 @@
 #include "handlers.hpp"
 #include "hardware.hpp"
 
-namespace ZCPM
+namespace zcpm
 {
 
-    namespace Terminal
+    namespace terminal
     {
         class Terminal;
     }
@@ -19,7 +19,7 @@ namespace ZCPM
     class System final
     {
     public:
-        System(std::unique_ptr<Terminal::Terminal> p_terminal,
+        System(std::unique_ptr<terminal::Terminal> p_terminal,
                bool memcheck,
                const std::string& bdos_sym = "",
                const std::string& user_sym = "");
@@ -58,4 +58,4 @@ namespace ZCPM
         Hardware m_hardware;
     };
 
-} // namespace ZCPM
+} // namespace zcpm

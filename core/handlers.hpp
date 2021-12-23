@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <functional>
 
-namespace ZCPM
+namespace zcpm
 {
 
     class Hardware;
@@ -14,4 +14,4 @@ namespace ZCPM
     /// For the Z80 'OUT' instruction
     using OutputHandler = std::function<void(Hardware&, int, uint8_t)>;
 
-} // namespace ZCPM
+} // namespace zcpm

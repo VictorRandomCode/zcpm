@@ -4,7 +4,7 @@
 
 #include "fcb.hpp"
 
-namespace ZCPM::Bdos
+namespace zcpm::bdos
 {
 
     namespace
@@ -178,4 +178,4 @@ namespace ZCPM::Bdos
         }
     }
 
-} // namespace ZCPM::Bdos
+} // namespace zcpm::bdos

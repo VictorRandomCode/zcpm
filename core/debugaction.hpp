@@ -5,7 +5,7 @@
 #include <ostream>
 #include <string>
 
-namespace ZCPM
+namespace zcpm
 {
 
     class DebugAction
@@ -75,4 +75,4 @@ namespace ZCPM
         mutable uint16_t m_remaining;
     };
 
-} // namespace ZCPM
+} // namespace zcpm

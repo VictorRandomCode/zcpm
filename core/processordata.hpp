@@ -9,7 +9,7 @@
 // are defined in this header to make maintenance easier; this header content should very rarely need changes,
 // whereas changes to processor.cpp are more likely.
 
-namespace ZCPM
+namespace zcpm
 {
 
     inline static const std::array<uint8_t, 256> INSTRUCTION_TABLE = {
@@ -388,4 +388,4 @@ namespace ZCPM
         0xac, 0xa8, 0xa8, 0xac,
     };
 
-} // namespace ZCPM
+} // namespace zcpm

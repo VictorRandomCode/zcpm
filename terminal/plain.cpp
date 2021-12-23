@@ -7,7 +7,7 @@
 
 #include "plain.hpp"
 
-namespace ZCPM::Terminal
+namespace zcpm::terminal
 {
 
     Plain::Plain(int rows, int columns) : Terminal(rows, columns)
@@ -84,4 +84,4 @@ namespace ZCPM::Terminal
         std::cout.flush();
     }
 
-} // namespace ZCPM::Terminal
+} // namespace zcpm::terminal

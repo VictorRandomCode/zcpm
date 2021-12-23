@@ -4,7 +4,7 @@
 
 #include "terminal.hpp"
 
-namespace ZCPM::Terminal
+namespace zcpm::terminal
 {
 
     // This is a "pass-through" terminal emulation; it doesn't attempt to interpret any specific escape sequences, just
@@ -37,4 +37,4 @@ namespace ZCPM::Terminal
         void put_char(char ch) override;
     };
 
-} // namespace ZCPM::Terminal
+} // namespace zcpm::terminal

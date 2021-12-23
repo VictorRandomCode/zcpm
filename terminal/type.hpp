@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ZCPM::Terminal
+namespace zcpm::terminal
 {
     enum class Type
     {
@@ -11,4 +11,4 @@ namespace ZCPM::Terminal
 
     std::istream& operator>>(std::istream& in, Type& terminal);
 
-} // namespace ZCPM::Terminal
+} // namespace zcpm::terminal

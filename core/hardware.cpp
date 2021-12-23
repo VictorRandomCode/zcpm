@@ -45,10 +45,10 @@ namespace
 
 } // namespace
 
-namespace ZCPM
+namespace zcpm
 {
 
-    Hardware::Hardware(std::unique_ptr<Terminal::Terminal> p_terminal,
+    Hardware::Hardware(std::unique_ptr<terminal::Terminal> p_terminal,
                        bool memcheck,
                        const std::string& bdos_sym,
                        const std::string& user_sym)
@@ -154,7 +154,7 @@ namespace ZCPM
             {
                 // "Parse" the pending BDOS call into various bits of useful information
                 const auto registers = m_processor->get_registers();
-                const auto [bdos_name, description] = Bdos::describe_call(registers, *this);
+                const auto [bdos_name, description] = bdos::describe_call(registers, *this);
 
                 // Log the information
                 BOOST_LOG_TRIVIAL(trace) << "BDOS: " << bdos_name << format_stack_info();
@@ -527,4 +527,4 @@ namespace ZCPM
         return result;
     }
 
-} // namespace ZCPM
+} // namespace zcpm

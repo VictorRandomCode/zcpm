@@ -5,10 +5,10 @@
 
 #include "disk.hpp"
 
-namespace ZCPM
+namespace zcpm
 {
 
-    namespace Terminal
+    namespace terminal
     {
         class Terminal;
     }
@@ -17,7 +17,7 @@ namespace ZCPM
     class Bios final
     {
     public:
-        Bios(Hardware* p_hardware, Terminal::Terminal* p_terminal);
+        Bios(Hardware* p_hardware, terminal::Terminal* p_terminal);
 
         ~Bios();
 
@@ -45,7 +45,7 @@ namespace ZCPM
 
         Hardware* m_phardware;
 
-        Terminal::Terminal* m_pterminal;
+        terminal::Terminal* m_pterminal;
 
         Disk m_disk;
 
@@ -71,4 +71,4 @@ namespace ZCPM
         uint16_t m_dma = 0x0080; // Address of the DMA buffer
     };
 
-} // namespace ZCPM
+} // namespace zcpm

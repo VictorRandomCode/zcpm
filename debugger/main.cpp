@@ -76,7 +76,7 @@ namespace
     }
 
     // Assuming payload is of the form either "foo1+17a,32b" or "123"
-    std::unique_ptr<ZCPM::DebugAction> parse_and_create_debug_action(ZCPM::System* p_machine,
+    std::unique_ptr<zcpm::DebugAction> parse_and_create_debug_action(zcpm::System* p_machine,
                                                                      const std::string& type,
                                                                      const std::string& payload)
     {
@@ -104,12 +104,12 @@ namespace
         }
 
         // Create the breakpoint/passpoint/watchpoint
-        std::unique_ptr<ZCPM::DebugAction> result;
+        std::unique_ptr<zcpm::DebugAction> result;
         if (type == "breakpoint")
         {
             if (count_string.empty())
             {
-                result = ZCPM::DebugAction::create(ZCPM::DebugAction::Type::BREAKPOINT, a, location_string);
+                result = zcpm::DebugAction::create(zcpm::DebugAction::Type::BREAKPOINT, a, location_string);
             }
             else
             {
@@ -125,14 +125,14 @@ namespace
             else
             {
                 result =
-                    ZCPM::DebugAction::create(ZCPM::DebugAction::Type::PASSPOINT, a, location_string, count_string);
+                    zcpm::DebugAction::create(zcpm::DebugAction::Type::PASSPOINT, a, location_string, count_string);
             }
         }
         else if (type == "watchpoint")
         {
             if (count_string.empty())
             {
-                result = ZCPM::DebugAction::create(ZCPM::DebugAction::Type::WATCHPOINT, a, location_string);
+                result = zcpm::DebugAction::create(zcpm::DebugAction::Type::WATCHPOINT, a, location_string);
             }
             else
             {
@@ -255,7 +255,7 @@ namespace
         return true;
     }
 
-    auto run(Writer& writer, ZCPM::System* p_machine, ZCPM::IDebuggable* p_debuggable)
+    auto run(Writer& writer, zcpm::System* p_machine, zcpm::IDebuggable* p_debuggable)
     {
         const std::vector<Command> commands{
             Command{ { "clear" },
@@ -285,7 +285,7 @@ namespace
                      replxx::Replxx::Color::DEFAULT,
                      [&writer](const TokenVector& input) {
                          const auto base = std::strtoul(input[1].c_str(), nullptr, 16);
-                         auto count = 12;
+                         auto count = 12u;
                          if (input.size() > 2)
                          {
                              count = std::strtoul(input[2].c_str(), nullptr, 16);
@@ -491,10 +491,10 @@ namespace
 
 int main(int argc, char* argv[])
 {
-    std::unique_ptr<ZCPM::System> p_machine;
+    std::unique_ptr<zcpm::System> p_machine;
     try
     {
-        p_machine = ZCPM::build_machine(argc, argv);
+        p_machine = zcpm::build_machine(argc, argv);
     }
     catch (const std::exception& e)
     {

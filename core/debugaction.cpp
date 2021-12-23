@@ -9,7 +9,7 @@
 
 #include "debugaction.hpp"
 
-namespace ZCPM
+namespace zcpm
 {
 
     inline const std::string FACILITY("DEBUG");
@@ -121,4 +121,4 @@ namespace ZCPM
             .str();
     }
 
-} // namespace ZCPM
+} // namespace zcpm

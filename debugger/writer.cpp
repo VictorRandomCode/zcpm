@@ -593,7 +593,7 @@ namespace
     }
 } // namespace
 
-Writer::Writer(const ZCPM::IDebuggable* p_debuggable, ZCPM::IMemory& memory, std::ostream& os)
+Writer::Writer(const zcpm::IDebuggable* p_debuggable, zcpm::IMemory& memory, std::ostream& os)
     : m_pdebuggable(p_debuggable), m_memory(memory), m_os(os)
 {
     BOOST_ASSERT(p_debuggable);
@@ -689,7 +689,7 @@ void Writer::display(uint16_t address, const std::string& s1, const std::string&
     m_os << boost::format("%04X     %-5s%s") % address % s1 % s2 << std::endl;
 }
 
-void Writer::display(const ZCPM::Registers& registers,
+void Writer::display(const zcpm::Registers& registers,
                      const std::string& s1,
                      const std::string& s2,
                      const uint16_t offset) const
@@ -709,27 +709,27 @@ std::string Writer::flags_to_string(uint8_t f) const
 {
     std::string result("------");
 
-    if (f & ZCPM::Processor::C_FLAG_MASK)
+    if (f & zcpm::Processor::C_FLAG_MASK)
     {
         result[0] = 'C';
     }
-    if (f & ZCPM::Processor::N_FLAG_MASK)
+    if (f & zcpm::Processor::N_FLAG_MASK)
     {
         result[1] = 'S';
     }
-    if (f & ZCPM::Processor::PV_FLAG_MASK)
+    if (f & zcpm::Processor::PV_FLAG_MASK)
     {
         result[2] = 'E';
     }
-    if (f & ZCPM::Processor::H_FLAG_MASK)
+    if (f & zcpm::Processor::H_FLAG_MASK)
     {
         result[3] = 'F';
     }
-    if (f & ZCPM::Processor::Z_FLAG_MASK)
+    if (f & zcpm::Processor::Z_FLAG_MASK)
     {
         result[4] = 'Z';
     }
-    if (f & ZCPM::Processor::S_FLAG_MASK)
+    if (f & zcpm::Processor::S_FLAG_MASK)
     {
         result[5] = 'M';
     }

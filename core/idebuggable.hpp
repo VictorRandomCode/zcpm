@@ -4,7 +4,7 @@
 #include <memory>
 #include <ostream>
 
-namespace ZCPM
+namespace zcpm
 {
 
     class DebugAction;
@@ -36,4 +36,4 @@ namespace ZCPM
         virtual bool remove_action(size_t index) = 0;
     };
 
-} // namespace ZCPM
+} // namespace zcpm

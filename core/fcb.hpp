@@ -6,7 +6,7 @@
 
 #include "imemory.hpp"
 
-namespace ZCPM
+namespace zcpm
 {
 
     class Fcb final
@@ -66,4 +66,4 @@ namespace ZCPM
         U m_u;
     };
 
-} // namespace ZCPM
+} // namespace zcpm

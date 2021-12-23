@@ -52,14 +52,14 @@ namespace
 
     // Additional bitmasks for convenience
     const uint8_t SZC_FLAG_MASK =
-        ZCPM::Processor::S_FLAG_MASK | ZCPM::Processor::Z_FLAG_MASK | ZCPM::Processor::C_FLAG_MASK;
-    const uint8_t YX_FLAG_MASK = ZCPM::Processor::Y_FLAG_MASK | ZCPM::Processor::X_FLAG_MASK;
-    const uint8_t SZ_FLAG_MASK = ZCPM::Processor::S_FLAG_MASK | ZCPM::Processor::Z_FLAG_MASK;
+        zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::C_FLAG_MASK;
+    const uint8_t YX_FLAG_MASK = zcpm::Processor::Y_FLAG_MASK | zcpm::Processor::X_FLAG_MASK;
+    const uint8_t SZ_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK;
     const uint8_t SZPV_FLAG_MASK =
-        ZCPM::Processor::S_FLAG_MASK | ZCPM::Processor::Z_FLAG_MASK | ZCPM::Processor::PV_FLAG_MASK;
+        zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::PV_FLAG_MASK;
     const uint8_t SYX_FLAG_MASK =
-        ZCPM::Processor::S_FLAG_MASK | ZCPM::Processor::Y_FLAG_MASK | ZCPM::Processor::X_FLAG_MASK;
-    const uint8_t HC_FLAG_MASK = ZCPM::Processor::H_FLAG_MASK | ZCPM::Processor::C_FLAG_MASK;
+        zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Y_FLAG_MASK | zcpm::Processor::X_FLAG_MASK;
+    const uint8_t HC_FLAG_MASK = zcpm::Processor::H_FLAG_MASK | zcpm::Processor::C_FLAG_MASK;
 
     /* Indirect (HL) or prefixed indexed (IX + d) and (IY + d) memory operands are
      * encoded using the 3 bits "110" (0x06).
@@ -71,14 +71,14 @@ namespace
      */
 
     const std::array<uint8_t, 8> XOR_CONDITION_TABLE{
-        ZCPM::Processor::Z_FLAG_MASK,  0, ZCPM::Processor::C_FLAG_MASK, 0,
-        ZCPM::Processor::PV_FLAG_MASK, 0, ZCPM::Processor::S_FLAG_MASK, 0,
+        zcpm::Processor::Z_FLAG_MASK,  0, zcpm::Processor::C_FLAG_MASK, 0,
+        zcpm::Processor::PV_FLAG_MASK, 0, zcpm::Processor::S_FLAG_MASK, 0,
     };
 
     const std::array<uint8_t, 8> AND_CONDITION_TABLE{
-        ZCPM::Processor::Z_FLAG_MASK, ZCPM::Processor::Z_FLAG_MASK,  ZCPM::Processor::C_FLAG_MASK,
-        ZCPM::Processor::C_FLAG_MASK, ZCPM::Processor::PV_FLAG_MASK, ZCPM::Processor::PV_FLAG_MASK,
-        ZCPM::Processor::S_FLAG_MASK, ZCPM::Processor::S_FLAG_MASK,
+        zcpm::Processor::Z_FLAG_MASK, zcpm::Processor::Z_FLAG_MASK,  zcpm::Processor::C_FLAG_MASK,
+        zcpm::Processor::C_FLAG_MASK, zcpm::Processor::PV_FLAG_MASK, zcpm::Processor::PV_FLAG_MASK,
+        zcpm::Processor::S_FLAG_MASK, zcpm::Processor::S_FLAG_MASK,
     };
 
     /* RST instruction restart addresses, encoded by Y() bits of the opcode. */
@@ -93,8 +93,8 @@ namespace
 
     const std::array<uint8_t, 4> OVERFLOW_TABLE{
         0,
-        ZCPM::Processor::PV_FLAG_MASK,
-        ZCPM::Processor::PV_FLAG_MASK,
+        zcpm::Processor::PV_FLAG_MASK,
+        zcpm::Processor::PV_FLAG_MASK,
         0,
     };
 
@@ -140,7 +140,7 @@ namespace
 
 } // namespace
 
-namespace ZCPM
+namespace zcpm
 {
 
     Processor::Processor(IMemory& memory, IProcessorObserver& processor_observer)
@@ -2691,4 +2691,4 @@ namespace ZCPM
         reg_f() = SZYXP_FLAGS_TABLE[x & 0xff] | c;
     }
 
-} // namespace ZCPM
+} // namespace zcpm

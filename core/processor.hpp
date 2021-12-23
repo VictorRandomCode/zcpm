@@ -9,7 +9,7 @@
 #include "idebuggable.hpp"
 #include "imemory.hpp"
 
-namespace ZCPM
+namespace zcpm
 {
 
     class Registers;
@@ -210,4 +210,4 @@ namespace ZCPM
         std::multimap<uint16_t, std::unique_ptr<DebugAction>> m_debug_actions;
     };
 
-} // namespace ZCPM
+} // namespace zcpm

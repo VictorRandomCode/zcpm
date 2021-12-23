@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 
-namespace ZCPM
+namespace zcpm
 {
 
     class Disk final
@@ -37,4 +37,4 @@ namespace ZCPM
         std::unique_ptr<Private> mPrivate;
     };
 
-} // namespace ZCPM
+} // namespace zcpm

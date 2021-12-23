@@ -4,7 +4,7 @@
 
 #include "terminal.hpp"
 
-namespace ZCPM::Terminal
+namespace zcpm::terminal
 {
 
     class Vt100 final : public Terminal
@@ -49,4 +49,4 @@ namespace ZCPM::Terminal
         std::string m_pending;
     };
 
-} // namespace ZCPM::Terminal
+} // namespace zcpm::terminal
