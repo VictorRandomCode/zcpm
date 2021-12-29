@@ -8,7 +8,7 @@ namespace zcpm
 
     class Hardware;
 
-    /// For Z80 the 'IN' instruction
+    /// For the Z80 'IN' instruction
     using InputHandler = std::function<uint8_t(Hardware&, int)>;
 
     /// For the Z80 'OUT' instruction

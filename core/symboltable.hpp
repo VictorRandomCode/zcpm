@@ -23,10 +23,9 @@ namespace zcpm
         // terms of known symbols.
         std::string describe(uint16_t a) const;
 
-        // Try to evaluate an expression such as 'foo1' where 'foo1' is a known label
-        // or perhaps 'foo2+23'.  Note that all values are hexadecimal.  Returns a
-        // (success,value) pair, success=false means an evaluation failure.  Note that
-        // this is not a full expression evaluator, it is VERY simplistic, sufficient
+        // Try to evaluate an expression such as 'foo1' where 'foo1' is a known label or perhaps 'foo2+23'.
+        // All values are hexadecimal. Returns a (success,value) pair, success=false means an evaluation
+        // failure. Note that this is not a full expression evaluator, it is VERY simplistic, sufficient
         // for our most common use cases.
         std::tuple<bool, uint16_t> evaluate_address_expression(const std::string& s) const;
 

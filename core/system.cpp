@@ -34,8 +34,8 @@ namespace zcpm
         // Set up the key vectors
         m_hardware.set_fbase_and_wboot(fbase, wboot);
 
-        // Call the BIOS 'BOOT' & 'WBOOT' functions so that the various BIOS data structures get initialised
-        // before we try to load a user executable
+        // Call the BIOS 'BOOT' & 'WBOOT' functions so that the various BIOS data structures are initialised
+        // before loading a user executable
         m_hardware.call_bios_boot();
     }
 
@@ -43,7 +43,7 @@ namespace zcpm
     {
         m_hardware.check_memory_accesses(false);
 
-        // Call BDOS:RSTDSK so that disk data structures get initialised
+        // Call BDOS:RSTDSK so that disk data structures are initialised
         const auto rstdsk = 13;
         BOOST_LOG_TRIVIAL(trace) << "Directly calling BDOS fn#" << rstdsk;
         m_hardware.call_bdos(rstdsk);
@@ -67,9 +67,9 @@ namespace zcpm
         BOOST_LOG_TRIVIAL(trace) << "Reading " << filesize << " bytes into memory at " << boost::format("%04X") % base
                                  << " from " << filename;
 
-        // Ideally we'd fread() directly into the memory buffer, but to do that means
-        // we have to couple things more than is safe, so instead we use a temporary buffer
-        // here, which increases the peak RAM of this process.
+        // Ideally we'd fread() directly into the memory buffer, but to do that means having more coupling
+        // than is safe, so instead a temporary buffer is used here, which increases the peak RAM of this
+        // process.
         std::vector<uint8_t> buf(filesize, 0);
 
         std::fread(buf.data(), 1, buf.size(), fp);
@@ -98,7 +98,7 @@ namespace zcpm
         m_hardware.copy_to_ram(fcb.get(), fcb.size(), fcb_base);
 
         const uint16_t command_tail_base = 0x0080;
-        // And set up the command tail at 0x0080; for each parameter we have one leading space
+        // Set up the command tail at 0x0080; for each parameter there is a leading space
         // plus the parameter itself.  The parameters are stored as uppercase, and experiments
         // show that they are always followed by a single null byte (not sure if that
         // matters, but just in case...)
@@ -123,7 +123,7 @@ namespace zcpm
         m_hardware.reset();
         m_hardware.m_processor->reg_pc() = 0x0100; // Standard CP/M start address for loaded binaries
 
-        // Set the stack such that a RET from the end of the loaded binary will cause us to
+        // Set the stack such that a RET from the end of the loaded binary will cause a
         // jump to 00000 hence abort.
 
         // Note that the "CP/M 2.2 Operating System Manual" says that "upon entry to a transient

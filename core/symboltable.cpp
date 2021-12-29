@@ -29,9 +29,8 @@ namespace zcpm
         std::string s;
         while (std::getline(file, s))
         {
-            // We assume each line is in the format 'FOO: equ $1234'
-            // So we assume that anything to the left of the colon is the label,
-            // and anything to the right of the $ is the value in hex.
+            // Assume that each line is in the format 'FOO: equ $1234'. So anything to the left
+            // of the colon is the label and anything to the right of the $ is the value in hex.
             const auto colon = s.find_first_of(':');
             const auto dollar = s.find_last_of('$');
 
@@ -61,7 +60,7 @@ namespace zcpm
     std::string SymbolTable::describe(uint16_t a) const
     {
         // We rely on the map being keyed by address of each symbol, and the keys are in ascending order.
-        // So we search backwards until we reach the address of interest (or the closest one just before),
+        // So search backwards until we reach the address of interest (or the closest one just before),
         // and use that symbol as the return string.
 
         for (auto it = m_symbols.rbegin(); it != m_symbols.rend(); it++)
@@ -79,7 +78,7 @@ namespace zcpm
     std::tuple<bool, uint16_t> SymbolTable::evaluate_address_expression(const std::string& s) const
     {
         // The supplied string could be something like "foo1+17a" where 'foo1' is in the symbol table
-        // and 17a is a hex offset from that symbol.  Or it could be "foo2" where we use the unmodified
+        // and 17a is a hex offset from that symbol. Or it could be "foo2" where we use the unmodified
         // value of the 'foo2' symbol.
 
         // So we'll use this regex: ([A-Za-z0-9]+)(?:([+-])([A-Fa-f0-9]+))?
@@ -107,7 +106,7 @@ namespace zcpm
         const auto& opr(expression_match[2].str());
         const auto& offset_string(expression_match[3].str());
 
-        // Do we have an operator & offset?  (these are optional)
+        // Do we have an operator & offset? (these are optional)
         if ((opr.empty() && !offset_string.empty()) || (!opr.empty() && offset_string.empty()))
         {
             BOOST_LOG_TRIVIAL(trace) << "Can't parse '" << s << "' (2)";

@@ -49,7 +49,7 @@ namespace zcpm::bdos
     std::tuple<std::string, std::string> describe_call(const Registers& registers, const IMemory& memory)
     {
         // Register C indicates *which* BDOS call is being made
-        const auto c = Registers::lowbyte(registers.BC);
+        const auto c = Registers::low_byte_of(registers.BC);
 
         const auto prefix = (boost::format("fn#%d ") % static_cast<unsigned short>(c)).str();
 
@@ -60,7 +60,7 @@ namespace zcpm::bdos
         case 1: return { prefix + "C_READ", "Console input" };
         case 2:
         {
-            char ch = Registers::lowbyte(registers.DE);
+            char ch = Registers::low_byte_of(registers.DE);
             auto description = (boost::format("Console output '%c' (ASCII 0x%02X)") % (std::isprint(ch) ? ch : '?') %
                                 static_cast<unsigned short>(ch))
                                    .str();
@@ -148,7 +148,7 @@ namespace zcpm::bdos
         case 31: return { prefix + "DRV_DPB", "Get addr(diskparams)" };
         case 32:
         {
-            auto e = Registers::lowbyte(registers.DE);
+            auto e = Registers::low_byte_of(registers.DE);
             auto description =
                 (boost::format("(E=%02X means '%s')") % static_cast<unsigned short>(e) % ((e == 0xFF) ? "get" : "set"))
                     .str();

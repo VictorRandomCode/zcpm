@@ -389,16 +389,13 @@ namespace zcpm
 
     std::string Hardware::format_stack_info() const
     {
-        // Ideally we'd just iterate via SP back to user memory, but many programs manually
-        // set/restore SP, so we need to limit it.  So we walk back from stack top until we
-        // hit what appears to be user memory OR a fixed limit.  It's a best-effort rather
-        // than a perfect solution.
+        // Ideally this method would simply iterate via SP back to user memory, but many programs manually set/restore
+        // SP, so this needs to be bounded.
 
-        // I'm in two minds about what we should display here.  If we use the stack values as-is
-        // the user needs to keep in mind that they are the *return* addresses, which is normally
-        // 3 bytes after the *source* address, and that can be confusing.  So it's tempting to
-        // subtract 3 bytes from each value before display, but that also could be misleading.
-        // So for now, I'm making this a compile-time option.  Needs more thought, TODO!
+        // TODO: If the stack values are displayed as-is the user needs to keep in mind that they are the *return*
+        // addresses, which is normally 3 bytes after the *source* address, and that can be confusing. It is tempting
+        // to subtract 3 bytes from each value before display, but that also could be misleading.
+        // So for now, this is a compile-time option that one day could/should be configurable.
         const bool use_source_value = true;
 
         const int max_steps = 4;
@@ -451,9 +448,9 @@ namespace zcpm
             return;
         }
 
-        // FIXME!  This can be misleading; when we display PC, that can be the
+        // FIXME! This can be misleading; when we display PC, that can be the
         // wrong value because we're reading m_pc from the processor which "lags"
-        // the actual PC.  Can be tricky, and not so easy to fix (I've had a quick try already).
+        // the actual PC. Can be tricky, and not so easy to fix (I've had a quick try already).
 
         if ((mode == Access::READ) && (m_watch_read.count(address)))
         {
@@ -464,7 +461,7 @@ namespace zcpm
         {
             BOOST_LOG_TRIVIAL(trace) << boost::format("    %02X -> %s at PC=%s") % static_cast<unsigned short>(value) %
                                             describe_address(address) % describe_address(m_processor->get_pc());
-            // TODO: If we detect an attempt to clobber very low addresses, panic.  It's a sign of bad logic in our
+            // TODO: If we detect an attempt to clobber very low addresses, panic. It's a sign of bad logic in our
             // system.
             // TODO: Try and find the root cause for this situation, and maybe handle this more gracefully?
             if (is_fatal_write(address))
@@ -487,9 +484,8 @@ namespace zcpm
             return;
         }
 
-        // FIXME!  This can be misleading; when we display PC, that can be the
-        // wrong value because we're reading m_pc from the processor which "lags"
-        // the actual PC.  Can be tricky, and not so easy to fix (I've had a quick try already).
+        // FIXME!  This can be misleading; when we display PC, that can be the wrong value because we're reading
+        // m_pc from the processor which "lags" the actual PC.  Can be tricky, and not so easy to fix.
 
         if ((mode == Access::READ) && (m_watch_read.count(address + 0) || m_watch_read.count(address + 1)))
         {
@@ -502,7 +498,7 @@ namespace zcpm
                                             describe_address(m_processor->get_pc());
             if (is_fatal_write(address))
             {
-                // We've detected an attempt to clobber very low addresses, panic.  Either the program under test is
+                // We've detected an attempt to clobber very low addresses, panic. Either the program under test is
                 // naughty, or we've got a logic bug.
                 throw std::runtime_error("Aborting: illegal memory write");
             }

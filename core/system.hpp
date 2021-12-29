@@ -26,8 +26,8 @@ namespace zcpm
 
         ~System();
 
-        // Configure where FBASE and WBOOT are (to help the system recognise BDOS & BIOS accesses),
-        // and then invoke the BIOS initialisation code.
+        // Configure FBASE and WBOOT (to help the system recognise BDOS & BIOS accesses), and
+        // then invoke the BIOS initialisation code
         void setup_bios(uint16_t fbase, uint16_t wboot);
 
         // Perform necessary BDOS initialisation
@@ -51,8 +51,8 @@ namespace zcpm
         void set_input_handler(const InputHandler& handler);
         void set_output_handler(const OutputHandler& handler);
 
-        // This is public.  Normally we'd hide "implementation details" such as this,
-        // but in the  system that we're modelling the various items are deeply coupled anyway.
+        // This is public.  Normally "implementation details" such as this would be hidden,
+        // but in the system being modelling the various items are deeply coupled anyway.
         // TODO: more thought needed on this issue.
 
         Hardware m_hardware;

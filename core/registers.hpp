@@ -26,11 +26,11 @@ namespace zcpm
         uint16_t altHL;
 
         // Trivial helpers just to make use of the above a bit more readable
-        static uint8_t lowbyte(uint16_t value)
+        static uint8_t low_byte_of(uint16_t value)
         {
             return value & 0xFF;
         }
-        static uint8_t highbyte(uint16_t value)
+        static uint8_t high_byte_of(uint16_t value)
         {
             return (value >> 8) & 0xFF;
         }

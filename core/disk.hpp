@@ -34,7 +34,7 @@ namespace zcpm
 
     private:
         class Private;
-        std::unique_ptr<Private> mPrivate;
+        std::unique_ptr<Private> m_private;
     };
 
 } // namespace zcpm

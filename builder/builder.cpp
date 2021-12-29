@@ -29,7 +29,7 @@ namespace zcpm
     {
         // Command line parameters and their defaults
         std::string logfile = "zcpm.log";
-        std::string bdos_file_name = "~/zcpm/bdos.bin"; // The file that provides a binary BDOS (and CCP etc)
+        std::string bdos_file_name;               // The file that provides a binary BDOS (and CCP etc)
         std::string bdos_sym = "~/zcpm/bdos.lab"; // Filename of .lab file which lists symbols in BDOS implementation
         std::string user_sym;                     // Filename of .lab file which lists symbols in user's executable
         uint16_t bdos_file_base = 0xDC00;         // Where to load that binary image

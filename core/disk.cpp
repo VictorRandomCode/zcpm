@@ -641,7 +641,7 @@ namespace zcpm
 
     // Facade
 
-    Disk::Disk() : mPrivate(std::make_unique<Private>())
+    Disk::Disk() : m_private(std::make_unique<Private>())
     {
     }
 
@@ -649,17 +649,17 @@ namespace zcpm
 
     size_t Disk::size() const
     {
-        return mPrivate->size();
+        return m_private->size();
     }
 
     void Disk::read(SectorData& buffer, uint16_t track, uint16_t sector) const
     {
-        mPrivate->read(buffer, track, sector);
+        m_private->read(buffer, track, sector);
     }
 
     void Disk::write(const SectorData& buffer, uint16_t track, uint16_t sector)
     {
-        mPrivate->write(buffer, track, sector);
+        m_private->write(buffer, track, sector);
     }
 
 } // namespace zcpm
