@@ -174,6 +174,12 @@ namespace
         }
 
         // Now check for bytefields
+        if ((op2 & 0xC0) == 0x40)
+        {
+            const uint16_t b = (op2 >> 3) & 0x07;
+            const uint8_t r = op2 & 0x07;
+            return { 2, "BIT", (boost::format("%d,") % b).str() + ByteRegMask[r] };
+        }
         if ((op2 & 0xC0) == 0x80)
         {
             const uint16_t b = (op2 >> 3) & 0x07;
@@ -185,6 +191,11 @@ namespace
             const uint16_t b = (op2 >> 3) & 0x07;
             const uint8_t r = op2 & 0x07;
             return { 2, "SET", (boost::format("%d,") % b).str() + ByteRegMask[r] };
+        }
+        if ((op2 & 0xC7) == 0x46)
+        {
+            const uint16_t b = (op2 >> 3) & 0x07;
+            return { 2, "BIT", (boost::format("%d,(HL)") % b).str() };
         }
         if ((op2 & 0xF8) == 0x00)
         {
@@ -264,7 +275,15 @@ namespace
             };
         case 0x39: return { 2, "ADD", xy + ",SP" };
         case 0x86: return { 3, "ADD", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x8E: return { 3, "ADC", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x94: return { 2, "SUB", xy + "H" };
+        case 0x95: return { 2, "SUB", xy + "L" };
         case 0x96: return { 3, "SUB", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x9E: return { 3, "SBC", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0xA6: return { 3, "AND", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0xAE: return { 3, "XOR", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0xB6: return { 3, "OR", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0xBE: return { 3, "CP", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
         case 0xCB:
         {
             // TODO: move to a new method of its own? We'll see how well this scales...
