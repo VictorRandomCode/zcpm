@@ -112,8 +112,10 @@ e.g.:
 
     ~/path/to/runner --terminal=televideo turbo.com
 
-You'll then find that Turbo Pascal works as it should, but the tricky bit is that `zcpm` does not remap keyboard cursor
-(arrow) keys to the emulated type, so you will need to use WordStar cursor controls to drive the editor.
+You'll then find that Turbo Pascal works as it should, assuming that you're using the right keyboard mappings
+(see file `wordstar.keys` and the `--keymap` option)
+
+The manual is at http://bitsavers.informatik.uni-stuttgart.de/pdf/borland/turbo_pascal/TURBO_Pascal_Reference_Manual_CPM_Version_3_Dec88.pdf
 
 Multiplan
 ---------

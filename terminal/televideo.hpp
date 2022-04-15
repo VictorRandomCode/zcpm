@@ -10,7 +10,7 @@ namespace zcpm::terminal
     class Televideo final : public Terminal
     {
     public:
-        Televideo(int rows, int columns);
+        Televideo(int rows, int columns, const std::string& keymap_filename = "");
         ~Televideo();
 
         // Send a single character to the console; also handles tabs, start/stop

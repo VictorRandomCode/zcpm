@@ -1,0 +1,15 @@
+# Sample key mappings for Wordstar 4.0 or Turbo Pascal 3.0
+#
+# First column is the ncurses key name, the second column is one or more (consecutive)
+# characters that are generated in response to that ncurses key.
+#
+# This is incomplete, it's just enough to get started as a proof-of-concept
+
+KEY_UP    ^E
+KEY_RIGHT ^D
+KEY_LEFT  ^S
+KEY_DOWN  ^X
+KEY_NPAGE ^C
+KEY_PPAGE ^R
+KEY_HOME  ^QS
+KEY_END   ^QD

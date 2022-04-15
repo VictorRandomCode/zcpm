@@ -10,7 +10,7 @@ namespace zcpm::terminal
     class Vt100 final : public Terminal
     {
     public:
-        Vt100(int rows, int columns);
+        Vt100(int rows, int columns, const std::string& keymap_filename = "");
         ~Vt100();
 
         // Send a single character to the console; also handles tabs, start/stop

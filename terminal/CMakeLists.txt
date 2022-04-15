@@ -18,18 +18,21 @@ set(CURSES_NEED_NCURSES TRUE)
 find_package(Curses)
 
 set(LIBSOURCE
-  vt100.cpp
+  keymap.cpp
   plain.cpp
   televideo.cpp
+  terminal.cpp
   type.cpp
+  vt100.cpp
   )
 
 set(LIBHEADER
-  terminal.hpp
-  vt100.hpp
+  keymap.hpp
   plain.hpp
   televideo.hpp
+  terminal.hpp
   type.hpp
+  vt100.hpp
   )
 
 add_library(${PROJECT_NAME} ${LIBSOURCE} ${LIBHEADER})

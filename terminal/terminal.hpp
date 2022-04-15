@@ -2,15 +2,15 @@
 
 #include <string>
 
+#include "keymap.hpp"
+
 namespace zcpm::terminal
 {
 
     class Terminal
     {
     public:
-        Terminal(int rows, int columns) : m_rows(rows), m_columns(columns)
-        {
-        }
+        Terminal(int rows, int columns, const std::string& keymap_filename = "");
 
         virtual ~Terminal() = default;
 
@@ -35,9 +35,19 @@ namespace zcpm::terminal
         // Put a single character to the console, unfiltered
         virtual void put_char(char ch) = 0;
 
+        // Get a pending character (blocking read) via a keymap
+        virtual char get_translated_char() const;
+
     protected:
+        const Keymap m_keymap;
         const int m_rows;
         const int m_columns;
+
+        const int KeyboardDelayMs = 1;
+
+    private:
+        // Keystrokes that are yet to be returned after a mapping
+        mutable std::list<char> m_pending_keystrokes;
     };
 
 } // namespace zcpm::terminal

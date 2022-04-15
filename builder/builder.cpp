@@ -36,10 +36,11 @@ namespace zcpm
         uint16_t wboot = 0xF203;                  // Address of WBOOT in loaded binary BDOS
         uint16_t fbase = 0xE406;                  // Address of FBASE in loaded binary BDOS
         terminal::Type terminal = terminal::Type::PLAIN; // Terminal type
-        int columns = 80;                                // Number of display columns
-        int rows = 24;                                   // Number of display rows
-        bool memcheck = true;                            // Enable RAM read/write checks?
-        std::string binary;                              // The CP/M binary that we try to load and execute
+        std::string keymap_file_name; // The file that provides keystroke mapping for terminal emulation
+        int columns = 80;             // Number of display columns
+        int rows = 24;                // Number of display rows
+        bool memcheck = true;         // Enable RAM read/write checks?
+        std::string binary;           // The CP/M binary that we try to load and execute
         std::vector<std::string> arguments;
 
         try
@@ -54,6 +55,7 @@ namespace zcpm
                 "wboot", po::value<uint16_t>(), "Address of WBOOT in loaded binary BDOS")(
                 "fbase", po::value<uint16_t>(), "Address of FBASE in loaded binary BDOS")(
                 "terminal", po::value<terminal::Type>(), "Terminal type to emulate")(
+                "keymap", po::value<std::string>(), "Optional keymap file for terminal emulation")(
                 "columns", po::value<int>(), "Terminal column count")("rows", po::value<int>(), "Terminal row count")(
                 "memcheck", po::value<bool>(), "Enable memory access checks?")(
                 "logfile", po::value<std::string>(), "Name of logfile")(
@@ -92,6 +94,7 @@ namespace zcpm
             {
                 terminal = vm["terminal"].as<terminal::Type>();
             }
+            keymap_file_name = (vm.count("keymap")) ? vm["keymap"].as<std::string>() : home_plus("zcpm/wordstar.keys");
             if (vm.count("columns"))
             {
                 columns = vm["columns"].as<int>();
@@ -142,9 +145,15 @@ namespace zcpm
         std::unique_ptr<terminal::Terminal> p_terminal;
         switch (terminal)
         {
-        case terminal::Type::PLAIN: p_terminal = std::make_unique<terminal::Plain>(rows, columns); break;
-        case terminal::Type::VT100: p_terminal = std::make_unique<terminal::Vt100>(rows, columns); break;
-        case terminal::Type::TELEVIDEO: p_terminal = std::make_unique<terminal::Televideo>(rows, columns); break;
+        case terminal::Type::PLAIN:
+            p_terminal = std::make_unique<terminal::Plain>(rows, columns);
+            break;
+        case terminal::Type::VT100:
+            p_terminal = std::make_unique<terminal::Vt100>(rows, columns, keymap_file_name);
+            break;
+        case terminal::Type::TELEVIDEO:
+            p_terminal = std::make_unique<terminal::Televideo>(rows, columns, keymap_file_name);
+            break;
         }
 
         // Put it all together

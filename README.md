@@ -197,6 +197,27 @@ Or with loading assembler-produced symbols:
 
 There's also an optional `USE_PROFILE` cmake option that enables profiling at build time. (With GCC only)
 
+Keymaps
+-------
+
+Some CP/M programs such as WordStar or Turbo Pascal use keystrokes such as ^S to mean move one character left
+(which was at the time referred to as WordStar cursor control). To make such programs work more nicely on a
+modern keyboard, a keystroke mapping file is used which maps a left arrow to ^S and so on.
+
+For example:
+
+    KEY_UP    ^E
+    KEY_RIGHT ^D
+    KEY_LEFT  ^S
+    KEY_DOWN  ^X
+
+The first column is the ncurses key name, the second column is one or more keys that should be generated
+in response. By default, Runner uses a predefined file called `wordstar.keys` which is loaded on startup,
+this can be overridden by the `--keymap` command line argument.
+
+Unfortunately this is an imperfect solution; CP/M is inconsistent with terminal management, it's hard to
+cleanly abstract these aspects.
+
 Handy commands
 --------------
 

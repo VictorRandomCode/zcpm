@@ -11,8 +11,6 @@
 
 namespace
 {
-    static const int KeyboardDelayMs = 1;
-
     // Parses an escape sequence (which may yet be incomplete) and returns <count, values, ch> where:
     // - count is the number of characters parsed that can now be erased,
     // - values is a vector of semicolon-separated numbers
@@ -176,7 +174,7 @@ namespace
 namespace zcpm::terminal
 {
 
-    Vt100::Vt100(int rows, int columns) : Terminal(rows, columns)
+    Vt100::Vt100(int rows, int columns, const std::string& keymap_filename) : Terminal(rows, columns, keymap_filename)
     {
         ::initscr();
 
@@ -188,6 +186,7 @@ namespace zcpm::terminal
 
         ::idlok(stdscr, true);    // Allow insert/delete row
         ::scrollok(stdscr, true); // Allow scrolling
+        ::keypad(stdscr, true);   // Ask curses to give us e.g. KEY_LEFT instead of <ESC>[D
     }
 
     Vt100::~Vt100()
@@ -302,28 +301,7 @@ namespace zcpm::terminal
 
     char Vt100::get_char()
     {
-        // This method might be called after a is_character_ready() which told the caller that
-        // data is now ready to be returned, in which case we should read and return it immediately.
-        // Or, it may be called without knowing if anything's ready, in which case we should
-        // block until something is ready and then return that.  But either way, we're in "timeout"
-        // mode currently which means we will quickly timeout if nothing is ready, so we need to
-        // temporarily go back to blocking mode for this operation.  Yuk.
-
-        ::timeout(-1);              // Temporarily back to blocking reads
-        int ch = ::getch();         // Read the character, blocking if needed
-        ::timeout(KeyboardDelayMs); // And then back to 1ms timeout mode
-
-        if (ch == 0x7F) // BACKSPACE/DELETE
-        {
-            // Backspace was pressed; Map a linux terminal 7F to a CP/M style 08
-            ch = 0x08;
-        }
-        else if (ch == 0x0A)
-        {
-            // Enter was pressed, but that needs to be mapped to a CP/M style 0D
-            ch = 0x0D;
-        }
-        return static_cast<char>(ch);
+        return get_translated_char();
     }
 
     void Vt100::put_char(char ch)
