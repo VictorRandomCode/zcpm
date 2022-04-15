@@ -404,8 +404,9 @@ namespace zcpm
 
         const uint16_t sp = m_processor->get_sp();
 
-        bool user = false;
-        for (auto step = 0; !user && (step < max_steps); ++step)
+        auto user = false;
+        auto startup = false;
+        for (auto step = 0; !user && !startup && (step < max_steps); ++step)
         {
             uint16_t ret = read_word(sp + step * 2);
             if (use_source_value)
@@ -414,7 +415,14 @@ namespace zcpm
             }
             if ((ret >= 0x0100) && ret < m_fbase)
             {
+                // This stack location is in user space, so stop the backtrace at this point
                 user = true;
+            }
+            if (ret >= 0xFFF0)
+            {
+                // BDOS calls "manually" called on startup of ZCPM result in address such as these in the
+                // stack track, showing the stack past these values is of no value
+                startup = true;
             }
             ss << boost::format(" << %s") % describe_address(ret);
             if (use_source_value)
