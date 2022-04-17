@@ -210,16 +210,6 @@ namespace zcpm::terminal
         ::refresh();
     }
 
-    void Vt100::print(const std::string& s)
-    {
-        const auto len = s.size();
-        for (size_t i = 0; i < len; i++)
-        {
-            outch(s[i]);
-        }
-        ::refresh();
-    }
-
     std::string Vt100::read_console_buffer(size_t mx, const std::string& initial)
     {
         // Remember the starting cursor position
@@ -302,12 +292,6 @@ namespace zcpm::terminal
     char Vt100::get_char()
     {
         return get_translated_char();
-    }
-
-    void Vt100::put_char(char ch)
-    {
-        outch(ch);
-        ::refresh();
     }
 
     void Vt100::outch(char ch)

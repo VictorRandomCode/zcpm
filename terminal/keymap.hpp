@@ -16,7 +16,7 @@ namespace zcpm
         // The key naming (e.g. KEY_RIGHT) is as per 'man getch' from ncurses. Each key (e.g. KEY_RIGHT) should appear
         // no more than once. If an entry for given key doesn't exist, then the key is returned untranslated. Note that
         // curses doesn't define a type for keystrokes such as these, they are simply 'int'.
-        Keymap(const std::string& filename);
+        explicit Keymap(const std::string& filename);
 
         // Return the mapping for a given key. If not known, then returns a single-element list with the same key.
         std::list<char> translate(int key) const;

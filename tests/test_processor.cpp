@@ -1,5 +1,5 @@
 //#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MAIN  // in only one cpp file
+#define BOOST_TEST_MAIN // in only one cpp file
 #include <boost/test/unit_test.hpp>
 
 #include <zcpm/core/processor.hpp>
@@ -8,11 +8,14 @@
 // test code aims to cover a useful sample to test for breakage. If a *full* test is needed, execute the 'zexall.com'
 // binary via the 'runner' tool, and be patient...
 
-namespace {
+namespace
+{
 
     // Define a local mock to assist with testing
 
-    struct Hardware : public zcpm::IMemory, public zcpm::IProcessorObserver
+    struct Hardware
+        : public zcpm::IMemory
+        , public zcpm::IProcessorObserver
     {
         Hardware() : m_processor(std::make_unique<zcpm::Processor>(*this, *this))
         {
@@ -157,34 +160,38 @@ namespace {
 
         // Implements IProcessorObserver
 
-        void set_finished(bool finished) override {
-            m_finished = finished;
+        void set_finished(bool) override
+        {
         }
 
-        [[nodiscard]] bool running() const override {
+        [[nodiscard]] bool running() const override
+        {
             return true;
         }
 
-        bool check_and_handle_bdos_and_bios(uint16_t address) const override {
+        bool check_and_handle_bdos_and_bios(uint16_t address) const override
+        {
             return false; // TODO
         }
 
         std::unique_ptr<zcpm::Processor> m_processor;
 
-        bool m_finished = false;
-
         std::array<uint8_t, 0x10000> m_memory{};
     };
 
     // Perform a single instruction on the A register
-    void test_8bit_register_instruction(uint8_t instruction, size_t expected_cycles, uint8_t initial_value, uint8_t expected_value, uint8_t expected_flags)
+    void test_8bit_register_instruction(uint8_t instruction,
+                                        size_t expected_cycles,
+                                        uint8_t initial_value,
+                                        uint8_t expected_value,
+                                        uint8_t expected_flags)
     {
         Hardware hardware;
 
         hardware.m_processor->reg_a() = initial_value;
         hardware.m_processor->reg_f() = 0x00;
 
-        hardware.load_memory_and_set_pc(0x0005, {instruction});
+        hardware.load_memory_and_set_pc(0x0005, { instruction });
 
         auto cycles = hardware.m_processor->emulate_instruction();
         BOOST_CHECK_EQUAL(cycles, expected_cycles);
@@ -193,7 +200,7 @@ namespace {
         BOOST_CHECK_EQUAL(hardware.m_processor->reg_a(), expected_value);
         BOOST_CHECK_EQUAL(hardware.m_processor->reg_f(), expected_flags);
     }
-}
+} // namespace
 
 BOOST_AUTO_TEST_CASE(test_register_read_write)
 {
@@ -259,7 +266,7 @@ BOOST_AUTO_TEST_CASE(test_single_instruction_nop)
     hardware.m_processor->reg_sp() = 0x5678;
     hardware.m_processor->reg_pc() = 0x6789;
 
-    hardware.load_memory_and_set_pc(0x0005, {0x00}); // NOP
+    hardware.load_memory_and_set_pc(0x0005, { 0x00 }); // NOP
 
     const auto cycles = hardware.m_processor->emulate_instruction();
     BOOST_CHECK_EQUAL(cycles, 4);
@@ -286,7 +293,7 @@ BOOST_AUTO_TEST_CASE(test_single_instruction_side_effects)
     hardware.m_processor->reg_sp() = 0x5678;
     hardware.m_processor->reg_pc() = 0x6789;
 
-    hardware.load_memory_and_set_pc(0x0005, {0x3C}); // INC A
+    hardware.load_memory_and_set_pc(0x0005, { 0x3C }); // INC A
 
     auto cycles = hardware.m_processor->emulate_instruction();
     BOOST_CHECK_EQUAL(cycles, 4);
@@ -307,7 +314,12 @@ BOOST_AUTO_TEST_CASE(test_8bit_register_operations)
     // INC A of 0x00
     test_8bit_register_instruction(0x3C, 4, 0x00, 0x01, 0x00);
     // INC A of 0x7F
-    test_8bit_register_instruction(0x3C, 4, 0x7F, 0x80, zcpm::Processor::S_FLAG_MASK | zcpm::Processor::H_FLAG_MASK | zcpm::Processor::PV_FLAG_MASK);
+    test_8bit_register_instruction(0x3C,
+                                   4,
+                                   0x7F,
+                                   0x80,
+                                   zcpm::Processor::S_FLAG_MASK | zcpm::Processor::H_FLAG_MASK |
+                                       zcpm::Processor::PV_FLAG_MASK);
     // INC A of 0xFF
     test_8bit_register_instruction(0x3C, 4, 0xFF, 0x00, zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::H_FLAG_MASK);
 

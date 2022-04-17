@@ -103,6 +103,6 @@ namespace zcpm
         }
 
         // Return just the key, so it is in effect an unmapped sequence
-        return std::list<char>(1, key);
+        return { static_cast<char>(key) };
     }
 } // namespace zcpm

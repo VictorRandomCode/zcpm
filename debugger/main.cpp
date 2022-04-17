@@ -264,7 +264,8 @@ namespace
                      1,
                      "Removes a debugger action",
                      replxx::Replxx::Color::DEFAULT,
-                     [&p_debuggable](const TokenVector& input) {
+                     [&p_debuggable](const TokenVector& input)
+                     {
                          const auto number = std::strtoul(input[1].c_str(), nullptr, 0);
                          const auto ok = p_debuggable->remove_action(number);
                          if (ok)
@@ -283,9 +284,10 @@ namespace
                      2,
                      "Dump memory",
                      replxx::Replxx::Color::DEFAULT,
-                     [&writer](const TokenVector& input) {
+                     [&writer](const TokenVector& input)
+                     {
                          const auto base = std::strtoul(input[1].c_str(), nullptr, 16);
-                         auto count = 12u;
+                         auto count = 12U;
                          if (input.size() > 2)
                          {
                              count = std::strtoul(input[2].c_str(), nullptr, 16);
@@ -299,7 +301,8 @@ namespace
                      0,
                      "Show current register values",
                      replxx::Replxx::Color::DEFAULT,
-                     [&writer](const TokenVector& /*input*/) {
+                     [&writer](const TokenVector& /*input*/)
+                     {
                          writer.examine();
                          return false;
                      } },
@@ -309,7 +312,8 @@ namespace
                      0,
                      "Set the program runnning",
                      replxx::Replxx::Color::DEFAULT,
-                     [&p_machine, &writer](const TokenVector& /*input*/) {
+                     [&p_machine, &writer](const TokenVector& /*input*/)
+                     {
                          p_machine->run();
                          writer.examine();
                          return false;
@@ -320,7 +324,8 @@ namespace
                      0,
                      "Shows this information",
                      replxx::Replxx::Color::DEFAULT,
-                     [&commands](const TokenVector& /*input*/) {
+                     [&commands](const TokenVector& /*input*/)
+                     {
                          for (const auto& command : commands)
                          {
                              std::cout << command << std::endl;
@@ -333,7 +338,8 @@ namespace
                      2,
                      "Disassemble the next N instructions",
                      replxx::Replxx::Color::DEFAULT,
-                     [&writer](const TokenVector& input) {
+                     [&writer](const TokenVector& input)
+                     {
                          auto base = -1;  // Default to using current PC as the starting point
                          auto count = 12; // Default to listing 12 instructions
                          if (input.size() >= 2)
@@ -353,7 +359,8 @@ namespace
                      0,
                      "Run the program, showing each step as it happens",
                      replxx::Replxx::Color::DEFAULT,
-                     [&p_machine, &writer](const TokenVector& /*input*/) {
+                     [&p_machine, &writer](const TokenVector& /*input*/)
+                     {
                          // Monitor; like 'go', but trace step-by-step (lots of output!)
                          writer.examine();
                          do
@@ -376,7 +383,8 @@ namespace
                      2,
                      "Set a debug action",
                      replxx::Replxx::Color::DEFAULT,
-                     [&p_debuggable, &p_machine](const TokenVector& input) {
+                     [&p_debuggable, &p_machine](const TokenVector& input)
+                     {
                          BOOST_ASSERT(input.size() == 3);
                          // Create the breakpoint/passpoint/watchpoint
                          auto action = parse_and_create_debug_action(p_machine, input[1], input[2]);
@@ -393,7 +401,8 @@ namespace
                      1,
                      "Show state information",
                      replxx::Replxx::Color::GREEN,
-                     [&p_debuggable, &p_machine, &writer](const TokenVector& input) {
+                     [&p_debuggable, &p_machine, &writer](const TokenVector& input)
+                     {
                          BOOST_ASSERT(input.size() > 1);
                          const auto& noun = input[1];
                          if (noun == "symbols")
@@ -420,7 +429,8 @@ namespace
                      0,
                      "Single step",
                      replxx::Replxx::Color::RED,
-                     [&p_machine, &writer](const TokenVector& /*input*/) {
+                     [&p_machine, &writer](const TokenVector& /*input*/)
+                     {
                          // Single step (similar to DebugZ 't' command)
                          p_machine->step();
                          writer.examine();

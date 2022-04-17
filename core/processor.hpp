@@ -176,7 +176,6 @@ namespace zcpm
         bool test_cc(uint8_t cc);
         bool test_dd(uint8_t dd);
         uint8_t read_indirect_hl(uint16_t& pc, size_t& elapsed_cycles);
-        void write_indirect_hl(uint8_t x, uint16_t& pc, size_t& elapsed_cycles);
         void op_add(uint8_t x);
         void op_adc(uint8_t x);
         void op_sub(uint8_t x);

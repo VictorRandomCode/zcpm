@@ -2507,21 +2507,6 @@ namespace zcpm
         return x;
     }
 
-    void Processor::write_indirect_hl(uint8_t x, uint16_t& pc, size_t& elapsed_cycles)
-    {
-        if (is_default_table())
-        {
-            m_memory.write_byte(reg_hl(), x, elapsed_cycles);
-        }
-        else
-        {
-            auto d = static_cast<int>(m_memory.read_byte_step(pc, elapsed_cycles));
-            d += HL_IX_IY();
-            x = m_memory.read_byte(d, elapsed_cycles);
-            elapsed_cycles += 5;
-        }
-    }
-
     void Processor::op_add(uint8_t x)
     {
         const uint8_t a = reg_a();

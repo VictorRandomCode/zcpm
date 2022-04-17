@@ -128,7 +128,7 @@ namespace zcpm
 
     struct SectorInfo
     {
-        explicit SectorInfo(const Disk::SectorData& buffer) : m_data(buffer), m_dirty(false)
+        explicit SectorInfo(const Disk::SectorData& buffer) : m_data(buffer)
         {
         }
 
@@ -144,7 +144,7 @@ namespace zcpm
         }
 
         Disk::SectorData m_data;
-        bool m_dirty;
+        bool m_dirty{ false };
     };
 
     // Implementation
