@@ -99,7 +99,7 @@ namespace zcpm
         IDebuggable* get_idebuggable() const;
 
         // This is public, and is an ugly hack. The underlying problem is that the system we're emulated is tightly
-        // coupled so it's hard to avoid the same patterns in emulation.
+        // coupled, so it's hard to avoid the same patterns in emulation.
         std::unique_ptr<Processor> m_processor;
 
     private:

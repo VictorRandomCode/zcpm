@@ -33,7 +33,7 @@ namespace zcpm
             std::list<char> result;
             for (auto i = 0U; i < sequence.length(); ++i)
             {
-                int key;
+                char key;
                 if ((sequence[i] == '^') && (i < sequence.length() - 1))
                 {
                     key = sequence[++i] - 'A' + 1;

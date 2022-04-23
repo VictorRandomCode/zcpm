@@ -106,9 +106,8 @@ namespace zcpm
         m_phardware->write_word(hdblk + 0x07, 0x03FF);    // DRM: Directory max
         m_phardware->write_byte(hdblk + 0x09, 0xFF);      // AL0: Alloc 0
         m_phardware->write_byte(hdblk + 0x0A, 0xFF);      // AL1: Alloc 1
-        m_phardware->write_word(
-            hdblk + 0x0B,
-            0x0000); // CKS: Check size (For a HDD, can have 0. Removable media would need non-zero)
+        m_phardware->write_word(hdblk + 0x0B,
+                                0x0000); // CKS: Check size (For a HDD, can have 0. Removable media would need non-zero)
         m_phardware->write_word(hdblk + 0x0D, 0x0000); // OFF: Track offset
 
         // CHKHD1 is a scratch table for directory entries. But as our disk (a simulated HDD) is not
@@ -205,7 +204,7 @@ namespace zcpm
         break;
         case 4:
         {
-            const auto ch = m_phardware->m_processor->get_c();
+            const auto ch = static_cast<char>(m_phardware->m_processor->get_c());
             if (ch >= ' ')
             {
                 msg = (boost::format("CONOUT(%02X '%c')") % static_cast<unsigned short>(ch) % ch).str();

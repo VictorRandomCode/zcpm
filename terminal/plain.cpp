@@ -26,16 +26,6 @@ namespace zcpm::terminal
         std::cout.flush();
     }
 
-    std::string Plain::read_console_buffer(size_t mx, const std::string& /*initial*/)
-    {
-        // TODO: We don't yet use 'initial'; we'd probably need GNU ReadLine for that
-
-        std::vector<char> bytes(mx + 2);
-        std::cin.getline(bytes.data(), mx);
-        std::string result(bytes.data());
-        return result;
-    }
-
     bool Plain::is_character_ready() const
     {
         struct pollfd fd[1] = { { 0, POLLIN, 0 } };

@@ -18,10 +18,6 @@ namespace zcpm::terminal
         // scroll, etc
         virtual void print(char ch) = 0;
 
-        // Reads a string from the user as per BDOS function 0x10.  'mx' is the maximum
-        // number of characters to accept.  'initial' is any pre-filled content.
-        virtual std::string read_console_buffer(size_t mx, const std::string& initial) = 0;
-
         // Check to see if a character has been typed at the console
         [[nodiscard]] virtual bool is_character_ready() const = 0;
 

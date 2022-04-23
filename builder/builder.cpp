@@ -145,9 +145,7 @@ namespace zcpm
         std::unique_ptr<terminal::Terminal> p_terminal;
         switch (terminal)
         {
-        case terminal::Type::PLAIN:
-            p_terminal = std::make_unique<terminal::Plain>(rows, columns);
-            break;
+        case terminal::Type::PLAIN: p_terminal = std::make_unique<terminal::Plain>(rows, columns); break;
         case terminal::Type::VT100:
             p_terminal = std::make_unique<terminal::Vt100>(rows, columns, keymap_file_name);
             break;

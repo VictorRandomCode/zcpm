@@ -19,7 +19,7 @@ namespace zcpm::bdos
             std::string result;
             for (auto offset = 0; offset < 30; ++offset)
             {
-                auto ch = memory.read_byte(address + offset);
+                auto ch = static_cast<char>(memory.read_byte(address + offset));
                 if (ch == '$')
                 {
                     return result;
@@ -60,7 +60,7 @@ namespace zcpm::bdos
         case 1: return { prefix + "C_READ", "Console input" };
         case 2:
         {
-            char ch = Registers::low_byte_of(registers.DE);
+            auto ch = static_cast<char>(Registers::low_byte_of(registers.DE));
             auto description = (boost::format("Console output '%c' (ASCII 0x%02X)") % (std::isprint(ch) ? ch : '?') %
                                 static_cast<unsigned short>(ch))
                                    .str();

@@ -255,7 +255,7 @@ namespace zcpm
             return 0;
         }
 
-        return 0; // Should be unreachable, but needed to keep gcc happy
+        return 0; // Is unreachable, but needed to keep gcc happy
     }
 
     size_t Processor::non_maskable_interrupt()

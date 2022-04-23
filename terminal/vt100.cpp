@@ -210,68 +210,6 @@ namespace zcpm::terminal
         ::refresh();
     }
 
-    std::string Vt100::read_console_buffer(size_t mx, const std::string& initial)
-    {
-        // Remember the starting cursor position
-        auto x = 0, y = 0;
-        getsyx(y, x);
-
-        // Display the initial data that the user edits/appends/etc
-        std::string result(initial);
-        ::addstr(result.c_str());
-
-        // Set the cursor at the right place
-        size_t len = result.size();
-
-        // And start the editing loop
-        int ch;
-        bool editing = true;
-        do
-        {
-            ch = ::getch();
-            // TODO: Implement the various CP/M-style line editing things
-            // as per the manual description of this function.
-            if (ch == 0x7F) // BACKSPACE/DELETE
-            {
-                if (len == 0)
-                {
-                    ::beep();
-                }
-                else
-                {
-                    result.resize(--len);
-                    mvaddch(y, x + len, ' ');
-                    ::refresh();
-                    ::move(y, x + static_cast<int>(len));
-                }
-            }
-            else if (ch == 0x0A) // RETURN pressed
-            {
-                editing = false;
-            }
-            else
-            {
-                if (len < mx)
-                {
-                    result.push_back(ch);
-                    ++len;
-                    ::addch(ch);
-                    ::refresh();
-                }
-                else
-                {
-                    ::beep();
-                }
-            }
-        } while (editing);
-
-        // CP/M seems to act as if the cursor is left at the beginning of the start line
-        ::move(y, 0);
-        ::refresh();
-
-        return result;
-    }
-
     bool Vt100::is_character_ready() const
     {
         // Is there a character available?
