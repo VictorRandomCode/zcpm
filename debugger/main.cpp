@@ -455,7 +455,8 @@ namespace
         rx.set_max_hint_rows(3);
 
         rx.set_completion_callback(
-            std::bind(&hook_completion, std::placeholders::_1, std::placeholders::_2, std::cref(commands)));
+            [&commands](const std::string& input, int context_len) -> replxx::Replxx::completions_t
+            { return hook_completion(input, context_len, commands); });
 
         // other api calls
         rx.set_word_break_characters(" \t.,-%!;:=*~^'\"/?<>|[](){}");
