@@ -157,7 +157,7 @@ namespace
 
         if (input.size() == static_cast<size_t>(context_len))
         {
-            // Current context is all of the input, so just match the leading (partial) verb
+            // Current context is all the input, so just match the leading (partial) verb
             for (const auto& command : commands)
             {
                 if (input.compare(0, context_len, command.m_verbs.front(), 0, context_len) == 0)
