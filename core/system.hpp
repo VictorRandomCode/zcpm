@@ -24,6 +24,11 @@ namespace zcpm
                const std::string& bdos_sym = "",
                const std::string& user_sym = "");
 
+        System(const System&) = delete;
+        System& operator=(const System&) = delete;
+        System(System&&) = delete;
+        System& operator=(System&&) = delete;
+
         ~System();
 
         // Configure FBASE and WBOOT (to help the system recognise BDOS & BIOS accesses), and

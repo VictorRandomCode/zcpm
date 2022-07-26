@@ -37,6 +37,11 @@ namespace zcpm
     public:
         Processor(IMemory& memory, IProcessorObserver& processor_observer);
 
+        Processor(const Processor&) = delete;
+        Processor& operator=(const Processor&) = delete;
+        Processor(Processor&&) = delete;
+        Processor& operator=(Processor&&) = delete;
+
         ~Processor() = default;
 
         // Initialise processor's state to power-on default

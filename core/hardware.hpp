@@ -31,7 +31,12 @@ namespace zcpm
                  const std::string& bdos_sym = "",
                  const std::string& user_sym = "");
 
-        ~Hardware();
+        Hardware(const Hardware&) = delete;
+        Hardware& operator=(const Hardware&) = delete;
+        Hardware(Hardware&&) = delete;
+        Hardware& operator=(Hardware&&) = delete;
+
+        ~Hardware() override;
 
         // Methods to hook up user handlers on events of interest
         void set_input_handler(const InputHandler& h);

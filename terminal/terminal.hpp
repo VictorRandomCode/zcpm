@@ -12,6 +12,11 @@ namespace zcpm::terminal
     public:
         Terminal(int rows, int columns, const std::string& keymap_filename = "");
 
+        Terminal(const Terminal&) = delete;
+        Terminal& operator=(const Terminal&) = delete;
+        Terminal(Terminal&&) = delete;
+        Terminal& operator=(Terminal&&) = delete;
+
         virtual ~Terminal() = default;
 
         // Send a single character to the console; also handles tabs, start/stop

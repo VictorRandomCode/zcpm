@@ -13,6 +13,11 @@ namespace zcpm
         // Reads from cwd on instantiation.
         Disk();
 
+        Disk(const Disk&) = delete;
+        Disk& operator=(const Disk&) = delete;
+        Disk(Disk&&) = delete;
+        Disk& operator=(Disk&&) = delete;
+
         ~Disk();
 
         // Returns number of entries in this instance.

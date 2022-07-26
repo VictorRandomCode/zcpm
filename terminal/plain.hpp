@@ -13,7 +13,13 @@ namespace zcpm::terminal
     {
     public:
         Plain(int rows, int columns);
-        ~Plain();
+
+        Plain(const Plain&) = delete;
+        Plain& operator=(const Plain&) = delete;
+        Plain(Plain&&) = delete;
+        Plain& operator=(Plain&&) = delete;
+
+        ~Plain() override;
 
         // Send a single character to the console; also handles tabs, start/stop
         // scroll, etc

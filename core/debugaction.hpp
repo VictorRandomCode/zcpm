@@ -12,6 +12,12 @@ namespace zcpm
     {
     public:
         DebugAction(uint16_t address, std::string location);
+
+        DebugAction(const DebugAction&) = delete;
+        DebugAction& operator=(const DebugAction&) = delete;
+        DebugAction(DebugAction&&) = delete;
+        DebugAction& operator=(DebugAction&&) = delete;
+
         virtual ~DebugAction() = default;
 
         enum class Type

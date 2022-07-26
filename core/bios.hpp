@@ -19,6 +19,11 @@ namespace zcpm
     public:
         Bios(Hardware* p_hardware, terminal::Terminal* p_terminal);
 
+        Bios(const Bios&) = delete;
+        Bios& operator=(const Bios&) = delete;
+        Bios(Bios&&) = delete;
+        Bios& operator=(Bios&&) = delete;
+
         ~Bios();
 
         bool is_bios(uint16_t address) const;
