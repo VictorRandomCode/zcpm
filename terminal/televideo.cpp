@@ -7,6 +7,17 @@
 
 #include "televideo.hpp"
 
+namespace
+{
+    void move_to_column(int column)
+    {
+        [[maybe_unused]] auto current_column = 0;
+        auto current_row = 0;
+        getsyx(current_row, current_column);
+        move(current_row, column);
+    }
+} // namespace
+
 namespace zcpm::terminal
 {
 
@@ -241,10 +252,7 @@ namespace zcpm::terminal
             // to move down one line"
             BOOST_LOG_TRIVIAL(trace) << "CURSES line insert";
             ::insertln();
-            // Move to first column
-            auto x = 0, y = 0;
-            getsyx(y, x);
-            ::move(y, 0);
+            move_to_column(0);
             m_pending.erase();
             return;
         }

@@ -9,6 +9,7 @@
 namespace zcpm
 {
 
+    // Implements a CP/M FCB (File Control Block; see http://seasip.info/Cpm/fcb.html)
     class Fcb final
     {
     public:
