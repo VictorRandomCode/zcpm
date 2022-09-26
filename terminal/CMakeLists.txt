@@ -37,6 +37,9 @@ set(LIBHEADER
 
 add_library(${PROJECT_NAME} ${LIBSOURCE} ${LIBHEADER})
 
+# Make sure Boost doesn't try to use the (removed) std::unary_function in boost::hash via boost/algorithm/string.hpp
+target_compile_definitions(${PROJECT_NAME} PUBLIC BOOST_NO_CXX98_FUNCTION_BASE)
+
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/..)
 
