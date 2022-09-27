@@ -1,4 +1,5 @@
 #include <fstream>
+#include <optional>
 #include <string>
 
 #include <ncurses.h>

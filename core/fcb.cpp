@@ -202,12 +202,12 @@ namespace zcpm
 
         m_u.m_fields.m_dr = dr;
 
-        for (size_t i = 0; i < name.size(); i++)
+        for (size_t i = 0; (i < name.size()) && (i < sizeof(m_u.m_fields.m_f)); i++)
         {
             m_u.m_fields.m_f[i] = static_cast<uint8_t>(name[i]);
         }
 
-        for (size_t i = 0; i < extn.size(); i++)
+        for (size_t i = 0; (i < extn.size()) && (i < sizeof(m_u.m_fields.m_t)); i++)
         {
             m_u.m_fields.m_t[i] = static_cast<uint8_t>(extn[i]);
         }

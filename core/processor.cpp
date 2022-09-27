@@ -2,6 +2,7 @@
 #include <array>
 #include <cstring>
 #include <iostream>
+#include <set>
 
 #include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
@@ -12,7 +13,7 @@
 #include "registers.hpp"
 
 // Uncomment this to allow very chatting logging of calls/returns
-//#define TRACING
+// #define TRACING
 
 namespace
 {
