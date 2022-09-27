@@ -8,8 +8,8 @@ SetupCompiler("-g;-Wno-unused-parameter")
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.71.0 COMPONENTS log REQUIRED)
 
-# Find replxx; for now I'm assuming it's in ${HOME}/local
-# TODO: make this be less brute-force and smarter instead...
+# Find replxx; for now it is assumed to be in ${HOME}/local
+# TODO: make this be easily configurable
 add_library(replxx STATIC IMPORTED)
 set_target_properties(replxx PROPERTIES
   IMPORTED_LOCATION "$ENV{HOME}/local/lib/libreplxx.a"

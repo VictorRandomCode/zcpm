@@ -6,12 +6,12 @@ option(USE_PROFILE "Enable profiling" OFF)
 option(USE_ANALYSER "Enable GCC11 static analyser" OFF)
 
 # Typical invocations:
-#   cmake -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm
+#   cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm
 # or for gcc via brew on macOS:
-#   cmake -D CMAKE_C_COMPILER=gcc-11 -D CMAKE_CXX_COMPILER=g++-11 ../zcpm
+#   cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=gcc-12 -D CMAKE_CXX_COMPILER=g++-12 ../zcpm
 # If needed, append e.g. -DUSE_SANITISERS=OFF or -DUSE_TIDY=ON or -DUSE_PROFILE=ON
-# Or to use gcc 11 analyser:
-#   cmake -DUSE_ANALYSER=ON ../zcpm
+# Or to use gcc analyser:
+#   cmake -DCMAKE_PREFIX_PATH=~/local -DUSE_ANALYSER=ON ../zcpm
 
 project(zcpm_project)
 
@@ -20,7 +20,7 @@ set(CMAKE_CXX_STANDARD 20)
 # Generate a build commands json file to help some external tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Optional: enable clang-tidy; can be slow and noisy.  We do this globally, not per-project
+# Optional: enable clang-tidy; can be slow and noisy.  This is done globally, not per-project
 if (USE_TIDY)
   find_program(CLANG_TIDY_EXE NAMES "clang-tidy" DOC "path to clang-tidy executable")
   if (CLANG_TIDY_EXE)
@@ -39,17 +39,12 @@ function(SetupCompiler OPTIONS)
 
   # Enable sanitisers of interest.
   if (USE_SANITISERS)
-    # clang's sanitisers seem lacking in macOS default clang ("AppleClang"), but are ok in macOS downloaded clang ("Clang")
-    if (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
-      message("Sanitisers are disabled for Apple's clang (use releases.llvm.org instead)")
-    else()
-      message("Sanitisers are enabled for '${PROJECT_NAME}'")
-      # Note that enabling these does slow down both compilation and execution.  But according
-      # to the docco for these, we should usually keep these enabled in most cases, it's worth it.
-      # However, they can clash with some tools e.g. valgrind, gdb, etc.
-      add_compile_options(-fsanitize=address -fsanitize=undefined)
-      add_link_options(-fsanitize=address -fsanitize=undefined)
-    endif()
+    message("Sanitisers are enabled for '${PROJECT_NAME}'")
+    # Note that enabling these does slow down both compilation and execution.  But according
+    # to the docco for these, we should usually keep these enabled in most cases, it's worth it.
+    # However, they can clash with some tools e.g. valgrind, gdb, etc.
+    add_compile_options(-fsanitize=address -fsanitize=undefined)
+    add_link_options(-fsanitize=address -fsanitize=undefined)
   else()
     message("Sanitisers are not enabled for '${PROJECT_NAME}'")
   endif()
@@ -67,6 +62,7 @@ function(SetupCompiler OPTIONS)
     message("Profiling is not enabled for '${PROJECT_NAME}'")
   endif()
 
+  # Enable analyser, but only with GCC 10 and later.
   if (USE_ANALYSER)
     if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 10.0))
       message("Analyser is being enabled for '${PROJECT_NAME}'")
@@ -83,7 +79,6 @@ function(SetupCompiler OPTIONS)
   add_compile_options(-Wall -Wextra -Wold-style-cast -Werror ${OPTIONS})
 
 endfunction()
-
 
 add_subdirectory(builder)
 add_subdirectory(terminal)

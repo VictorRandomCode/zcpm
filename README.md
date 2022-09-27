@@ -112,25 +112,18 @@ Longer term plans include a graphical debugger with integrated console using Qt.
 Building
 --------
 
-This needs [boost](https://www.boost.org/) and [cmake](https://cmake.org/) and a modern C++ compiler.
-And it can be handy to use [libc++](https://libcxx.llvm.org/) (which is LLVM's C++ library, as
-opposed to [libstdc++](https://gcc.gnu.org/onlinedocs/libstdc++/) from GNU).
+This needs [boost](https://www.boost.org/), [cmake](https://cmake.org/), and a modern C++ compiler.
 
-On macOS, I'm using [brew](https://brew.sh/) for boost/cmake, plus a downloaded version of current
-stable [clang](https://releases.llvm.org/download.html).
+For macOS, use [brew](https://brew.sh/) to provide boost, cmake and clang:
 
-On Debian 10 use this:
+    brew install boost cmake llvm
 
-    sudo apt install build-essential clang libc++-dev libc++abi-dev cmake emacs valgrind gdb libboost-all-dev strace clang-tidy
+For Debian-based systems, install these packages:
 
-On Fedora 32 use this:
+    sudo apt install build-essential clang libc++-dev libc++abi-dev cmake libboost-all-dev clang-tidy
 
-    sudo dnf install cmake clang ncurses ncurses-devel gcc-g++ libcxx-devel z80asm z80dasm make
-    sudo dnf install boost boost-devel boost-static
-    sudo dnf install libasan libubsan
-
-Additionally, you'll need to have [replxx](https://github.com/AmokHuginnsson/replxx)
-installed. On my system I've installed into `~/local` like this:
+Additionally, [replxx](https://github.com/AmokHuginnsson/replxx) needs to be
+built from source. The simplest approach is to install it into `~/local` like this:
 
     cd
     git clone https://github.com/AmokHuginnsson/replxx.git
@@ -139,55 +132,37 @@ installed. On my system I've installed into `~/local` like this:
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${HOME}/local .. && make
     make install
 
-If you install `replxx` somewhere else, edit `debugger/CMakeLists.txt` as needed.
+(If `replxx` is installed somewhere else, modify `debugger/CMakeLists.txt` as needed.)
 
 Once that's all set up:
 
     mkdir build && cd build
-    cmake ../zcpm
+    cmake -DCMAKE_PREFIX_PATH=~/local ../zcpm
 
-Or for clang like this:
+Or if a particular non-default compiler is needed:
 
-    cd ~/Coding
     mkdir build && cd build
-    cmake -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm/
-
-Note that (as of the time of writing, August 2020) the macOS-supplied clang does work, but it means
-that you get ignorable warnings when you link against the brew-supplied boost libraries.
-
-On macOS if you install gcc via `brew install gcc`, you can configure & build like this:
-
-    cmake -D CMAKE_C_COMPILER=gcc-10 -D CMAKE_CXX_COMPILER=g++-10 ../zcpm/
-
-Although you may run in to linker issues that I haven't yet resolved.
-
-Another issue that I've encountered recently is that Boost 1.71.0 (which is the default for
-some package managers) doesn't play nicely with clang 11.0, resulting in compilation errors.
-To resolve that, download the current version of Boost and build it from source, and then
-tell CMake where to find it, e.g. :
-
-    export PATH=/path/to/preferred/cmake/bin:$PATH
-    BOOST_ROOT=${HOME}/local cmake -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm/
+    cmake -DCMAKE_PREFIX_PATH=~/local -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang++ ../zcpm
 
 Running
 -------
 
-First make sure you've created `~/zcpm/` containing both `bdos.bin` and `bdos.lab` copied from the
-source directory. Or, if you'd prefer you can manually specify the location of these files via command
+First make sure `~/zcpm/` has been created containing both `bdos.bin` and `bdos.lab` copied from the
+source directory. Or, if preferred the locations of those files can be manually specified via command
 line options.
 
-Running the Debugger. I'm assuming that you've got some CP/M test binaries in `~/xcpm`
+Running the Debugger. Assuming that some CP/M test binaries are in `~/xcpm`
 
     ~/path/to/debugger ~/xcpm/drivea/CLS.COM
     ZCPM> go
     ZPPM> quit
 
-It can be helpful to use symbol tables to add information to the log. We can use the symbol table
-from the BDOS that we use as well as the one from the assembled binary that we're testing like this:
+It can be helpful to use symbol tables to add information to the log. The symbol table
+from the BDOS can be used as well as the one from the assembled binary that is being testing like this:
 
     ~/path/to/debugger --bdossym ../bdos/bdos.lab --usersym ~/Coding/z80/emutests/test05.lab ~/Coding/z80/emutests/test05.com blah.txt
 
-Using the Runner.
+Using the Runner:
 
     ~/path/to/runner ~/xcpm/drivea/HELLO.COM
 
@@ -221,10 +196,6 @@ cleanly abstract these aspects.
 Handy commands
 --------------
 
-Setting up a build with static analysis enabled:
-
-    cmake -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm/ -DUSE_TIDY=ON
-
 Running WordStar (after copying `WS*.*` into current directory):
 
     ~/path/to/runner --terminal=vt100 WS.COM
@@ -237,21 +208,26 @@ grepping the resultant log file to see a summary of what BDOS & BIOS calls were 
 
     grep -E 'BIOS fn|BDOS: fn' zcpm.log
 
-Using the gcc10 analyser
-------------------------
+Build with static analysis (via `clang-tidy`) enabled:
 
-As of gcc 10.x, gcc now has a static analysis option. In my tests I'm not having much success, I see
-false (?) positives in STL code which I can't do anything about. So tread carefully.
+    cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm/ -DUSE_TIDY=ON
 
-It can be enabled by the cmake option `USE_ANALYSER`, assuming you're using gcc 10.
+or:
 
-The main problem is that it is very slow to run, and needs LOTS of RAM to do its thing. So if it
+    cmake -DCMAKE_PREFIX_PATH=~/local -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang++ -DUSE_TIDY=1 -DCLANG_TIDY_EXE=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang-tidy ../zcpm
+
+Using the gcc static analyser
+-----------------------------
+
+As of gcc 10.x, gcc has a static analysis option. It can be enabled for `zcpm` by the cmake option `USE_ANALYSER`.
+
+But note that it is very slow to run, and needs LOTS of RAM to do its thing. So if it
 aborts it has probably run out of memory. Sticking with a single-threaded build can help. And turn
 off the ASAN stuff to make things work better. e.g.
 
     cd build
     rm -rf *
-    cmake -DUSE_ANALYSER=ON -DUSE_SANITISERS=OFF ../zcpm
+    cmake -DUSE_ANALYSER=ON -DUSE_SANITISERS=OFF -DCMAKE_PREFIX_PATH=~/local -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12 ../zcpm
     make
 
 Target Platforms:
