@@ -31,6 +31,7 @@ set(LIBSOURCE
 set(LIBHEADER
   bdos.hpp
   bios.hpp
+  config.hpp
   debugaction.hpp
   disk.hpp
   fcb.hpp

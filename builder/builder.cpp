@@ -7,6 +7,7 @@
 #include <boost/log/utility/setup.hpp>
 #include <boost/program_options.hpp>
 
+#include <zcpm/core/config.hpp>
 #include <zcpm/core/system.hpp>
 #include <zcpm/terminal/plain.hpp>
 #include <zcpm/terminal/televideo.hpp>
@@ -29,19 +30,21 @@ namespace zcpm
     {
         // Command line parameters and their defaults
         std::string logfile = "zcpm.log";
-        std::string bdos_file_name;               // The file that provides a binary BDOS (and CCP etc)
-        std::string bdos_sym = "~/zcpm/bdos.lab"; // Filename of .lab file which lists symbols in BDOS implementation
-        std::string user_sym;                     // Filename of .lab file which lists symbols in user's executable
-        uint16_t bdos_file_base = 0xDC00;         // Where to load that binary image
-        uint16_t wboot = 0xF203;                  // Address of WBOOT in loaded binary BDOS
-        uint16_t fbase = 0xE406;                  // Address of FBASE in loaded binary BDOS
+        std::string bdos_file_name;                      // The file that provides a binary BDOS (and CCP etc)
+        uint16_t bdos_file_base = 0xDC00;                // Where to load that binary image
+        uint16_t wboot = 0xF203;                         // Address of WBOOT in loaded binary BDOS
+        uint16_t fbase = 0xE406;                         // Address of FBASE in loaded binary BDOS
         terminal::Type terminal = terminal::Type::PLAIN; // Terminal type
         std::string keymap_file_name; // The file that provides keystroke mapping for terminal emulation
         int columns = 80;             // Number of display columns
         int rows = 24;                // Number of display rows
-        bool memcheck = true;         // Enable RAM read/write checks?
-        bool log_bdos = true;         // Enable logging of BDOS calls?
-        std::string binary;           // The CP/M binary that we try to load and execute
+        Config config = { .memcheck = true,
+                          .log_bdos = true,
+                          .protect_warm_start_vector = true,
+                          .protect_bdos_jump = true,
+                          .bdos_sym = "~/zcpm/bdos.lab",
+                          .user_sym = "" };
+        std::string binary; // The CP/M binary that we try to load and execute
         std::vector<std::string> arguments;
 
         try
@@ -60,6 +63,8 @@ namespace zcpm
                 "columns", po::value<int>(), "Terminal column count")("rows", po::value<int>(), "Terminal row count")(
                 "memcheck", po::value<bool>(), "Enable memory access checks?")(
                 "logbdos", po::value<bool>(), "Enable logging of BDOS calls?")(
+                "protectwarm", po::value<bool>(), "Protect warm start vector from modification?")(
+                "protectbdosjump", po::value<bool>(), "Protect BDOS jump vector from modification?")(
                 "logfile", po::value<std::string>(), "Name of logfile")(
                 "binary", po::value<std::string>(), "CP/M binary input file to execute")(
                 "args", po::value<std::vector<std::string>>(), "Parameters for binary");
@@ -79,7 +84,7 @@ namespace zcpm
                 return nullptr;
             }
             bdos_file_name = (vm.count("bdosfile")) ? vm["bdosfile"].as<std::string>() : home_plus("zcpm/bdos.bin");
-            bdos_sym = (vm.count("bdossym")) ? vm["bdossym"].as<std::string>() : home_plus("zcpm/bdos.lab");
+            config.bdos_sym = (vm.count("bdossym")) ? vm["bdossym"].as<std::string>() : home_plus("zcpm/bdos.lab");
             if (vm.count("bdosbase"))
             {
                 bdos_file_base = vm["bdosbase"].as<uint16_t>();
@@ -107,15 +112,23 @@ namespace zcpm
             }
             if (vm.count("memcheck"))
             {
-                memcheck = vm["memcheck"].as<bool>();
+                config.memcheck = vm["memcheck"].as<bool>();
             }
             if (vm.count("logbdos"))
             {
-                log_bdos = vm["logbdos"].as<bool>();
+                config.log_bdos = vm["logbdos"].as<bool>();
+            }
+            if (vm.count("protectwarm"))
+            {
+                config.protect_warm_start_vector = vm["protectwarm"].as<bool>();
+            }
+            if (vm.count("protectbdosjump"))
+            {
+                config.protect_bdos_jump = vm["protectbdosjump"].as<bool>();
             }
             if (vm.count("usersym"))
             {
-                user_sym = vm["usersym"].as<std::string>();
+                config.user_sym = vm["usersym"].as<std::string>();
             }
             if (vm.count("logfile"))
             {
@@ -161,7 +174,7 @@ namespace zcpm
         }
 
         // Put it all together
-        auto p_machine(std::make_unique<zcpm::System>(std::move(p_terminal), memcheck, log_bdos, bdos_sym, user_sym));
+        auto p_machine(std::make_unique<zcpm::System>(std::move(p_terminal), config));
 
         // The BDOS/CCP binary is built from Z80 source code which was reconstructed from a CP/M 2.2 disassembly plus a
         // tweak or two. The assembled binary is what is loaded here. ZCPM intercepts calls to the BIOS from the BDOS.

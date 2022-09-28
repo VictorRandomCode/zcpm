@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "config.hpp"
 #include "handlers.hpp"
 #include "hardware.hpp"
 
@@ -19,11 +20,7 @@ namespace zcpm
     class System final
     {
     public:
-        System(std::unique_ptr<terminal::Terminal> p_terminal,
-               bool memcheck,
-               bool log_bdos,
-               const std::string& bdos_sym = "",
-               const std::string& user_sym = "");
+        System(std::unique_ptr<terminal::Terminal> p_terminal, const Config& behaviour);
 
         System(const System&) = delete;
         System& operator=(const System&) = delete;

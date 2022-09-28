@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_set>
 
+#include "config.hpp"
 #include "handlers.hpp"
 #include "imemory.hpp"
 #include "processor.hpp"
@@ -26,11 +27,7 @@ namespace zcpm
         , public IMemory
     {
     public:
-        Hardware(std::unique_ptr<terminal::Terminal> p_terminal,
-                 bool memcheck,
-                 bool log_bdos,
-                 const std::string& bdos_sym = "",
-                 const std::string& user_sym = "");
+        Hardware(std::unique_ptr<terminal::Terminal> p_terminal, const Config& behaviour);
 
         Hardware(const Hardware&) = delete;
         Hardware& operator=(const Hardware&) = delete;
@@ -120,6 +117,12 @@ namespace zcpm
 
         std::string describe_address(uint16_t a) const;
 
+        // Returns true if an attempted write to the specified address should be fatal for ZCPM
+        bool is_fatal_write(uint16_t address) const;
+
+        // Runtime options from commandline switches
+        const Config m_config;
+
         // Optional handler to call when we do a Z80 'IN'
         InputHandler m_input_handler;
 
@@ -135,8 +138,6 @@ namespace zcpm
         std::unique_ptr<Bios> m_pbios;
 
         bool m_check_memory_accesses = false; // Indicates if we have temporarily allowed/disallowed memory checks
-        const bool m_enable_memory_checks; // The 'master switch' for memory checks, overrides temporary setting above
-        const bool m_log_bdos;             // Log BDOS calls?
 
         // Addresses that we are watching; for now we just log their access, but longer-term we'll invoke a
         // user-supplied handler
@@ -147,7 +148,6 @@ namespace zcpm
         std::unordered_set<uint16_t> m_watch_write;
 
         uint16_t m_fbase = 0;
-        uint16_t m_wboot = 0;
 
         // Table of known symbols.
         SymbolTable m_symbols;

@@ -16,47 +16,13 @@
 #include "processor.hpp"
 #include "registers.hpp"
 
-namespace
-{
-    // Returns true if an attempted write to the specified address should be fatal for ZCPM
-    bool is_fatal_write(uint16_t address)
-    {
-        // Note that a few programs will try to modify the warm start vector (at locations 00,01,02)
-        // to hook in their own intercepts. For example Supercalc.
-        // TODO: Add a runtime flag to enable/disable this check.
-        if (address <= 0x0002)
-        {
-            // Warm start vector
-            return true;
-        }
-
-        // Note that CP/M debuggers will intercept the BDOS jump vector, which means that they'll
-        // try to modify address 0006 & 0007.  But normal programs won't do that.
-        // TODO: Add a runtime flag to enable/disable this check.
-        if ((address >= 0x0005) && (address <= 0x0007))
-        {
-            // BDOS jump vector
-            return true;
-        }
-
-        // Everything else is ok
-        return false;
-    }
-
-} // namespace
-
 namespace zcpm
 {
 
-    Hardware::Hardware(std::unique_ptr<terminal::Terminal> p_terminal,
-                       bool memcheck,
-                       bool log_bdos,
-                       const std::string& bdos_sym,
-                       const std::string& user_sym)
+    Hardware::Hardware(std::unique_ptr<terminal::Terminal> p_terminal, const Config& behaviour)
         : m_processor(std::make_unique<Processor>(*this, *this)),
-          m_pterminal(std::move(p_terminal)),
-          m_enable_memory_checks(memcheck),
-          m_log_bdos(log_bdos)
+          m_config(behaviour),
+          m_pterminal(std::move(p_terminal))
     {
         m_memory.fill(0);
 
@@ -70,8 +36,8 @@ namespace zcpm
         add_watch_read(0x0008, (0x0100 - 8));
 
         // Load the symbol table
-        m_symbols.load(bdos_sym, "BDOS");
-        m_symbols.load(user_sym, "USER");
+        m_symbols.load(m_config.bdos_sym, "BDOS");
+        m_symbols.load(m_config.user_sym, "USER");
 
         // And a symbol to help investigate accesses to the very top of memory.  I *think* these
         // are because of our direct call to a BDOS function on startup in which case all is well,
@@ -94,7 +60,6 @@ namespace zcpm
     void Hardware::set_fbase_and_wboot(uint16_t fbase, uint16_t wboot)
     {
         m_fbase = fbase;
-        m_wboot = wboot;
 
         // Set up jump to BIOS 'WBOOT' from 0000
         write_byte(0x0000, 0xc3);           // JP
@@ -149,7 +114,7 @@ namespace zcpm
         // Does this appear to be a BDOS call?  i.e., a jump to FBASE from 0005?
         if (address == m_fbase)
         {
-            if (m_log_bdos)
+            if (m_config.log_bdos)
             {
                 // "Parse" the pending BDOS call into various bits of useful information
                 const auto registers = m_processor->get_registers();
@@ -379,7 +344,7 @@ namespace zcpm
 
     void Hardware::check_memory_accesses(bool protect)
     {
-        if (m_enable_memory_checks && (m_check_memory_accesses != protect))
+        if (m_config.memcheck && (m_check_memory_accesses != protect))
         {
             BOOST_LOG_TRIVIAL(trace) << (protect ? "Enabling" : "Disabling") << " memory access checks";
             m_check_memory_accesses = protect;
@@ -450,7 +415,7 @@ namespace zcpm
 
     void Hardware::check_watched_memory_byte(uint16_t address, Access mode, uint8_t value) const
     {
-        if (!m_enable_memory_checks || !m_check_memory_accesses)
+        if (!m_config.memcheck || !m_check_memory_accesses)
         {
             return;
         }
@@ -486,7 +451,7 @@ namespace zcpm
 
     void Hardware::check_watched_memory_word(uint16_t address, Access mode, uint16_t value) const
     {
-        if (!m_enable_memory_checks || !m_check_memory_accesses)
+        if (!m_config.memcheck || !m_check_memory_accesses)
         {
             return;
         }
@@ -530,4 +495,25 @@ namespace zcpm
         return result;
     }
 
+    bool Hardware::is_fatal_write(uint16_t address) const
+    {
+        // A few programs will try to modify the warm start vector (at locations 0000,0001,0002)
+        // to hook in their own intercepts. For example Supercalc.
+        if ((address <= 0x0002) && m_config.protect_warm_start_vector)
+        {
+            // Warm start vector
+            return true;
+        }
+
+        // CP/M debuggers will intercept the BDOS jump vector, which means that they'll
+        // try to modify address 0006 & 0007.  But normal programs won't.
+        if (((address >= 0x0005) && (address <= 0x0007)) && m_config.protect_bdos_jump)
+        {
+            // BDOS jump vector
+            return true;
+        }
+
+        // Everything else is ok
+        return false;
+    }
 } // namespace zcpm

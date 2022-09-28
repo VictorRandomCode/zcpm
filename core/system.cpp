@@ -19,12 +19,8 @@
 namespace zcpm
 {
 
-    System::System(std::unique_ptr<terminal::Terminal> p_terminal,
-                   bool memcheck,
-                   bool log_bdos,
-                   const std::string& bdos_sym,
-                   const std::string& user_sym)
-        : m_hardware(std::move(p_terminal), memcheck, log_bdos, bdos_sym, user_sym)
+    System::System(std::unique_ptr<terminal::Terminal> p_terminal, const Config& behaviour)
+        : m_hardware(std::move(p_terminal), behaviour)
     {
     }
 
