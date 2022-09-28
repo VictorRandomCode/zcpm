@@ -40,6 +40,7 @@ namespace zcpm
         int columns = 80;             // Number of display columns
         int rows = 24;                // Number of display rows
         bool memcheck = true;         // Enable RAM read/write checks?
+        bool log_bdos = true;         // Enable logging of BDOS calls?
         std::string binary;           // The CP/M binary that we try to load and execute
         std::vector<std::string> arguments;
 
@@ -58,6 +59,7 @@ namespace zcpm
                 "keymap", po::value<std::string>(), "Optional keymap file for terminal emulation")(
                 "columns", po::value<int>(), "Terminal column count")("rows", po::value<int>(), "Terminal row count")(
                 "memcheck", po::value<bool>(), "Enable memory access checks?")(
+                "logbdos", po::value<bool>(), "Enable logging of BDOS calls?")(
                 "logfile", po::value<std::string>(), "Name of logfile")(
                 "binary", po::value<std::string>(), "CP/M binary input file to execute")(
                 "args", po::value<std::vector<std::string>>(), "Parameters for binary");
@@ -107,6 +109,10 @@ namespace zcpm
             {
                 memcheck = vm["memcheck"].as<bool>();
             }
+            if (vm.count("logbdos"))
+            {
+                log_bdos = vm["logbdos"].as<bool>();
+            }
             if (vm.count("usersym"))
             {
                 user_sym = vm["usersym"].as<std::string>();
@@ -155,7 +161,7 @@ namespace zcpm
         }
 
         // Put it all together
-        auto p_machine(std::make_unique<zcpm::System>(std::move(p_terminal), memcheck, bdos_sym, user_sym));
+        auto p_machine(std::make_unique<zcpm::System>(std::move(p_terminal), memcheck, log_bdos, bdos_sym, user_sym));
 
         // The BDOS/CCP binary is built from Z80 source code which was reconstructed from a CP/M 2.2 disassembly plus a
         // tweak or two. The assembled binary is what is loaded here. ZCPM intercepts calls to the BIOS from the BDOS.

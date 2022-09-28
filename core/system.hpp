@@ -21,6 +21,7 @@ namespace zcpm
     public:
         System(std::unique_ptr<terminal::Terminal> p_terminal,
                bool memcheck,
+               bool log_bdos,
                const std::string& bdos_sym = "",
                const std::string& user_sym = "");
 

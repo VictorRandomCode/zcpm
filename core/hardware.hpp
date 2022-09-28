@@ -28,6 +28,7 @@ namespace zcpm
     public:
         Hardware(std::unique_ptr<terminal::Terminal> p_terminal,
                  bool memcheck,
+                 bool log_bdos,
                  const std::string& bdos_sym = "",
                  const std::string& user_sym = "");
 
@@ -134,7 +135,8 @@ namespace zcpm
         std::unique_ptr<Bios> m_pbios;
 
         bool m_check_memory_accesses = false; // Indicates if we have temporarily allowed/disallowed memory checks
-        bool m_enable_memory_checks; // The 'master switch' for memory checks, overrides temporary setting above
+        const bool m_enable_memory_checks; // The 'master switch' for memory checks, overrides temporary setting above
+        const bool m_log_bdos;             // Log BDOS calls?
 
         // Addresses that we are watching; for now we just log their access, but longer-term we'll invoke a
         // user-supplied handler

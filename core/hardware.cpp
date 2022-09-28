@@ -50,11 +50,13 @@ namespace zcpm
 
     Hardware::Hardware(std::unique_ptr<terminal::Terminal> p_terminal,
                        bool memcheck,
+                       bool log_bdos,
                        const std::string& bdos_sym,
                        const std::string& user_sym)
         : m_processor(std::make_unique<Processor>(*this, *this)),
           m_pterminal(std::move(p_terminal)),
-          m_enable_memory_checks(memcheck)
+          m_enable_memory_checks(memcheck),
+          m_log_bdos(log_bdos)
     {
         m_memory.fill(0);
 
@@ -147,10 +149,7 @@ namespace zcpm
         // Does this appear to be a BDOS call?  i.e., a jump to FBASE from 0005?
         if (address == m_fbase)
         {
-            // TODO: the following code is just for logging/debugging. If performance becomes an issue, execution of
-            // this block should be conditional on a new boolean. Although this is only executed on each entry to BDOS,
-            // which isn't that bad...
-            if (true) // TODO: execution to be controlled by a new run-time option
+            if (m_log_bdos)
             {
                 // "Parse" the pending BDOS call into various bits of useful information
                 const auto registers = m_processor->get_registers();
