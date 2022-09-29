@@ -1,6 +1,6 @@
 #include "bdos.hpp"
 
-#include <boost/format.hpp>
+#include <fmt/core.h>
 
 #include "fcb.hpp"
 
@@ -30,7 +30,7 @@ namespace zcpm::bdos
                 }
                 else
                 {
-                    result += (boost::format("<%02X>") % static_cast<unsigned short>(ch)).str();
+                    result += fmt::format("<{:02X}>", ch);
                 }
             }
 
@@ -41,7 +41,7 @@ namespace zcpm::bdos
         std::string describe_fcb(const IMemory& memory, uint16_t address, bool both = false)
         {
             const Fcb fcb(memory, address);
-            return (boost::format("FCB at %04X: %s") % address % fcb.describe(both)).str();
+            return fmt::format("FCB at {:04X}: {}", address, fcb.describe(both));
         }
 
     } // namespace
@@ -51,7 +51,7 @@ namespace zcpm::bdos
         // Register C indicates *which* BDOS call is being made
         const auto c = Registers::low_byte_of(registers.BC);
 
-        const auto prefix = (boost::format("fn#%d ") % static_cast<unsigned short>(c)).str();
+        const auto prefix = fmt::format("fn#{:d} ", c);
 
         // TODO: make the 'description' field be smarter; show actual filenames or register values etc.
         switch (c)
@@ -61,9 +61,7 @@ namespace zcpm::bdos
         case 2:
         {
             auto ch = static_cast<char>(Registers::low_byte_of(registers.DE));
-            auto description = (boost::format("Console output '%c' (ASCII 0x%02X)") % (std::isprint(ch) ? ch : '?') %
-                                static_cast<unsigned short>(ch))
-                                   .str();
+            auto description = fmt::format("Console output '{:c}' (ASCII 0x{:02X})", (std::isprint(ch) ? ch : '?'), ch);
             return { prefix + "C_WRITE", description };
         }
         case 6: return { prefix + "C_RAWIO", "Direct console I/O" };
@@ -77,9 +75,7 @@ namespace zcpm::bdos
         {
             auto& buffer = registers.DE;
             auto max = memory.read_byte(buffer);
-            auto description = (boost::format("Read console buffer (buffer at %04X, %d bytes max)") % buffer %
-                                static_cast<unsigned short>(max))
-                                   .str();
+            auto description = fmt::format("Read console buffer (buffer at {:04X}, {:d} bytes max)", buffer, max);
             return { prefix + "C_READSTR", description };
         }
         case 11: return { prefix + "C_STAT", "Get console status" };
@@ -135,7 +131,7 @@ namespace zcpm::bdos
         case 25: return { prefix + "DRV_GET", "Return current disk" };
         case 26:
         {
-            auto description = (boost::format("Set DMA address to %04X") % registers.DE).str();
+            auto description = fmt::format("Set DMA address to {:04X}", registers.DE);
             return { prefix + "F_DMAOFF", description };
         }
         case 27: return { prefix + "DRV_ALLOCVEC", "Get addr(alloc)" };
@@ -149,9 +145,7 @@ namespace zcpm::bdos
         case 32:
         {
             auto e = Registers::low_byte_of(registers.DE);
-            auto description =
-                (boost::format("(E=%02X means '%s')") % static_cast<unsigned short>(e) % ((e == 0xFF) ? "get" : "set"))
-                    .str();
+            auto description = fmt::format("(E={:02X} means '{}')", e, ((e == 0xFF) ? "get" : "set"));
             return { prefix + "F_USERNUM", "Set/get user code " + description };
         }
         case 33:

@@ -5,8 +5,8 @@
 #include <stdexcept>
 #include <string>
 
-#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <fmt/core.h>
 
 #include <zcpm/terminal/terminal.hpp>
 
@@ -315,15 +315,15 @@ namespace zcpm
         {
             if (bytes_this_line == 0)
             {
-                buf_address = (boost::format("%04X:") % (base + i)).str();
+                buf_address = fmt::format("{:04X}", base + i);
                 buf_hex.clear();
                 buf_ascii.clear();
             }
 
             const auto byte = m_memory[base + i];
-            buf_hex += (boost::format(" %02X") % static_cast<unsigned short>(byte)).str();
+            buf_hex += fmt::format(" {:02X}", byte);
             const auto ch = ((byte >= ' ') && (byte <= 0x7E)) ? static_cast<char>(byte) : '.';
-            buf_ascii += (boost::format("%c") % ch).str();
+            buf_ascii += ch;
 
             ++bytes_this_line;
 
@@ -388,7 +388,7 @@ namespace zcpm
                 // stack track, showing the stack past these values is of no value
                 startup = true;
             }
-            ss << boost::format(" << %s") % describe_address(ret);
+            ss << " << " << describe_address(ret);
             if (use_source_value)
             {
                 ss << "+3";
@@ -426,16 +426,13 @@ namespace zcpm
 
         if ((mode == Access::READ) && (m_watch_read.count(address)))
         {
-            BOOST_LOG_TRIVIAL(trace) << boost::format("    %02X <- %s at PC=%s") % static_cast<unsigned short>(value) %
-                                            describe_address(address) % describe_address(m_processor->get_pc());
+            BOOST_LOG_TRIVIAL(trace) << fmt::format(
+                "    {:02X} <- {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
         }
         if ((mode == Access::WRITE) && (m_watch_write.count(address)))
         {
-            BOOST_LOG_TRIVIAL(trace) << boost::format("    %02X -> %s at PC=%s") % static_cast<unsigned short>(value) %
-                                            describe_address(address) % describe_address(m_processor->get_pc());
-            // TODO: If we detect an attempt to clobber very low addresses, panic. It's a sign of bad logic in our
-            // system.
-            // TODO: Try and find the root cause for this situation, and maybe handle this more gracefully?
+            BOOST_LOG_TRIVIAL(trace) << fmt::format(
+                "    {:02X} -> {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
             if (is_fatal_write(address))
             {
                 throw std::runtime_error("Aborting: illegal memory write");
@@ -443,8 +440,8 @@ namespace zcpm
         }
         if ((mode == Access::WRITE) && m_pbios && (m_pbios->is_bios(address)))
         {
-            BOOST_LOG_TRIVIAL(trace) << boost::format("BIOS write to %s at PC=%s") % describe_address(address) %
-                                            describe_address(m_processor->get_pc());
+            BOOST_LOG_TRIVIAL(trace) << "BIOS write to " << describe_address(address)
+                                     << " at PC=" << describe_address(m_processor->get_pc());
             throw std::runtime_error("BIOS tampering!");
         }
     }
@@ -461,31 +458,30 @@ namespace zcpm
 
         if ((mode == Access::READ) && (m_watch_read.count(address + 0) || m_watch_read.count(address + 1)))
         {
-            BOOST_LOG_TRIVIAL(trace) << boost::format("  %04X <- %s at PC=%s") % value % describe_address(address) %
-                                            describe_address(m_processor->get_pc());
+            BOOST_LOG_TRIVIAL(trace) << fmt::format(
+                "  {:04X} <- {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
         }
         if ((mode == Access::WRITE) && (m_watch_write.count(address) || m_watch_write.count(address + 1)))
         {
-            BOOST_LOG_TRIVIAL(trace) << boost::format("  %04X -> %s at PC=%s") % value % describe_address(address) %
-                                            describe_address(m_processor->get_pc());
+            BOOST_LOG_TRIVIAL(trace) << fmt::format(
+                "  {:04X} -> {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
             if (is_fatal_write(address))
             {
-                // We've detected an attempt to clobber very low addresses, panic. Either the program under test is
-                // naughty, or we've got a logic bug.
+                // Detected an attempt to clobber very low addresses.
                 throw std::runtime_error("Aborting: illegal memory write");
             }
         }
         if ((mode == Access::WRITE) && m_pbios && (m_pbios->is_bios(address + 0) || m_pbios->is_bios(address + 1)))
         {
-            BOOST_LOG_TRIVIAL(trace) << boost::format("BIOS write to %s at PC=%s") % describe_address(address) %
-                                            describe_address(m_processor->get_pc());
+            BOOST_LOG_TRIVIAL(trace) << "BIOS write to " << describe_address(address)
+                                     << " at PC=" << describe_address(m_processor->get_pc());
             throw std::runtime_error("BIOS tampering!");
         }
     }
 
     std::string Hardware::describe_address(uint16_t a) const
     {
-        auto result = (boost::format("%04X") % a).str();
+        auto result = fmt::format("{:04X}", a);
 
         if (!m_symbols.empty())
         {

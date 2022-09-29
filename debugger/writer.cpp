@@ -2,8 +2,10 @@
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <vector>
 
-#include <boost/format.hpp>
+#include <boost/assert.hpp>
+#include <fmt/core.h>
 
 #include <zcpm/core/processor.hpp>
 #include <zcpm/core/registers.hpp>
@@ -27,13 +29,13 @@ namespace
     // A 8-bit literal as a 2 digit hex string
     auto byte(uint8_t x)
     {
-        return (boost::format("%02X") % static_cast<unsigned int>(x)).str();
+        return fmt::format("{:02X}", x);
     }
 
     // A 16-bit literal as a 4 digit hex string
     auto word(uint8_t low, uint8_t high)
     {
-        return (boost::format("%04X") % (high << 8 | low)).str();
+        return fmt::format("{:04X}", high << 8 | low);
     }
 
     std::string byte_array_to_string(const std::vector<uint8_t>& bytes)
@@ -53,30 +55,30 @@ namespace
     // Dereference NN from (string)
     auto nn_string(uint8_t low, uint8_t high, const std::string& s)
     {
-        return (boost::format("(%04X),%s") % (high << 8 | low) % s).str();
+        return fmt::format("({:04X}),{}", high << 8 | low, s);
     }
 
     // Dereference (string) from NN
     auto string_nn(uint8_t low, uint8_t high, const std::string& s)
     {
-        return (boost::format("%s,(%04X)") % s % (high << 8 | low)).str();
+        return fmt::format("{},({:04X})", s, high << 8 | low);
     }
 
     // Dereference N from (string)
     auto n_string(uint8_t n, const std::string& s)
     {
-        return (boost::format("(%02X),%s") % static_cast<unsigned int>(n) % s).str();
+        return fmt::format("({:02X}),{}", n, s);
     }
 
     // Dereference (string) from N
     // auto string_n(uint8_t n, const std::string& s)
     //{
-    //  return (boost::format("%s,(%02X)") % s % static_cast<unsigned int>(n)).str();
+    //  return fmt::format("{},({:02X})", s, n);
     //}
 
     auto hl_ss(uint8_t ss)
     {
-        return (boost::format("HL,%s") % WordRegMask[ss]).str();
+        return fmt::format("HL,{}", WordRegMask[ss]);
     }
 
     auto byte_register(uint8_t r)
@@ -92,41 +94,41 @@ namespace
     // r,n where r is a byte register and n is a 8-bit literal
     auto r_n(uint8_t r, uint8_t n)
     {
-        return (boost::format("%s,%02X") % ByteRegMask[r] % static_cast<unsigned int>(n)).str();
+        return fmt::format("{},{:02X}", ByteRegMask[r], n);
     }
 
     // r,r where r1 and r2 are both byte registers
     auto r_r(uint8_t r1, uint8_t r2)
     {
-        return (boost::format("%s,%s") % ByteRegMask[r1] % ByteRegMask[r2]).str();
+        return fmt::format("{},{}", ByteRegMask[r1], ByteRegMask[r2]);
     }
 
     // dd,nn where dd is a word register and nn is a 16-bit literal
     auto dd_nn(uint8_t dd, uint8_t nn_low, uint8_t nn_high)
     {
         const uint16_t nn = (nn_high << 8) | nn_low;
-        return (boost::format("%s,%04X") % WordRegMask[dd] % nn).str();
+        return fmt::format("{},{:04X}", WordRegMask[dd], nn);
     }
 
     // (nn),dd where dd is a word register and nn is a 16-bit literal
     auto inn_dd(uint8_t dd, uint8_t nn_low, uint8_t nn_high)
     {
         const uint16_t nn = (nn_high << 8) | nn_low;
-        return (boost::format("(%04X),%s") % nn % WordRegMask[dd]).str();
+        return fmt::format("({:04X}),{}", nn, WordRegMask[dd]);
     }
 
     // dd,(nn) where dd is a word register and nn is a 16-bit literal
     auto dd_inn(uint8_t dd, uint8_t nn_low, uint8_t nn_high)
     {
         const uint16_t nn = (nn_high << 8) | nn_low;
-        return (boost::format("%s,(%04X)") % WordRegMask[dd] % nn).str();
+        return fmt::format("{},({:04X})", WordRegMask[dd], nn);
     }
 
     // cc,pq where cc is a 3-bit condition and pq is a 16-bit literal
     auto cc_pq(uint8_t cc, uint8_t pq_low, uint8_t pq_high)
     {
         const uint16_t pq = (pq_high << 8) | pq_low;
-        return (boost::format("%s,%04X") % CondMask[cc] % pq).str();
+        return fmt::format("{},{:04X}", CondMask[cc], pq);
     }
 
     // Relative target as a 4 digit hex value (PC+e)
@@ -134,7 +136,7 @@ namespace
     {
         const int8_t ee = e;
         const uint16_t dest = pc + 2 + ee;
-        return (boost::format("%04X") % dest).str();
+        return fmt::format("{:04X}", dest);
     }
 
     // cc,e where cc is a 2-bit condition and e is a relative jump, which
@@ -143,21 +145,21 @@ namespace
     {
         const int8_t ee = e;
         const uint16_t dest = pc + 2 + ee;
-        return (boost::format("%s,%04X") % CondMask[cc] % dest).str();
+        return fmt::format("{},{:04X}", CondMask[cc], dest);
     }
 
     // "r,(reg+d)"  where r is a 8-bit register index and reg is an index register name and d is an offset
     auto r_ind_offset(uint8_t r, const std::string& reg, uint8_t offset)
     {
         const int8_t o = offset;
-        return (boost::format("%s,(%s+%02X)") % ByteRegMask[r] % reg % static_cast<short>(o)).str();
+        return fmt::format("{},({}+{:02X})", ByteRegMask[r], reg, o);
     }
 
     // "(reg+d),r"  where r is a 8-bit register index and reg is an index register name and d is an offset
     auto ind_offset_r(uint8_t r, const std::string& reg, uint8_t offset)
     {
         const int8_t o = offset;
-        return (boost::format("(%s+%02X),%s") % reg % static_cast<short>(o) % ByteRegMask[r]).str();
+        return fmt::format("({}+{:02X}),{}", reg, o, ByteRegMask[r]);
     }
 
     // TODO: Collate string constants
@@ -178,24 +180,24 @@ namespace
         {
             const uint16_t b = (op2 >> 3) & 0x07;
             const uint8_t r = op2 & 0x07;
-            return { 2, "BIT", (boost::format("%d,") % b).str() + ByteRegMask[r] };
+            return { 2, "BIT", fmt::format("{:d},", b) + ByteRegMask[r] };
         }
         if ((op2 & 0xC0) == 0x80)
         {
             const uint16_t b = (op2 >> 3) & 0x07;
             const uint8_t r = op2 & 0x07;
-            return { 2, "RES", (boost::format("%d,") % b).str() + ByteRegMask[r] };
+            return { 2, "RES", fmt::format("{:d},", b) + ByteRegMask[r] };
         }
         if ((op2 & 0xC0) == 0xC0)
         {
             const uint16_t b = (op2 >> 3) & 0x07;
             const uint8_t r = op2 & 0x07;
-            return { 2, "SET", (boost::format("%d,") % b).str() + ByteRegMask[r] };
+            return { 2, "SET", fmt::format("{:d},", b) + ByteRegMask[r] };
         }
         if ((op2 & 0xC7) == 0x46)
         {
             const uint16_t b = (op2 >> 3) & 0x07;
-            return { 2, "BIT", (boost::format("%d,(HL)") % b).str() };
+            return { 2, "BIT", fmt::format("{:d},(HL)", b) };
         }
         if ((op2 & 0xF8) == 0x00)
         {
@@ -239,7 +241,7 @@ namespace
         }
 
         // No match
-        return { 0, (boost::format("?? CB %02X") % static_cast<unsigned short>(op2)).str(), "" };
+        return { 0, fmt::format("?? CB {:02X}", op2), "" };
     }
 
     std::tuple<size_t, std::string, std::string> disassemble_ddfd(const std::string& xy,
@@ -253,68 +255,59 @@ namespace
         {
         case 0x09: return { 2, "ADD", xy + ",BC" };
         case 0x19: return { 2, "ADD", xy + ",DE" };
-        case 0x21: return { 4, "LD", (boost::format("%S,%04X") % xy % ((op4 << 8) | op3)).str() };
-        case 0x22: return { 4, "LD", (boost::format("(%04X),%S") % ((op4 << 8) | op3) % xy).str() };
+        case 0x21: return { 4, "LD", fmt::format("{},{:04X}", xy, (op4 << 8) | op3) };
+        case 0x22: return { 4, "LD", fmt::format("({:04X}),{}", (op4 << 8) | op3, xy) };
         case 0x23: return { 2, "INC", xy };
         case 0x24: return { 2, "INC", xy + "H" };
         case 0x25: return { 2, "DEC", xy + "H" };
-        case 0x26: return { 3, "LD", (boost::format("%SH,%02X") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x26: return { 3, "LD", fmt::format("{}H,{:02X}", xy, op3) };
         case 0x29: return { 2, "ADD", xy + "," + xy };
-        case 0x2A: return { 4, "LD", (boost::format("%S,(%04X)") % xy % ((op4 << 8) | op3)).str() };
+        case 0x2A: return { 4, "LD", fmt::format("{},({:04X})", xy, (op4 << 8) | op3) };
         case 0x2B: return { 2, "DEC", xy };
         case 0x2C: return { 2, "INC", xy + "L" };
         case 0x2D: return { 2, "DEC", xy + "L" };
-        case 0x2E: return { 3, "LD", (boost::format("%SL,%02X") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0x34: return { 3, "INC", (boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0x35: return { 3, "DEC", (boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0x36:
-            return {
-                4,
-                "LD",
-                (boost::format("(%S+%02X),%02X") % xy % static_cast<uint16_t>(op3) % static_cast<uint16_t>(op4)).str()
-            };
+        case 0x2E: return { 3, "LD", fmt::format("{}L,{:02X}", xy, op3) };
+        case 0x34: return { 3, "INC", fmt::format("({}+{:02X})", xy, op3) };
+        case 0x35: return { 3, "DEC", fmt::format("({}+{:02X})", xy, op3) };
+        case 0x36: return { 4, "LD", fmt::format("({}+{:02X}),{:02X}", xy, op3, op4) };
         case 0x39: return { 2, "ADD", xy + ",SP" };
-        case 0x86: return { 3, "ADD", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0x8E: return { 3, "ADC", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x86: return { 3, "ADD", fmt::format("A,({}+{:02X})", xy, op3) };
+        case 0x8E: return { 3, "ADC", fmt::format("A,({}+{:02X})", xy, op3) };
         case 0x94: return { 2, "SUB", xy + "H" };
         case 0x95: return { 2, "SUB", xy + "L" };
-        case 0x96: return { 3, "SUB", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0x9E: return { 3, "SBC", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0xA6: return { 3, "AND", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0xAE: return { 3, "XOR", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0xB6: return { 3, "OR", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
-        case 0xBE: return { 3, "CP", (boost::format("A,(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+        case 0x96: return { 3, "SUB", fmt::format("A,({}+{:02X})", xy, op3) };
+        case 0x9E: return { 3, "SBC", fmt::format("A,({}+{:02X})", xy, op3) };
+        case 0xA6: return { 3, "AND", fmt::format("A,({}+{:02X})", xy, op3) };
+        case 0xAE: return { 3, "XOR", fmt::format("A,({}+{:02X})", xy, op3) };
+        case 0xB6: return { 3, "OR", fmt::format("A,({}+{:02X})", xy, op3) };
+        case 0xBE: return { 3, "CP", fmt::format("A,({}+{:02X})", xy, op3) };
         case 0xCB:
         {
             // TODO: move to a new method of its own? We'll see how well this scales...
             if (DdFdCbLogicals.contains(op4))
             {
-                return { 4,
-                         DdFdCbLogicals.at(op4),
-                         (boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3)).str() };
+                return { 4, DdFdCbLogicals.at(op4), fmt::format("({}+{:02X})", xy, op3) };
             }
             else if ((op4 & 0xC0) == 0x80)
             {
                 const auto b = (op4 >> 3) & 0x07;
-                return { 4, "RES", (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
+                return { 4, "RES", fmt::format("{:d},({}+{:02X})", b, xy, op3) };
             }
             else if ((op4 & 0xC0) == 0x40)
             {
                 const auto b = (op4 >> 3) & 0x07;
-                return { 4, "BIT", (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
+                return { 4, "BIT", fmt::format("{:d},({}+{:02X})", b, xy, op3) };
             }
             else if ((op4 & 0xC0) == 0xC0)
             {
                 const auto b = (op4 >> 3) & 0x07;
-                return { 4, "SET", (boost::format("%d,(%S+%02X)") % b % xy % static_cast<uint16_t>(op3)).str() };
+                return { 4, "SET", fmt::format("{:d},({}+{:02X})", b, xy, op3) };
             }
             else
             {
                 // Unimplemented sequence
-                const auto message = boost::format("Unimplemented %02X %02X %02X %02X") % static_cast<uint16_t>(op1) %
-                                     static_cast<uint16_t>(op2) % static_cast<uint16_t>(op3) %
-                                     static_cast<uint16_t>(op4);
-                throw std::logic_error(message.str());
+                const auto message = fmt::format("Unimplemented {:02X} {:02X} {:02X} {:02X}", op1, op2, op3, op4);
+                throw std::logic_error(message);
             }
         }
         case 0xE1: return { 2, "POP", xy };
@@ -333,13 +326,13 @@ namespace
             const auto table = (op1 == 0xDD) ? DDByteRegMask : FDByteRegMask;
             if (p1 == 0x06)
             {
-                const auto lhs = boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3);
-                return { 3, "LD", lhs.str() + "," + std::string(ByteRegMask[p2]) };
+                const auto lhs = fmt::format("({}+{:02X})", xy, op3);
+                return { 3, "LD", lhs + "," + std::string(ByteRegMask[p2]) };
             }
             else if (p2 == 0x06)
             {
-                const auto rhs = boost::format("(%S+%02X)") % xy % static_cast<uint16_t>(op3);
-                return { 3, "LD", std::string(ByteRegMask[p1]) + "," + rhs.str() };
+                const auto rhs = fmt::format("({}+{:02X})", xy, op3);
+                return { 3, "LD", std::string(ByteRegMask[p1]) + "," + rhs };
             }
             else
             {
@@ -349,7 +342,7 @@ namespace
         if ((op4 & 0xC0) == 0x40)
         {
             const auto b = (op4 >> 3) & 0x07;
-            return { 4, "BIT", (boost::format("%X,(%S+%02X)") % xy % b % static_cast<uint16_t>(op3)).str() };
+            return { 4, "BIT", fmt::format("{:X},({}+{:02X})", b, xy, op3) };
         }
         if ((op2 & 0xC7) == 0x46)
         {
@@ -363,9 +356,8 @@ namespace
         }
 
         // Unimplemented sequence
-        const auto message = boost::format("Unimplemented %02X %02X %02X %02X") % static_cast<uint16_t>(op1) %
-                             static_cast<uint16_t>(op2) % static_cast<uint16_t>(op3) % static_cast<uint16_t>(op4);
-        throw std::logic_error(message.str());
+        const auto message = fmt::format("Unimplemented {:02X} {:02X} {:02X} {:02X}", op1, op2, op3, op4);
+        throw std::logic_error(message);
     }
 
     std::tuple<size_t, std::string, std::string> disassemble_ed(uint8_t op2, uint8_t op3, uint8_t op4)
@@ -412,7 +404,7 @@ namespace
         }
 
         // No match
-        return { 0, (boost::format("?? ED %02X") % static_cast<unsigned short>(op2)).str(), "" };
+        return { 0, fmt::format("?? ED {:02X}", op2), "" };
     }
 
     // Given 4 bytes at the current PC (plus the PC), returns two human-readable "words" of disassembly,
@@ -604,11 +596,7 @@ namespace
         }
 
         // Unhandled instruction
-        return { 0,
-                 (boost::format("?TODO(%02X,%02X,%02X)") % static_cast<unsigned short>(op1) %
-                  static_cast<unsigned short>(op2) % static_cast<unsigned short>(op3))
-                     .str(),
-                 "" };
+        return { 0, fmt::format("?TODO({:02X},{:02X},{:02X})", op1, op2, op3), "" };
     }
 } // namespace
 
@@ -683,10 +671,10 @@ void Writer::dump(int start, size_t bytes) const
     {
         if ((offset % 16) == 0)
         {
-            m_os << boost::format("%04X:") % (base + offset);
+            m_os << fmt::format("{:04X}:", base + offset);
         }
         const auto b = m_memory.read_byte(base + offset);
-        hex_bytes += (boost::format(" %02X") % static_cast<unsigned short>(b)).str();
+        hex_bytes += fmt::format(" {:02X}", b);
         ascii_bytes += std::string(1, ((b < 0x20) || (b > 0x7f)) ? '.' : b);
         if (((offset + 1) % 16) == 0)
         {
@@ -705,7 +693,7 @@ void Writer::dump(int start, size_t bytes) const
 
 void Writer::display(uint16_t address, const std::string& s1, const std::string& s2) const
 {
-    m_os << boost::format("%04X     %-5s%s") % address % s1 % s2 << std::endl;
+    m_os << fmt::format("{:04X}     {:<5}{}", address, s1, s2) << std::endl;
 }
 
 void Writer::display(const zcpm::Registers& registers,
@@ -713,14 +701,26 @@ void Writer::display(const zcpm::Registers& registers,
                      const std::string& s2,
                      const uint16_t offset) const
 {
-    m_os << boost::format("%s A=%02X B=%04X D=%04X H=%04X S=%04X P=%04X  %-5s%s") %
-                flags_to_string(registers.AF & 0xFF) % static_cast<unsigned short>(registers.AF >> 8) % registers.BC %
-                registers.DE % registers.HL % registers.SP % ((registers.PC + offset) & 0xFFFF) % s1 % s2;
+    m_os << fmt::format("{} A={:02X} B={:04X} D={:04X} H={:04X} S={:04X} P={:04X}  {:<5}{}",
+                        flags_to_string(registers.AF & 0xFF),
+                        registers.AF >> 8,
+                        registers.BC,
+                        registers.DE,
+                        registers.HL,
+                        registers.SP,
+                        ((registers.PC + offset) & 0xFFFF),
+                        s1,
+                        s2);
 
     m_os << std::endl;
-    m_os << boost::format("%s '=%02X '=%04X '=%04X '=%04X X=%04X Y=%04X") % flags_to_string(registers.altAF & 0xFF) %
-                static_cast<unsigned short>(registers.altAF >> 8) % registers.altBC % registers.altDE %
-                registers.altHL % registers.IX % registers.IY
+    m_os << fmt::format("{} '={:02X} '={:04X} '={:04X} '={:04X} X={:04X} Y={:04X}",
+                        flags_to_string(registers.altAF & 0xFF),
+                        registers.altAF >> 8,
+                        registers.altBC,
+                        registers.altDE,
+                        registers.altHL,
+                        registers.IX,
+                        registers.IY)
          << std::endl;
 }
 

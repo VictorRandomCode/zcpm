@@ -71,7 +71,7 @@ IncludeCategories:
     Priority:        0
   - Regex:           '^(<[\.a-zA-Z_0-9]+>)'
     Priority:        1
-  - Regex:           '^(<(gtest|boost)/)'
+  - Regex:           '^(<(gtest|boost|fmt)/)'
     Priority:        2
   - Regex:           '^(<zcpm/)'
     Priority:        3

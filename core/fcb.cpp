@@ -3,7 +3,7 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
+#include <fmt/core.h>
 
 #include "fcb.hpp"
 
@@ -179,20 +179,20 @@ namespace zcpm
             }
         }
 
-        auto numbers =
-            (boost::format("EX=%d RC=%d CR=%d R=%d/%d/%d") % static_cast<unsigned short>(m_u.m_fields.m_ex) %
-             static_cast<unsigned short>(m_u.m_fields.m_rc) % static_cast<unsigned short>(m_u.m_fields.m_cr) %
-             static_cast<unsigned short>(m_u.m_fields.m_r[0]) % static_cast<unsigned short>(m_u.m_fields.m_r[1]) %
-             static_cast<unsigned short>(m_u.m_fields.m_r[2]))
-                .str();
-
+        auto numbers = fmt::format("EX={:d} RC={:d} CR={:d} R={:d}/{:d}/{:d}",
+                                   m_u.m_fields.m_ex,
+                                   m_u.m_fields.m_rc,
+                                   m_u.m_fields.m_cr,
+                                   m_u.m_fields.m_r[0],
+                                   m_u.m_fields.m_r[1],
+                                   m_u.m_fields.m_r[2]);
         if (show_both_filenames)
         {
-            return (boost::format(R"("%s","%s" %s)") % name1 % name2 % numbers).str();
+            return fmt::format(R"("{}","{}" {})", name1, name2, numbers);
         }
         else
         {
-            return (boost::format(R"("%s" %s)") % name1 % numbers).str();
+            return fmt::format(R"("{}" {})", name1, numbers);
         }
     }
 

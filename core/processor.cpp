@@ -4,15 +4,15 @@
 #include <iostream>
 #include <set>
 
-#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <fmt/core.h>
 
 #include "instructions.hpp"
 #include "processor.hpp"
 #include "processordata.hpp"
 #include "registers.hpp"
 
-// Uncomment this to allow very chatting logging of calls/returns
+// Uncomment this to allow very chatty logging of calls/returns
 // #define TRACING
 
 namespace
@@ -602,7 +602,7 @@ namespace zcpm
             // manually treat this as a termination condition.
             if ((m_effective_pc == 0x0008) || !(m_processor_observer.running()))
             {
-                BOOST_LOG_TRIVIAL(trace) << boost::format("Stopping execution at PC=%04X") % m_effective_pc;
+                BOOST_LOG_TRIVIAL(trace) << fmt::format("Stopping execution at PC={:04X}", m_effective_pc);
                 m_processor_observer.set_finished(true);
                 goto stop_emulation; // NOLINT: imported 3rd-party code
             }
@@ -2106,7 +2106,7 @@ namespace zcpm
                 const auto nn = m_memory.read_word_step(pc, elapsed_cycles);
                 m_memory.push(pc, elapsed_cycles);
 #ifdef TRACING
-                BOOST_LOG_TRIVIAL(trace) << boost::format("TRACE: Calling %04X from PC=%04X") % nn % (pc - 3);
+                BOOST_LOG_TRIVIAL(trace) << fmt::format("TRACE: Calling {:04X} from PC={:04X}", nn, pc - 3);
 #endif
                 pc = nn;
 
@@ -2122,8 +2122,7 @@ namespace zcpm
                     const auto nn = m_memory.read_word_step(pc, elapsed_cycles);
                     m_memory.push(pc, elapsed_cycles);
 #ifdef TRACING
-                    BOOST_LOG_TRIVIAL(trace)
-                        << boost::format("TRACE: Calling %04X from PC=%04X (cond)") % nn % (pc - 3);
+                    BOOST_LOG_TRIVIAL(trace) << fmt::format("TRACE: Calling {:04X} from PC={:04X} (cond)", nn, pc - 3);
 #endif
                     pc = nn;
 
@@ -2142,11 +2141,11 @@ namespace zcpm
             case RET:
             {
 #ifdef TRACING
-                BOOST_LOG_TRIVIAL(trace) << boost::format("TRACE: Returning from PC=%04X") % (pc - 1);
+                BOOST_LOG_TRIVIAL(trace) << fmt::format("TRACE: Returning from PC={:04X}", pc - 1);
 #endif
                 pc = m_memory.pop(elapsed_cycles);
 #ifdef TRACING
-                BOOST_LOG_TRIVIAL(trace) << boost::format("TRACE: Returning to PC=%04X") % pc;
+                BOOST_LOG_TRIVIAL(trace) << fmt::format("TRACE: Returning to PC={:04X}", pc);
 #endif
 
                 break;
@@ -2157,11 +2156,11 @@ namespace zcpm
                 if (test_cc(Y(opcode)))
                 {
 #ifdef TRACING
-                    BOOST_LOG_TRIVIAL(trace) << boost::format("TRACE: Returning from PC=%04X (cond)") % (pc - 1);
+                    BOOST_LOG_TRIVIAL(trace) << fmt::format("TRACE: Returning from PC={:04X} (cond)", pc - 1);
 #endif
                     pc = m_memory.pop(elapsed_cycles);
 #ifdef TRACING
-                    BOOST_LOG_TRIVIAL(trace) << boost::format("TRACE: Returning to PC=%04X") % pc;
+                    BOOST_LOG_TRIVIAL(trace) << fmt::format("TRACE: Returning to PC={:04X}", pc);
 #endif
                 }
                 elapsed_cycles++;

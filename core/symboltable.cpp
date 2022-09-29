@@ -6,8 +6,8 @@
 #include <string>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <fmt/core.h>
 
 #include "symboltable.hpp"
 
@@ -68,7 +68,7 @@ namespace zcpm
             if (it->first <= a)
             {
                 const auto offset = a - it->first;
-                return (boost::format("%s:%s+%04X") % std::get<0>(it->second) % std::get<1>(it->second) % offset).str();
+                return fmt::format("{}:{}+{:04X}", std::get<0>(it->second), std::get<1>(it->second), offset);
             }
         }
 
@@ -151,7 +151,7 @@ namespace zcpm
         for (const auto& [key, value] : m_symbols)
         {
             const auto& [ns, name] = value;
-            std::cout << boost::format("  %04X %s:%s") % key % ns % name << std::endl;
+            std::cout << fmt::format("  {:04X} {}:{}", key, ns, name) << std::endl;
         }
     }
 

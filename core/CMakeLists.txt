@@ -54,4 +54,4 @@ target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 # Export the headers of this library so that users of this library see them
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/..)
 
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads terminal)
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads terminal fmt)

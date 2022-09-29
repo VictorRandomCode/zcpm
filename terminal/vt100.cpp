@@ -4,8 +4,8 @@
 
 #include <ncurses.h>
 
-#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <fmt/core.h>
 
 #include "vt100.hpp"
 
@@ -85,7 +85,7 @@ namespace
     // Move cursor to screen location v,h
     void ansi_cup(int v, int h)
     {
-        BOOST_LOG_TRIVIAL(trace) << boost::format("CURSES cup (v=%d h=%d)") % v % h;
+        BOOST_LOG_TRIVIAL(trace) << fmt::format("CURSES cup (v={:d} h={:d})", v, h);
         ::move(v - 1, h - 1);
     }
 

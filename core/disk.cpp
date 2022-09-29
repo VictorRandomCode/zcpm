@@ -8,8 +8,8 @@
 #include <system_error>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <fmt/core.h>
 
 #include "disk.hpp"
 
@@ -361,8 +361,7 @@ namespace zcpm
             const auto& f(m_entries[n]);
 
             // See http://primrosebank.net/computers/cpm/cpm_structure.htm,
-            // or David Coresi's "Inside CP/M" page 221, or
-            // http://www.seasip.info/Cpm/format22.html
+            // or David Coresi's "Inside CP/M" page 221, or http://www.seasip.info/Cpm/format22.html
 
             // Initially filled with nulls
             for (auto i = 0; i < EntrySize; i++)
@@ -514,7 +513,7 @@ namespace zcpm
                                 {
                                     const auto [track, sector] = find_location_within_block(b, i);
                                     BOOST_LOG_TRIVIAL(trace)
-                                        << boost::format("  Using data from TRACK:%04X SECTOR:%04X") % track % sector;
+                                        << fmt::format("  Using data from TRACK:{:04X} SECTOR:{:04X}", track, sector);
                                     const auto it = m_sector_cache.find({ track, sector });
                                     if (it != m_sector_cache.end())
                                     {
@@ -590,10 +589,13 @@ namespace zcpm
                                 {
                                     if (f.m_blocks[i] == block)
                                     {
-                                        BOOST_LOG_TRIVIAL(trace)
-                                            << boost::format("Sector %02X:%02X is block %d offset %d within file %s") %
-                                                   track % sector % block % static_cast<uint16_t>(offset) %
-                                                   f.m_raw_name;
+                                        BOOST_LOG_TRIVIAL(trace) << fmt::format(
+                                            "Sector {:02X}:{:02X} is block {:d} offset {:d} within file {}",
+                                            track,
+                                            sector,
+                                            block,
+                                            offset,
+                                            f.m_raw_name);
                                         try
                                         {
                                             flush_changed_file(value, block, offset, f);

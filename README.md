@@ -124,7 +124,8 @@ For Debian-based systems, install these packages:
     sudo apt install build-essential clang libc++-dev libc++abi-dev cmake libboost-all-dev clang-tidy
 
 Note that [replxx](https://github.com/AmokHuginnsson/replxx) needs to be built from source. This is
-automatically downloaded & built as part of the CMake configuration.
+automatically downloaded & built as part of the CMake configuration. Similarly,
+[fmtlib](https://github.com/fmtlib/fmt) is also used, and is automatically built via CMake.
 
 Once that's all set up:
 

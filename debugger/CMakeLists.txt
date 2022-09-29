@@ -1,7 +1,5 @@
 project(debugger)
 
-include(FetchContent)
-
 # Debugger needs replxx from GitHub
 FetchContent_Declare(replxx
   GIT_REPOSITORY "https://github.com/AmokHuginnsson/replxx"

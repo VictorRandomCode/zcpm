@@ -43,4 +43,4 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC BOOST_NO_CXX98_FUNCTION_BASE)
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/..)
 
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ncurses)
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ncurses fmt)

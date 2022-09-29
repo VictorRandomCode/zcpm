@@ -4,8 +4,8 @@
 #include <ostream>
 #include <utility>
 
-#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <fmt/core.h>
 
 #include "debugaction.hpp"
 
@@ -59,8 +59,8 @@ namespace zcpm
     {
         if (m_address == address)
         {
-            BOOST_LOG_TRIVIAL(trace) << boost::format("%s: Breakpoint at %04X") % FACILITY % address;
-            std::cout << boost::format("%s: Breakpoint at %04X") % FACILITY % address << std::endl;
+            BOOST_LOG_TRIVIAL(trace) << fmt::format("{}: Breakpoint at {:04X}", FACILITY, address);
+            std::cout << fmt::format("{}: Breakpoint at {:04X}", FACILITY, address) << std::endl;
             return false;
         }
         return true;
@@ -68,7 +68,7 @@ namespace zcpm
 
     std::string Breakpoint::describe() const
     {
-        return (boost::format("Breakpoint at %04X (entered as '%s')") % m_address % m_location).str();
+        return fmt::format("Breakpoint at {:04X} (entered as '{}')", m_address, m_location);
     }
 
     Watchpoint::Watchpoint(uint16_t address, const std::string& location) : DebugAction(address, location)
@@ -79,15 +79,16 @@ namespace zcpm
     {
         if (m_address == address)
         {
-            BOOST_LOG_TRIVIAL(trace) << boost::format("%s: Watchpoint at %04X") % FACILITY % address;
-            std::cout << boost::format("%s: Watchpoint at %04X") % FACILITY % address << std::endl;
+            const auto message = fmt::format("{}: Watchpoint at {:04X}", FACILITY, address);
+            BOOST_LOG_TRIVIAL(trace) << message;
+            std::cout << message << std::endl;
         }
         return true; // Allow the debugger to keep running
     }
 
     std::string Watchpoint::describe() const
     {
-        return (boost::format("Watchpoint at %04X (entered as '%s')") % m_address % m_location).str();
+        return fmt::format("Watchpoint at {:04X} (entered as '{}')", m_address, m_location);
     }
 
     PassPoint::PassPoint(uint16_t address, const std::string& location, uint16_t initial)
@@ -102,12 +103,12 @@ namespace zcpm
             // We've hit the passpoint; determine the correct action based on the remaining count
             if ((m_remaining == 0) || (--m_remaining == 0))
             {
-                BOOST_LOG_TRIVIAL(trace) << boost::format("%s: Passpoint at %04X expired, stopping") % FACILITY %
-                                                address;
-                std::cout << boost::format("%s: Passpoint at %04X expired, stopping") % FACILITY % address << std::endl;
+                const auto message = fmt::format("{}: Passpoint at {:04X} expired, stopping", FACILITY, address);
+                BOOST_LOG_TRIVIAL(trace) << message;
+                std::cout << message << std::endl;
                 return false;
             }
-            BOOST_LOG_TRIVIAL(trace) << boost::format("%s: Passpoint at %04X not yet expired") % FACILITY % address;
+            BOOST_LOG_TRIVIAL(trace) << fmt::format("{}: Passpoint at {:04X} not yet expired", FACILITY, address);
         }
 
         // Carry on, don't stop the debugger
@@ -116,9 +117,8 @@ namespace zcpm
 
     std::string PassPoint::describe() const
     {
-        return (boost::format("Passpoint  at %04X (entered as '%s'), %d remaining") % m_address % m_location %
-                m_remaining)
-            .str();
+        return fmt::format(
+            "Passpoint  at {:04X} (entered as '{}'), {:d} remaining", m_address, m_location, m_remaining);
     }
 
 } // namespace zcpm

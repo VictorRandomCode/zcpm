@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
+include(FetchContent)
+
 option(USE_TIDY "Enable clang's static analyser" OFF)
 option(USE_SANITISERS "Enable ASAN and UBSAN" OFF)
 option(USE_PROFILE "Enable profiling" OFF)
@@ -79,6 +81,13 @@ function(SetupCompiler OPTIONS)
   add_compile_options(-Wall -Wextra -Wold-style-cast -Werror ${OPTIONS})
 
 endfunction()
+
+# ZCPM makes use of fmtlib until std::format is more widely available
+FetchContent_Declare(fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG 9.1.0
+)
+FetchContent_MakeAvailable(fmt)
 
 add_subdirectory(builder)
 add_subdirectory(terminal)

@@ -2,8 +2,8 @@
 
 #include <ncurses.h>
 
-#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <fmt/core.h>
 
 #include "televideo.hpp"
 
@@ -179,8 +179,7 @@ namespace zcpm::terminal
         {
             if ((ch < ' ') || (ch > '~'))
             {
-                BOOST_LOG_TRIVIAL(trace) << boost::format("Warning: unhandled CURSES %02X") %
-                                                static_cast<unsigned short>(ch);
+                BOOST_LOG_TRIVIAL(trace) << fmt::format("Warning: unhandled CURSES {:02X}", ch);
             }
 
             // Make sure that a 7F is displayed as a space, for compatibility with our reference system
@@ -263,7 +262,7 @@ namespace zcpm::terminal
             auto col = static_cast<int>(m_pending[3]);
             BOOST_ASSERT(row > 31);
             BOOST_ASSERT(col > 31);
-            BOOST_LOG_TRIVIAL(trace) << boost::format("CURSES address (row=%d col=%d)") % (row - 31) % (col - 31);
+            BOOST_LOG_TRIVIAL(trace) << fmt::format("CURSES address (row={:d} col={:d})", row - 31, col - 31);
             ::move(row - 32, col - 32);
             m_pending.erase();
             return;

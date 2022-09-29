@@ -2,8 +2,8 @@
 #include <stdexcept>
 #include <string>
 
-#include <boost/format.hpp>
 #include <boost/log/trivial.hpp>
+#include <fmt/core.h>
 
 #include <zcpm/terminal/terminal.hpp>
 
@@ -49,7 +49,7 @@ namespace zcpm
         // maybe stack should be elsewhere?
         m_stubs_base = base + 0x0100;
 
-        BOOST_LOG_TRIVIAL(trace) << boost::format("Rewriting BIOS jump table at %04X") % base;
+        BOOST_LOG_TRIVIAL(trace) << fmt::format("Rewriting BIOS jump table at {:04X}", base);
 
         // Write our own jump table over the top of whatever is there currently, making it point to another
         // one ("stubs") higher in memory, and that's the one that is intercepted (which should reduce the
@@ -120,13 +120,17 @@ namespace zcpm
             m_phardware->write_byte(i, 0x00);
         }
 
-        BOOST_LOG_TRIVIAL(trace) << boost::format(
-                                        "BIOS jump table %04X..%04X, BIOS stubs %04X..%04X, DPH etc %04X..%04X") %
-                                        m_discovered_base % (m_discovered_base + table_size * 3 - 1) % m_stubs_base %
-                                        m_stubs_top % m_dph_base % m_dph_top;
+        BOOST_LOG_TRIVIAL(trace) << fmt::format(
+            "BIOS jump table {:04X}..{:04X}, BIOS stubs {:04X}..{:04X}, DPH etc {:04X}..{:04X}",
+            m_discovered_base,
+            m_discovered_base + table_size * 3 - 1,
+            m_stubs_base,
+            m_stubs_top,
+            m_dph_base,
+            m_dph_top);
 
-        BOOST_LOG_TRIVIAL(trace) << boost::format("     dirbf=%04X hdblk=%04X chkhd1=%04X allhd1=%04X") % dirbf %
-                                        hdblk % chkhd1 % allhd1;
+        BOOST_LOG_TRIVIAL(trace) << fmt::format(
+            "     dirbf={:04X} hdblk={:04X} chkhd1={:04X} allhd1={:04X}", dirbf, hdblk, chkhd1, allhd1);
 
         // Set up monitoring of the DPH etc stuff
         m_phardware->add_watch_read(m_dph_base, m_dph_top - m_dph_base + 1);
@@ -162,7 +166,7 @@ namespace zcpm
         // The address is within the BIOS stubs. Work out what BIOS function is being called
         const unsigned int fn = address - m_stubs_base;
 
-        const std::string prefix((boost::format("BIOS fn#%d ") % fn).str());
+        const auto prefix(fmt::format("BIOS fn#{:d} ", fn));
         std::string msg;
 
         switch (fn)
@@ -198,7 +202,7 @@ namespace zcpm
             // Block until a character is ready, and then return it in A
             m_phardware->m_processor->reg_a() = m_pterminal->get_char();
             const auto ch = m_phardware->m_processor->get_a();
-            msg = (boost::format("CONIN(%02X)") % static_cast<unsigned short>(ch)).str();
+            msg = fmt::format("CONIN({:02X})", ch);
             log_bios_call(prefix, msg);
         }
         break;
@@ -207,11 +211,11 @@ namespace zcpm
             const auto ch = static_cast<char>(m_phardware->m_processor->get_c());
             if (ch >= ' ')
             {
-                msg = (boost::format("CONOUT(%02X '%c')") % static_cast<unsigned short>(ch) % ch).str();
+                msg = fmt::format("CONOUT({:02X} '{:c}')", ch, ch);
             }
             else
             {
-                msg = (boost::format("CONOUT(%02X)") % static_cast<unsigned short>(ch)).str();
+                msg = fmt::format("CONOUT({:02X})", ch);
             }
             log_bios_call(prefix, msg);
             m_pterminal->print(ch);
@@ -228,9 +232,7 @@ namespace zcpm
         {
             const auto disk = m_phardware->m_processor->get_c(); // Disk index; 0=A, 1=B, etc
             const auto flag = m_phardware->m_processor->get_e(); // Bit 0 is the "has been logged in before" flag
-            msg = (boost::format("SELDSK(disk=%02X,flag=%02X)") % static_cast<unsigned short>(disk) %
-                   static_cast<unsigned short>(flag))
-                      .str();
+            msg = fmt::format("SELDSK(disk={:02X},flag={:02X})", disk, flag);
             log_bios_call(prefix, msg);
             fn_seldsk(disk, flag);
         }
@@ -238,7 +240,7 @@ namespace zcpm
         case 10:
         {
             const auto bc = m_phardware->m_processor->get_bc();
-            msg = (boost::format("SETTRK(%04X)") % bc).str();
+            msg = fmt::format("SETTRK({:04X})", bc);
             log_bios_call(prefix, msg);
             fn_settrk(bc);
         }
@@ -246,7 +248,7 @@ namespace zcpm
         case 11:
         {
             const auto bc = m_phardware->m_processor->get_bc();
-            msg = (boost::format("SETSEC(%04X)") % bc).str();
+            msg = fmt::format("SETSEC({:04X})", bc);
             log_bios_call(prefix, msg);
             fn_setsec(bc);
         }
@@ -254,14 +256,14 @@ namespace zcpm
         case 12:
         {
             const auto bc = m_phardware->m_processor->get_bc();
-            msg = (boost::format("SETDMA(%04X)") % bc).str();
+            msg = fmt::format("SETDMA({:04X})", bc);
             log_bios_call(prefix, msg);
             fn_setdma(bc);
         }
         break;
         case 13:
         {
-            msg = boost::format("READ()").str();
+            msg = "READ()";
             log_bios_call(prefix, msg);
             m_phardware->m_processor->reg_a() = fn_read();
         }
@@ -269,7 +271,7 @@ namespace zcpm
         case 14:
         {
             const auto c = m_phardware->m_processor->get_c();
-            msg = (boost::format("WRITE(%02X)") % static_cast<unsigned short>(c)).str();
+            msg = fmt::format("WRITE({:02X})", c);
             log_bios_call(prefix, msg);
             m_phardware->m_processor->reg_a() = fn_write(c);
         }
@@ -278,7 +280,7 @@ namespace zcpm
         {
             const auto bc = m_phardware->m_processor->get_bc();
             const auto de = m_phardware->m_processor->get_de();
-            msg = (boost::format("SECTRAN(%04X,%04X)") % bc % de).str();
+            msg = fmt::format("SECTRAN({:04X},{:04X})", bc, de);
             log_bios_call(prefix, msg);
             const auto physical_sector_number = fn_sectran(bc, de);
             m_phardware->m_processor->reg_hl() = physical_sector_number;
@@ -360,7 +362,8 @@ namespace zcpm
         // See http://www.seasip.info/Cpm/bios.html#read
         // Read the sector at m_track/m_sector into m_dma, return success status (which ends up in register A)
 
-        BOOST_LOG_TRIVIAL(trace) << boost::format("Read TRACK:%04X,SECTOR:%04X into %04X") % m_track % m_sector % m_dma;
+        BOOST_LOG_TRIVIAL(trace) << fmt::format(
+            "Read TRACK:{:04X},SECTOR:{:04X} into {:04X}", m_track, m_sector, m_dma);
 
         // Allocate a sector-size chunk of memory, into which data is read
         Disk::SectorData buffer{};
@@ -377,8 +380,8 @@ namespace zcpm
         // See http://www.seasip.info/Cpm/bios.html#write
         // Write from m_dma to the sector at m_track/m_sector, return success status (which ends up in register A)
 
-        BOOST_LOG_TRIVIAL(trace) << boost::format("Write TRACK:%04X,SECTOR:%04X from %04X") % m_track % m_sector %
-                                        m_dma;
+        BOOST_LOG_TRIVIAL(trace) << fmt::format(
+            "Write TRACK:{:04X},SECTOR:{:04X} from {:04X}", m_track, m_sector, m_dma);
 
         // To help with debugging
         m_phardware->dump(m_dma, Disk::SectorSize);
