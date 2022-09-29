@@ -123,27 +123,21 @@ For Debian-based systems, install these packages:
 
     sudo apt install build-essential clang libc++-dev libc++abi-dev cmake libboost-all-dev clang-tidy
 
-Additionally, [replxx](https://github.com/AmokHuginnsson/replxx) needs to be
-built from source. The simplest approach is to install it into `~/local` like this:
-
-    cd
-    git clone https://github.com/AmokHuginnsson/replxx.git
-    cd replxx
-    mkdir -p build && cd build
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${HOME}/local .. && make
-    make install
-
-(If `replxx` is installed somewhere else, modify `debugger/CMakeLists.txt` as needed.)
+Note that [replxx](https://github.com/AmokHuginnsson/replxx) needs to be built from source. This is
+automatically downloaded & built as part of the CMake configuration.
 
 Once that's all set up:
 
     mkdir build && cd build
-    cmake -DCMAKE_PREFIX_PATH=~/local ../zcpm
+    cmake ../zcpm
 
 Or if a particular non-default compiler is needed:
 
-    mkdir build && cd build
-    cmake -DCMAKE_PREFIX_PATH=~/local -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang++ ../zcpm
+    cmake -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang++ ../zcpm
+
+or:
+
+    cmake -DCMAKE_C_COMPILER=/opt/homebrew/bin/gcc-12 -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-12 ../zcpm
 
 Running
 -------
@@ -235,11 +229,11 @@ grepping the resultant log file to see a summary of what BDOS & BIOS calls were 
 
 Build with static analysis (via `clang-tidy`) enabled:
 
-    cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -DUSE_TIDY=1 ../zcpm/
+    cmake -DCMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -DUSE_TIDY=1 ../zcpm/
 
 or:
 
-    cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -DUSE_TIDY=1 -DCLANG_TIDY_EXE=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang-tidy ../zcpm
+    cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DUSE_TIDY=1 -DCLANG_TIDY_EXE=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang-tidy ../zcpm
 
 Using the gcc static analyser
 -----------------------------
@@ -252,7 +246,7 @@ off the ASAN stuff to make things work better. e.g.
 
     cd build
     rm -rf *
-    cmake -DUSE_ANALYSER=ON -DUSE_SANITISERS=OFF -DCMAKE_PREFIX_PATH=~/local -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12 ../zcpm
+    cmake -DUSE_ANALYSER=ON -DUSE_SANITISERS=OFF -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12 ../zcpm
     make
 
 Target Platforms:

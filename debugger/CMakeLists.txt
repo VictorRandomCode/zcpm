@@ -1,5 +1,14 @@
 project(debugger)
 
+include(FetchContent)
+
+# Debugger needs replxx from GitHub
+FetchContent_Declare(replxx
+  GIT_REPOSITORY "https://github.com/AmokHuginnsson/replxx"
+  GIT_TAG release-0.0.4
+  )
+FetchContent_MakeAvailable(replxx)
+
 SetupCompiler("-g;-Wno-unused-parameter")
 
 # Find Boost (Refer https://cmake.org/cmake/help/latest/module/FindBoost.html for details)
@@ -7,14 +16,6 @@ SetupCompiler("-g;-Wno-unused-parameter")
 # Temporarily disable Boost's CMake, see https://stackoverflow.com/a/58085634
 set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost 1.71.0 COMPONENTS log REQUIRED)
-
-# Find replxx; for now it is assumed to be in ${HOME}/local
-# TODO: make this be easily configurable
-add_library(replxx STATIC IMPORTED)
-set_target_properties(replxx PROPERTIES
-  IMPORTED_LOCATION "$ENV{HOME}/local/lib/libreplxx.a"
-  INTERFACE_INCLUDE_DIRECTORIES "$ENV{HOME}/local/include"
-)
 
 set(DBGSOURCE
   main.cpp
