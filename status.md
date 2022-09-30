@@ -64,9 +64,8 @@ When prompted, use SC.COM as the name of the SuperCalc(tm) file and choose DEC V
 to also download `sc.hlp`, SuperCalc won't run without it.
 
 SuperCalc deliberately modifies memory locations 0000-0003 when it starts, overwriting the jump vector at that address.
-ZCPM is written to disallow that in order to detect errant programs. Protection of that address can be disabled by
-suitably modifying line 64 of hardware.cpp. If that is done, SuperCalc appears to correctly function. One day soon I'll
-add a runtime flag to allow this when needed.
+ZCPM by default will disallow that in order to detect errant programs. Protection of those addresses can be disabled by
+using the `--protectwarm=0` runtime option.
 
 BDS-C
 -----
