@@ -8,6 +8,7 @@
 namespace zcpm
 {
     class IDebuggable;
+    class IMemory;
     class Registers;
     class System;
 } // namespace zcpm

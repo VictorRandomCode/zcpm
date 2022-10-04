@@ -1,11 +1,4 @@
-#include <cstdlib>
-#include <iostream>
-#include <memory>
-#include <vector>
-
-#include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup.hpp>
-#include <boost/program_options.hpp>
+#include "builder.hpp"
 
 #include <zcpm/core/config.hpp>
 #include <zcpm/core/system.hpp>
@@ -15,7 +8,14 @@
 #include <zcpm/terminal/type.hpp>
 #include <zcpm/terminal/vt100.hpp>
 
-#include "builder.hpp"
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup.hpp>
+#include <boost/program_options.hpp>
+
+#include <cstdlib>
+#include <iostream>
+#include <memory>
+#include <vector>
 
 namespace zcpm
 {

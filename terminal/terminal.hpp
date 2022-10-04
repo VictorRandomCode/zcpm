@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include "keymap.hpp"
+
+#include <string>
 
 namespace zcpm::terminal
 {

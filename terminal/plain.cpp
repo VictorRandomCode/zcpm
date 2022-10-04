@@ -1,11 +1,10 @@
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include <poll.h>
-#include <termios.h>
-
 #include "plain.hpp"
+
+#include <iostream>
+#include <poll.h>
+#include <string>
+#include <termios.h>
+#include <vector>
 
 namespace zcpm::terminal
 {

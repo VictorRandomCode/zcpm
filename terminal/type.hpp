@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iosfwd>
+
 namespace zcpm::terminal
 {
     enum class Type

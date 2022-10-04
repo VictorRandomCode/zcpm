@@ -1,15 +1,15 @@
+#include "symboltable.hpp"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/log/trivial.hpp>
+#include <fmt/core.h>
+
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <regex>
 #include <stdexcept>
 #include <string>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
-#include <fmt/core.h>
-
-#include "symboltable.hpp"
 
 namespace zcpm
 {

@@ -1,9 +1,9 @@
-#include <istream>
+#include "type.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 
-#include "type.hpp"
+#include <istream>
 
 namespace zcpm::terminal
 {

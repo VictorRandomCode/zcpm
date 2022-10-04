@@ -241,13 +241,12 @@ Using the gcc static analyser
 
 As of gcc 10.x, gcc has a static analysis facility. It can be enabled for `zcpm` by the cmake option `USE_ANALYSER`.
 
-But note that it is very slow to run, and needs LOTS of RAM to do its thing. So if it
-aborts it has probably run out of memory. Sticking with a single-threaded build can help. And turn
-off the ASAN stuff to make things work better. e.g.
+But note that it is very slow to run, and needs LOTS of RAM to do its thing. So if it aborts it has probably run out of
+memory. Sticking with a single-threaded build can help. And turn off ASAN options to make things work better. e.g.
 
     cd build
     rm -rf *
-    cmake -DUSE_ANALYSER=ON -DUSE_SANITISERS=OFF -DCMAKE_C_COMPILER=gcc-12 -DCMAKE_CXX_COMPILER=g++-12 ../zcpm
+    cmake -DUSE_ANALYSER=ON -DUSE_SANITISERS=OFF ../zcpm
     make
 
 Target Platforms:

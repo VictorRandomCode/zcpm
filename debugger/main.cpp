@@ -1,17 +1,4 @@
-#include <cerrno>
-#include <cstdlib>
-#include <functional>
-#include <iostream>
-#include <memory>
-#include <regex>
-#include <string>
-#include <vector>
-
-#include <replxx.hxx>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/log/utility/setup.hpp>
+#include "writer.hpp"
 
 #include <zcpm/builder/builder.hpp>
 #include <zcpm/core/debugaction.hpp>
@@ -19,7 +6,19 @@
 #include <zcpm/core/idebuggable.hpp>
 #include <zcpm/core/system.hpp>
 
-#include "writer.hpp"
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/log/utility/setup.hpp>
+
+#include <cerrno>
+#include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <regex>
+#include <replxx.hxx>
+#include <string>
+#include <vector>
 
 namespace
 {

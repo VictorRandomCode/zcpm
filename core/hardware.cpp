@@ -1,20 +1,21 @@
+#include "hardware.hpp"
+
+#include "bdos.hpp"
+#include "bios.hpp"
+#include "processor.hpp"
+#include "registers.hpp"
+
+#include <zcpm/terminal/terminal.hpp>
+
+#include <boost/log/trivial.hpp>
+#include <fmt/core.h>
+
 #include <cstring>
 #include <iostream>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-
-#include <boost/log/trivial.hpp>
-#include <fmt/core.h>
-
-#include <zcpm/terminal/terminal.hpp>
-
-#include "bdos.hpp"
-#include "bios.hpp"
-#include "hardware.hpp"
-#include "processor.hpp"
-#include "registers.hpp"
 
 namespace zcpm
 {

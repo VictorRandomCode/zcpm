@@ -1,13 +1,13 @@
-#include <optional>
-#include <regex>
-#include <string>
-
-#include <ncurses.h>
+#include "vt100.hpp"
 
 #include <boost/log/trivial.hpp>
 #include <fmt/core.h>
 
-#include "vt100.hpp"
+#include <iostream>
+#include <ncurses.h>
+#include <optional>
+#include <regex>
+#include <string>
 
 namespace
 {
@@ -199,8 +199,8 @@ namespace zcpm::terminal
 
         if (!m_pending.empty())
         {
-            BOOST_LOG_TRIVIAL(trace) << "Warning: incomplete escape sequence <ESC>" << m_pending.substr(1)
-                                     << " at termination";
+            std::cerr << "Warning: incomplete escape sequence <ESC>" << m_pending.substr(1) << " at termination"
+                      << std::endl;
         }
     }
 

@@ -67,15 +67,15 @@ ForEachMacros:
   - BOOST_FOREACH
 IncludeBlocks:   Regroup
 IncludeCategories:
-  - Regex:           '^(<[a-zA-Z_0-9]+>)'
-    Priority:        0
-  - Regex:           '^(<[\.a-zA-Z_0-9]+>)'
+  - Regex:           '^".*'
     Priority:        1
-  - Regex:           '^(<(gtest|boost|fmt)/)'
-    Priority:        2
   - Regex:           '^(<zcpm/)'
+    Priority:        2
+  - Regex:           '^(<(gtest|boost|fmt)/)'
     Priority:        3
-  - Regex:           '.*'
+  - Regex:           '^(<[a-zA-Z_0-9]+>)'
+    Priority:        4
+  - Regex:           '^(<[\.a-zA-Z_0-9]+>)'
     Priority:        4
 IncludeIsMainRegex: '(Test)?$'
 IndentCaseLabels: false

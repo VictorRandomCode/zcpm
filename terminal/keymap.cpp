@@ -1,26 +1,26 @@
-#include <fstream>
-#include <optional>
-#include <string>
-
-#include <ncurses.h>
+#include "keymap.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
 
-#include "keymap.hpp"
+#include <fstream>
+#include <ncurses.h>
+#include <optional>
+#include <string>
 
 namespace zcpm
 {
     namespace
     {
-        const std::map<std::string, int> ncurses_to_int = {
-            { "KEY_LEFT", KEY_LEFT },   { "KEY_RIGHT", KEY_RIGHT }, { "KEY_UP", KEY_UP },     { "KEY_DOWN", KEY_DOWN },
-            { "KEY_NPAGE", KEY_NPAGE }, { "KEY_PPAGE", KEY_PPAGE }, { "KEY_HOME", KEY_HOME }, { "KEY_END", KEY_END },
-        };
-
         // Convert a ncurses key name (eg KEY_RIGHT) to its numeric equivalent if it is known
         std::optional<int> ncurses_index_of(const std::string& name)
         {
+            static const std::map<std::string, int> ncurses_to_int = {
+                { "KEY_LEFT", KEY_LEFT }, { "KEY_RIGHT", KEY_RIGHT }, { "KEY_UP", KEY_UP },
+                { "KEY_DOWN", KEY_DOWN }, { "KEY_NPAGE", KEY_NPAGE }, { "KEY_PPAGE", KEY_PPAGE },
+                { "KEY_HOME", KEY_HOME }, { "KEY_END", KEY_END },
+            };
+
             if (ncurses_to_int.contains(name))
             {
                 return ncurses_to_int.at(name);

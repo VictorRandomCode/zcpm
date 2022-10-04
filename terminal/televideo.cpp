@@ -1,11 +1,11 @@
-#include <string>
-
-#include <ncurses.h>
+#include "televideo.hpp"
 
 #include <boost/log/trivial.hpp>
 #include <fmt/core.h>
 
-#include "televideo.hpp"
+#include <iostream>
+#include <ncurses.h>
+#include <string>
 
 namespace
 {
@@ -52,8 +52,8 @@ namespace zcpm::terminal
 
         if (!m_pending.empty())
         {
-            BOOST_LOG_TRIVIAL(trace) << "Warning: incomplete escape sequence <ESC>" << m_pending.substr(1)
-                                     << " at termination";
+            std::cerr << "Warning: incomplete escape sequence <ESC>" << m_pending.substr(1) << " at termination"
+                      << std::endl;
         }
     }
 

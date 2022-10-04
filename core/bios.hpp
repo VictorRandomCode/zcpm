@@ -1,9 +1,9 @@
 #pragma once
 
+#include "disk.hpp"
+
 #include <cstdint>
 #include <string>
-
-#include "disk.hpp"
 
 namespace zcpm
 {

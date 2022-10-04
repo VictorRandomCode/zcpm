@@ -1,16 +1,17 @@
+#include "processor.hpp"
+
+#include "instructions.hpp"
+#include "processordata.hpp"
+#include "registers.hpp"
+
+#include <boost/log/trivial.hpp>
+#include <fmt/core.h>
+
 #include <algorithm>
 #include <array>
 #include <cstring>
 #include <iostream>
 #include <set>
-
-#include <boost/log/trivial.hpp>
-#include <fmt/core.h>
-
-#include "instructions.hpp"
-#include "processor.hpp"
-#include "processordata.hpp"
-#include "registers.hpp"
 
 // Uncomment this to allow very chatty logging of calls/returns
 // #define TRACING

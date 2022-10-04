@@ -1,17 +1,18 @@
-#include <algorithm>
-#include <array>
-#include <cstdint>
-#include <cstdio>
-#include <filesystem>
-#include <map>
-#include <string>
-#include <system_error>
+#include "disk.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/log/trivial.hpp>
 #include <fmt/core.h>
 
-#include "disk.hpp"
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <cstdio>
+#include <filesystem>
+#include <iostream>
+#include <map>
+#include <string>
+#include <system_error>
 
 namespace
 {
@@ -165,6 +166,11 @@ namespace zcpm
             build_directory();
         }
 
+        Private(const Private&) = delete;
+        Private& operator=(const Private&) = delete;
+        Private(Private&&) = delete;
+        Private& operator=(Private&&) = delete;
+
         ~Private()
         {
             try
@@ -173,7 +179,7 @@ namespace zcpm
             }
             catch (const std::exception& e)
             {
-                BOOST_LOG_TRIVIAL(trace) << "Exception during flush: " << e.what();
+                std::cerr << "Exception during flush: " << e.what() << std::endl;
             }
         }
 
@@ -545,14 +551,10 @@ namespace zcpm
                         // The modified flag has the 'exists' flag set to false, which means that is a deletion.
                         // But we need to be careful where we have an entry for a newly-deleted file *and* one
                         // for an existing file with the same name.  If this is the case, we don't delete anything.
-                        auto has_existing_version = false;
-                        for (const auto& f : m_entries)
-                        {
-                            if (f.m_exists && (f.m_raw_name == e.m_raw_name))
-                            {
-                                has_existing_version = true;
-                            }
-                        }
+                        const auto has_existing_version =
+                            std::any_of(m_entries.begin(),
+                                        m_entries.end(),
+                                        [e](auto f) { return f.m_exists && (f.m_raw_name == e.m_raw_name); });
 
                         if (has_existing_version)
                         {

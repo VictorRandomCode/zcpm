@@ -1,8 +1,10 @@
 #include "bdos.hpp"
 
-#include <fmt/core.h>
-
 #include "fcb.hpp"
+#include "imemory.hpp"
+#include "registers.hpp"
+
+#include <fmt/core.h>
 
 namespace zcpm::bdos
 {

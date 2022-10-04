@@ -1,16 +1,17 @@
-#include <cstdint>
-#include <stdexcept>
-#include <string>
+#include "bios.hpp"
+
+#include "disk.hpp"
+#include "hardware.hpp"
+#include "processor.hpp"
+
+#include <zcpm/terminal/terminal.hpp>
 
 #include <boost/log/trivial.hpp>
 #include <fmt/core.h>
 
-#include <zcpm/terminal/terminal.hpp>
-
-#include "bios.hpp"
-#include "disk.hpp"
-#include "hardware.hpp"
-#include "processor.hpp"
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 
 // The constructor sets up various tables in RAM for the BIOS. This is the layout (from low address to high):
 //

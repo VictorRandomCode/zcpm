@@ -1,13 +1,13 @@
+#include "debugaction.hpp"
+
+#include <boost/log/trivial.hpp>
+#include <fmt/core.h>
+
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <ostream>
 #include <utility>
-
-#include <boost/log/trivial.hpp>
-#include <fmt/core.h>
-
-#include "debugaction.hpp"
 
 namespace zcpm
 {
@@ -19,8 +19,6 @@ namespace zcpm
                                                      const std::string& location,
                                                      const std::string& count)
     {
-        std::unique_ptr<DebugAction> result;
-
         // This is only used for passpoint/watchpoint, but doing this for an empty string for breakpoint won't hurt
         const auto count_value = std::strtoul(count.c_str(), nullptr, 16);
 

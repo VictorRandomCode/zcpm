@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include "terminal.hpp"
+
+#include <string>
 
 namespace zcpm::terminal
 {
@@ -11,7 +11,13 @@ namespace zcpm::terminal
     {
     public:
         Vt100(int rows, int columns, const std::string& keymap_filename = "");
-        ~Vt100();
+
+        Vt100(const Vt100&) = delete;
+        Vt100& operator=(const Vt100&) = delete;
+        Vt100(Vt100&&) = delete;
+        Vt100& operator=(Vt100&&) = delete;
+
+        ~Vt100() override;
 
         // Send a single character to the console; also handles tabs, start/stop
         // scroll, etc

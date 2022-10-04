@@ -1,20 +1,21 @@
+#include "system.hpp"
+
+#include "fcb.hpp"
+#include "hardware.hpp"
+#include "processor.hpp"
+
+#include <zcpm/terminal/terminal.hpp>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/log/trivial.hpp>
+#include <fmt/core.h>
+
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
-#include <fmt/core.h>
-
-#include <zcpm/terminal/terminal.hpp>
-
-#include "fcb.hpp"
-#include "hardware.hpp"
-#include "processor.hpp"
-#include "system.hpp"
 
 namespace zcpm
 {

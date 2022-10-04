@@ -1,9 +1,9 @@
 #pragma once
 
+#include "instructions.hpp"
+
 #include <array>
 #include <cstdint>
-
-#include "instructions.hpp"
 
 // Lookup tables used by the Z80 processor implementation.  These are only ever used within processor.cpp but they
 // are defined in this header to make maintenance easier; this header content should very rarely need changes,

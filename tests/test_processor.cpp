@@ -1,8 +1,8 @@
-//#define BOOST_TEST_DYN_LINK
+// #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN // in only one cpp file
-#include <boost/test/unit_test.hpp>
-
 #include <zcpm/core/processor.hpp>
+
+#include <boost/test/unit_test.hpp>
 
 // This module tests some CPU/register functionality. Note that it's not practical to test all combinations, this
 // test code aims to cover a useful sample to test for breakage. If a *full* test is needed, execute the 'zexall.com'

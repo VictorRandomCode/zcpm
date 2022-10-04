@@ -1,13 +1,13 @@
 #pragma once
 
+#include "debugaction.hpp"
+#include "idebuggable.hpp"
+#include "imemory.hpp"
+
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <ostream>
-
-#include "debugaction.hpp"
-#include "idebuggable.hpp"
-#include "imemory.hpp"
 
 namespace zcpm
 {
@@ -42,7 +42,7 @@ namespace zcpm
         Processor(Processor&&) = delete;
         Processor& operator=(Processor&&) = delete;
 
-        ~Processor() = default;
+        ~Processor() override = default;
 
         // Initialise processor's state to power-on default
         void reset_state();

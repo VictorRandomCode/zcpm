@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include "terminal.hpp"
+
+#include <string>
 
 namespace zcpm::terminal
 {
@@ -11,7 +11,13 @@ namespace zcpm::terminal
     {
     public:
         Televideo(int rows, int columns, const std::string& keymap_filename = "");
-        ~Televideo();
+
+        Televideo(const Televideo&) = delete;
+        Televideo& operator=(const Televideo&) = delete;
+        Televideo(Televideo&&) = delete;
+        Televideo& operator=(Televideo&&) = delete;
+
+        ~Televideo() override;
 
         // Send a single character to the console; also handles tabs, start/stop
         // scroll, etc

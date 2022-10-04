@@ -4,10 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "imemory.hpp"
-
 namespace zcpm
 {
+    class IMemory;
 
     // Implements a CP/M FCB (File Control Block; see http://seasip.info/Cpm/fcb.html)
     class Fcb final
@@ -43,7 +42,7 @@ namespace zcpm
         void set_second(const std::string& s);
 
         // This class overlays a FCB instance in the system's memory.  The FCB is a 36 byte
-        // structure, which we implement as a fixed-size array with unions for the interesting
+        // structure, implemented as a fixed-size array with unions for the interesting
         // bits.  The details are from the "CP/M 2.0 Interface Guide", page 7 (for example).
         struct Fields
         {
@@ -60,7 +59,7 @@ namespace zcpm
         };
         union U
         {
-            uint8_t m_bytes[36];
+            uint8_t m_bytes[sizeof(Fields)];
             Fields m_fields;
         };
 

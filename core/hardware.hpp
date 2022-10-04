@@ -1,15 +1,15 @@
 #pragma once
 
-#include <array>
-#include <cstdint>
-#include <memory>
-#include <unordered_set>
-
 #include "config.hpp"
 #include "handlers.hpp"
 #include "imemory.hpp"
 #include "processor.hpp"
 #include "symboltable.hpp"
+
+#include <array>
+#include <cstdint>
+#include <memory>
+#include <unordered_set>
 
 namespace zcpm
 {

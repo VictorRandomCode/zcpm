@@ -1,16 +1,16 @@
 #pragma once
 
+#include "handlers.hpp"
+#include "hardware.hpp"
+
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "config.hpp"
-#include "handlers.hpp"
-#include "hardware.hpp"
-
 namespace zcpm
 {
+    struct Config;
 
     namespace terminal
     {

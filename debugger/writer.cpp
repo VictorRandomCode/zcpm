@@ -1,16 +1,16 @@
+#include "writer.hpp"
+
+#include <zcpm/core/processor.hpp>
+#include <zcpm/core/registers.hpp>
+
+#include <boost/assert.hpp>
+#include <fmt/core.h>
+
 #include <array>
 #include <cstdint>
 #include <ostream>
 #include <string>
 #include <vector>
-
-#include <boost/assert.hpp>
-#include <fmt/core.h>
-
-#include <zcpm/core/processor.hpp>
-#include <zcpm/core/registers.hpp>
-
-#include "writer.hpp"
 
 namespace
 {
@@ -708,7 +708,7 @@ void Writer::display(const zcpm::Registers& registers,
                         registers.DE,
                         registers.HL,
                         registers.SP,
-                        ((registers.PC + offset) & 0xFFFF),
+                        (registers.PC + offset) & 0xFFFF,
                         s1,
                         s2);
 
