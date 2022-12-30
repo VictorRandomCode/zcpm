@@ -1,5 +1,5 @@
 ---
-Checks:          '-*,boost-*,bugprone-*,cert-*,clang-analyzer-*,hicpp-*,misc-*,modernize-*,performance-*,-cppcoreguidelines-avoid-magic-numbers,-hicpp-signed-bitwise,-cppcoreguidelines-pro-type-union-access,-modernize-use-trailing-return-type,-hicpp-no-array-decay'
+Checks:          '-*,boost-*,bugprone-*,cert-*,clang-analyzer-*,hicpp-*,misc-*,modernize-*,performance-*,cppcoreguidelines-*,-cppcoreguidelines-avoid-magic-numbers,-hicpp-signed-bitwise,-cppcoreguidelines-pro-type-union-access,-modernize-use-trailing-return-type,-hicpp-no-array-decay'
 WarningsAsErrors: ''
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false
@@ -13,6 +13,8 @@ CheckOptions:
     value:           '1'
   - key:             cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
     value:           '1'
+  - key:             cppcoreguidelines-pro-type-member-init.UseAssignment
+    value:           '0'
   - key:             google-readability-braces-around-statements.ShortStatementLines
     value:           '1'
   - key:             google-readability-function-size.StatementThreshold

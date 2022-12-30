@@ -29,7 +29,7 @@ namespace zcpm
         }
 
         // Convert a string such as "^KD" to a control-K (ASCII 11) and D (ascii 4)
-        std::list<char> parse_sequence(const std::string& sequence)
+        std::list<char> parse_sequence(std::string_view sequence)
         {
             std::list<char> result;
             for (auto i = 0U; i < sequence.length(); ++i)
@@ -49,7 +49,7 @@ namespace zcpm
         }
     } // namespace
 
-    Keymap::Keymap(const std::string& filename)
+    Keymap::Keymap(std::string_view filename)
     {
         if (filename.empty())
         {
@@ -59,7 +59,7 @@ namespace zcpm
         std::ifstream file(filename);
         if (!file.is_open())
         {
-            throw std::runtime_error("Can't open keymap file: " + filename);
+            throw std::runtime_error("Can't open keymap file: " + std::string(filename));
         }
         std::string s;
         while (std::getline(file, s))
@@ -83,7 +83,7 @@ namespace zcpm
                 }
                 else
                 {
-                    throw std::runtime_error("Unknown ncurses key " + fields[0] + " in " + filename);
+                    throw std::runtime_error("Unknown ncurses key " + fields[0] + " in " + std::string(filename));
                 }
             }
         }

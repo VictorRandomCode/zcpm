@@ -38,12 +38,12 @@ public:
 
 private:
     // For displaying a line in a 'list' output
-    void display(uint16_t address, const std::string& s1, const std::string& s2) const;
+    void display(uint16_t address, std::string_view s1, std::string_view s2) const;
 
     // For displaying a line in an 'examine' output
     void display(const zcpm::Registers& registers,
-                 const std::string& s1,
-                 const std::string& s2,
+                 std::string_view s1,
+                 std::string_view s2,
                  const uint16_t offset = 0) const;
 
     std::string flags_to_string(uint8_t f) const;

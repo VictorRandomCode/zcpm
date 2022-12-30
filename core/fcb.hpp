@@ -19,10 +19,10 @@ namespace zcpm
         Fcb(const IMemory& memory, uint16_t address);
 
         // Set content based on a single filename
-        void set(const std::string& s1);
+        void set(std::string_view s1);
 
         // Set content based on a pair of filenames
-        void set(const std::string& s1, const std::string& s2);
+        void set(std::string_view s1, std::string_view s2);
 
         // Return raw binary data that this FCB contains
         [[nodiscard]] const uint8_t* get() const;
@@ -38,8 +38,8 @@ namespace zcpm
         std::string describe(bool show_both_filenames) const;
 
     private:
-        void set_first(const std::string& s);
-        void set_second(const std::string& s);
+        void set_first(std::string_view s);
+        void set_second(std::string_view s);
 
         // This class overlays a FCB instance in the system's memory.  The FCB is a 36 byte
         // structure, implemented as a fixed-size array with unions for the interesting

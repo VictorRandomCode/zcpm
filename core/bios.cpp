@@ -408,7 +408,7 @@ namespace zcpm
         return logical_sector_number;
     }
 
-    void Bios::log_bios_call(const std::string& prefix, const std::string& message) const
+    void Bios::log_bios_call(std::string_view prefix, std::string_view message) const
     {
         BOOST_LOG_TRIVIAL(trace) << "  " << prefix << message << m_phardware->format_stack_info();
     }

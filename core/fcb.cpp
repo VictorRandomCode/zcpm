@@ -15,13 +15,13 @@ namespace
     // e.g. "a.b" will set dr=0 name="A       " extn="B  "
     //
     // Returns <dr, name, extn>
-    std::tuple<uint8_t, std::string, std::string> parse_filename(const std::string& s)
+    std::tuple<uint8_t, std::string, std::string> parse_filename(std::string_view s)
     {
         // TODO: Needs to be less simplistic; probably also need to create some unit tests for this logic
 
         // split into drive/file
         std::vector<std::string> fields;
-        const auto input(boost::to_upper_copy(s));
+        const auto input(boost::to_upper_copy(std::string(s)));
         boost::split(fields, input, boost::is_any_of(":"));
 
         uint8_t dr = 0;
@@ -117,12 +117,12 @@ namespace zcpm
         }
     }
 
-    void Fcb::set(const std::string& s1)
+    void Fcb::set(std::string_view s1)
     {
         set_first(s1);
     }
 
-    void Fcb::set(const std::string& s1, const std::string& s2)
+    void Fcb::set(std::string_view s1, std::string_view s2)
     {
         set_first(s1);
         set_second(s2);
@@ -142,7 +142,7 @@ namespace zcpm
             name1 += char('A' + dr - 1);
             name1 += ':';
         }
-        for (unsigned char ch : m_u.m_fields.m_f)
+        for (unsigned char const ch : m_u.m_fields.m_f)
         {
             if (ch != ' ')
             {
@@ -150,7 +150,7 @@ namespace zcpm
             }
         }
         name1 += '.';
-        for (unsigned char ch : m_u.m_fields.m_t)
+        for (unsigned char const ch : m_u.m_fields.m_t)
         {
             if (ch != ' ')
             {
@@ -164,7 +164,7 @@ namespace zcpm
             // Note that drive code for second filename is ignored, as per CP/M documentation for rename file
             for (unsigned int i = 1; i <= 8; ++i)
             {
-                char ch = m_u.m_fields.m_d[i];
+                char const ch = m_u.m_fields.m_d[i];
                 if (ch != ' ')
                 {
                     name2 += ch;
@@ -173,7 +173,7 @@ namespace zcpm
             name2 += '.';
             for (unsigned int i = 1; i <= 3; ++i)
             {
-                char ch = m_u.m_fields.m_d[8 + i];
+                char const ch = m_u.m_fields.m_d[8 + i];
                 if (ch != ' ')
                 {
                     name2 += ch;
@@ -198,7 +198,7 @@ namespace zcpm
         }
     }
 
-    void Fcb::set_first(const std::string& s)
+    void Fcb::set_first(std::string_view s)
     {
         auto [dr, name, extn] = parse_filename(s);
 
@@ -215,7 +215,7 @@ namespace zcpm
         }
     }
 
-    void Fcb::set_second(const std::string& s)
+    void Fcb::set_second(std::string_view s)
     {
         // This is a bit ugly.  According to the official docs we pretty much just overwrite
         // EX/S1/S2/etc with the second filename info.  So we'll do exactly that.

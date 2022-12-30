@@ -37,7 +37,7 @@ namespace zcpm
         void setup_bdos();
 
         // Load a binary file into memory at the specified base address, not worrying about cmdline args
-        bool load_binary(uint16_t base, const std::string& filename);
+        bool load_binary(uint16_t base, std::string_view filename);
 
         // Set up the FCB in page zero based on the specified command line arguments
         bool load_fcb(const std::vector<std::string>& args);

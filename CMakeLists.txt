@@ -78,7 +78,7 @@ function(SetupCompiler OPTIONS)
 
   # Set up a common minimal set of compilation options plus whatever the caller has asked for
   # (The caller-supplied options might actually be turning off something that we turn on here!)
-  add_compile_options(-Wall -Wextra -Wold-style-cast -Werror ${OPTIONS})
+  add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wmisleading-indentation -pedantic -Werror ${OPTIONS})
 
 endfunction()
 

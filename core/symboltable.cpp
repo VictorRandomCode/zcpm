@@ -14,7 +14,7 @@
 namespace zcpm
 {
 
-    void SymbolTable::load(const std::string& filename, const std::string& prefix)
+    void SymbolTable::load(std::string_view filename, std::string_view prefix)
     {
         if (filename.empty())
         {
@@ -24,7 +24,7 @@ namespace zcpm
         std::ifstream file(filename);
         if (!file.is_open())
         {
-            throw std::runtime_error("Can't open " + filename);
+            throw std::runtime_error("Can't open " + std::string(filename));
         }
         std::string s;
         while (std::getline(file, s))
@@ -47,9 +47,9 @@ namespace zcpm
         }
     }
 
-    void SymbolTable::add(const std::string& prefix, uint16_t a, const std::string& label)
+    void SymbolTable::add(std::string_view prefix, uint16_t a, std::string_view label)
     {
-        m_symbols.insert({ a, { prefix, label } });
+        m_symbols.insert({ a, { std::string(prefix), std::string(label) } });
     }
 
     bool SymbolTable::empty() const
@@ -75,7 +75,7 @@ namespace zcpm
         return "?";
     }
 
-    std::tuple<bool, uint16_t> SymbolTable::evaluate_address_expression(const std::string& s) const
+    std::tuple<bool, uint16_t> SymbolTable::evaluate_address_expression(std::string_view s) const
     {
         // The supplied string could be something like "foo1+17a" where 'foo1' is in the symbol table
         // and 17a is a hex offset from that symbol. Or it could be "foo2" where we use the unmodified
@@ -87,7 +87,8 @@ namespace zcpm
 
         const std::regex expression_regex("([A-Za-z0-9]+)(?:([+-])([A-Fa-f0-9]+))?");
         std::smatch expression_match;
-        if (!std::regex_search(s, expression_match, expression_regex))
+        std::string const ss(s);
+        if (!std::regex_search(ss, expression_match, expression_regex))
         {
             BOOST_LOG_TRIVIAL(trace) << "Can't parse '" << s << "' (1)";
             return { false, 0 };

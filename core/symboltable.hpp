@@ -11,10 +11,10 @@ namespace zcpm
     {
     public:
         // Load symbols from the specified label file, and store them in the specified namespace
-        void load(const std::string& filename, const std::string& prefix);
+        void load(std::string_view filename, std::string_view prefix);
 
         // Add one-off symbols
-        void add(const std::string& prefix, uint16_t a, const std::string& label);
+        void add(std::string_view prefix, uint16_t a, std::string_view label);
 
         // Do we have any entries?
         bool empty() const;
@@ -27,7 +27,7 @@ namespace zcpm
         // All values are hexadecimal. Returns a (success,value) pair, success=false means an evaluation
         // failure. Note that this is not a full expression evaluator, it is VERY simplistic, sufficient
         // for our most common use cases.
-        std::tuple<bool, uint16_t> evaluate_address_expression(const std::string& s) const;
+        std::tuple<bool, uint16_t> evaluate_address_expression(std::string_view s) const;
 
         // Show contents to stdout
         void dump() const;

@@ -37,7 +37,7 @@ namespace zcpm::terminal
         const int m_rows;
         const int m_columns;
 
-        const int KeyboardDelayMs = 1;
+        const int KeyboardDelayMs{ 1 };
 
     private:
         // Keystrokes that are yet to be returned after a mapping

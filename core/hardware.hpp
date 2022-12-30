@@ -65,7 +65,7 @@ namespace zcpm
         void add_watch_write(uint16_t base, uint16_t count = 1);
 
         // Directly add a one-off entry to the symbol table, which can be helpful for analysing run logs
-        void add_symbol(uint16_t a, const std::string& label);
+        void add_symbol(uint16_t a, std::string_view label);
 
         // Implements IMemory
 
@@ -97,7 +97,7 @@ namespace zcpm
 
         // Try to evaluate an expression such as 'foo1' where 'foo1' is a known label or perhaps 'foo2+23'.  Note that
         // all values are hexadecimal.  Returns a (success,value) pair, success=false means an evaluation failure.
-        std::tuple<bool, uint16_t> evaluate_address_expression(const std::string& s) const;
+        std::tuple<bool, uint16_t> evaluate_address_expression(std::string_view s) const;
 
         IDebuggable* get_idebuggable() const;
 
@@ -133,11 +133,11 @@ namespace zcpm
 
         std::array<uint8_t, 0x10000> m_memory{};
 
-        bool m_finished = false;
+        bool m_finished{ false };
 
         std::unique_ptr<Bios> m_pbios;
 
-        bool m_check_memory_accesses = false; // Indicates if we have temporarily allowed/disallowed memory checks
+        bool m_check_memory_accesses{ false }; // Indicates if we have temporarily allowed/disallowed memory checks
 
         // Addresses that we are watching; for now we just log their access, but longer-term we'll invoke a
         // user-supplied handler
@@ -147,7 +147,7 @@ namespace zcpm
         // user-supplied handler
         std::unordered_set<uint16_t> m_watch_write;
 
-        uint16_t m_fbase = 0;
+        uint16_t m_fbase{ 0 };
 
         // Table of known symbols.
         SymbolTable m_symbols;

@@ -8,6 +8,7 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <vector>
 
 namespace zcpm
 {
@@ -19,6 +20,12 @@ namespace zcpm
     {
     public:
         virtual ~IProcessorObserver() = default;
+
+        IProcessorObserver() = default;
+        IProcessorObserver(const IProcessorObserver& other) = delete;
+        IProcessorObserver(IProcessorObserver&& other) = delete;
+        IProcessorObserver& operator=(const IProcessorObserver& other) = delete;
+        IProcessorObserver& operator=(IProcessorObserver&& other) = delete;
 
         // Can be used from user-supplied handlers to stop execution
         virtual void set_finished(bool finished) = 0;
@@ -107,24 +114,24 @@ namespace zcpm
         bool remove_action(size_t index) override;
 
         // Z80 flag positions in the F register
-        inline static const uint8_t S_FLAG_BIT = 7;
-        inline static const uint8_t Z_FLAG_BIT = 6;
-        inline static const uint8_t Y_FLAG_BIT = 5;
-        inline static const uint8_t H_FLAG_BIT = 4;
-        inline static const uint8_t X_FLAG_BIT = 3;
-        inline static const uint8_t PV_FLAG_BIT = 2;
-        inline static const uint8_t N_FLAG_BIT = 1;
-        inline static const uint8_t C_FLAG_BIT = 0;
+        inline static const uint8_t S_FLAG_BIT{ 7 };
+        inline static const uint8_t Z_FLAG_BIT{ 6 };
+        inline static const uint8_t Y_FLAG_BIT{ 5 };
+        inline static const uint8_t H_FLAG_BIT{ 4 };
+        inline static const uint8_t X_FLAG_BIT{ 3 };
+        inline static const uint8_t PV_FLAG_BIT{ 2 };
+        inline static const uint8_t N_FLAG_BIT{ 1 };
+        inline static const uint8_t C_FLAG_BIT{ 0 };
 
         // Bitmasks for testing those flags
-        inline static const uint8_t S_FLAG_MASK = 1 << S_FLAG_BIT;
-        inline static const uint8_t Z_FLAG_MASK = 1 << Z_FLAG_BIT;
-        inline static const uint8_t Y_FLAG_MASK = 1 << Y_FLAG_BIT;
-        inline static const uint8_t H_FLAG_MASK = 1 << H_FLAG_BIT;
-        inline static const uint8_t X_FLAG_MASK = 1 << X_FLAG_BIT;
-        inline static const uint8_t PV_FLAG_MASK = 1 << PV_FLAG_BIT;
-        inline static const uint8_t N_FLAG_MASK = 1 << N_FLAG_BIT;
-        inline static const uint8_t C_FLAG_MASK = 1 << C_FLAG_BIT;
+        inline static const uint8_t S_FLAG_MASK{ 1 << S_FLAG_BIT };
+        inline static const uint8_t Z_FLAG_MASK{ 1 << Z_FLAG_BIT };
+        inline static const uint8_t Y_FLAG_MASK{ 1 << Y_FLAG_BIT };
+        inline static const uint8_t H_FLAG_MASK{ 1 << H_FLAG_BIT };
+        inline static const uint8_t X_FLAG_MASK{ 1 << X_FLAG_BIT };
+        inline static const uint8_t PV_FLAG_MASK{ 1 << PV_FLAG_BIT };
+        inline static const uint8_t N_FLAG_MASK{ 1 << N_FLAG_BIT };
+        inline static const uint8_t C_FLAG_MASK{ 1 << C_FLAG_BIT };
 
     private:
         // The main registers are stored as a union of arrays named registers. They are referenced using indexes. Words
@@ -138,13 +145,17 @@ namespace zcpm
 
         uint16_t m_alternates[4]{}; // "Shadow" registers
 
-        uint16_t m_i = 0, m_r = 0, m_pc = 0, m_iff1 = 0, m_iff2 = 0;
+        uint16_t m_i{ 0 };
+        uint16_t m_r{ 0 };
+        uint16_t m_pc{ 0 };
+        uint16_t m_iff1{ 0 };
+        uint16_t m_iff2{ 0 };
 
         // Internally, the emulation only updates m_pc when it is exiting, it uses 'pc' internally which is updated byte
         // by byte. Neither is exactly what we want when adding in debug hooks, and changing those two uses to support
         // debug hooks is difficult. So 'effective' PC is added which is just used as a return value for use by
         // debuggers.
-        uint16_t m_effective_pc = 0;
+        uint16_t m_effective_pc{ 0 };
 
         enum class InterruptMode
         {
@@ -152,7 +163,7 @@ namespace zcpm
             IM1,
             IM2
         };
-        InterruptMode m_im = InterruptMode::IM0;
+        InterruptMode m_im{ InterruptMode::IM0 };
 
         // Register decoding tables
         void *m_register_table[16]{}, *m_dd_register_table[16]{}, *m_fd_register_table[16]{};

@@ -691,14 +691,14 @@ void Writer::dump(int start, size_t bytes) const
     }
 }
 
-void Writer::display(uint16_t address, const std::string& s1, const std::string& s2) const
+void Writer::display(uint16_t address, std::string_view s1, std::string_view s2) const
 {
     m_os << fmt::format("{:04X}     {:<5}{}", address, s1, s2) << std::endl;
 }
 
 void Writer::display(const zcpm::Registers& registers,
-                     const std::string& s1,
-                     const std::string& s2,
+                     std::string_view s1,
+                     std::string_view s2,
                      const uint16_t offset) const
 {
     m_os << fmt::format("{} A={:02X} B={:04X} D={:04X} H={:04X} S={:04X} P={:04X}  {:<5}{}",

@@ -49,9 +49,9 @@ namespace zcpm
         m_hardware.check_memory_accesses(true);
     }
 
-    bool System::load_binary(uint16_t base, const std::string& filename)
+    bool System::load_binary(uint16_t base, std::string_view filename)
     {
-        std::FILE* fp = std::fopen(filename.c_str(), "r");
+        std::FILE* fp = std::fopen(filename.data(), "r");
         if (!fp)
         {
             std::cerr << "Can't open '" << filename << "'" << std::endl;

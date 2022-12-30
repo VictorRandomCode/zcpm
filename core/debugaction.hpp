@@ -11,7 +11,7 @@ namespace zcpm
     class DebugAction
     {
     public:
-        DebugAction(uint16_t address, std::string location);
+        DebugAction(uint16_t address, std::string_view location);
 
         DebugAction(const DebugAction&) = delete;
         DebugAction& operator=(const DebugAction&) = delete;
@@ -30,7 +30,7 @@ namespace zcpm
         // Factory method to instantiate a concrete subclass based on the supplied parameters
         static std::unique_ptr<DebugAction> create(Type type,
                                                    uint16_t address,
-                                                   const std::string& location,
+                                                   std::string_view location,
                                                    const std::string& count = "");
 
         [[nodiscard]] uint16_t get_address() const;
@@ -54,7 +54,7 @@ namespace zcpm
     class Breakpoint : public DebugAction
     {
     public:
-        Breakpoint(uint16_t address, const std::string& location);
+        Breakpoint(uint16_t address, std::string_view location);
         [[nodiscard]] bool evaluate(uint16_t address) const override; // Will return false if we hit "our" address
         [[nodiscard]] std::string describe() const override;
     };
@@ -63,7 +63,7 @@ namespace zcpm
     class Watchpoint : public DebugAction
     {
     public:
-        Watchpoint(uint16_t address, const std::string& location);
+        Watchpoint(uint16_t address, std::string_view location);
         [[nodiscard]] bool evaluate(uint16_t address) const override; // Will always return true
         [[nodiscard]] std::string describe() const override;
     };
@@ -73,7 +73,7 @@ namespace zcpm
     class PassPoint : public DebugAction
     {
     public:
-        PassPoint(uint16_t address, const std::string& location, uint16_t initial);
+        PassPoint(uint16_t address, std::string_view location, uint16_t initial);
         [[nodiscard]] bool evaluate(uint16_t address) const override;
         [[nodiscard]] std::string describe() const override;
 

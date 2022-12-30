@@ -155,7 +155,7 @@ namespace zcpm
         }
     }
 
-    void Hardware::add_symbol(uint16_t a, const std::string& label)
+    void Hardware::add_symbol(uint16_t a, std::string_view label)
     {
         m_symbols.add("ZCPM", a, label);
     }
@@ -404,7 +404,7 @@ namespace zcpm
         m_symbols.dump();
     }
 
-    std::tuple<bool, uint16_t> Hardware::evaluate_address_expression(const std::string& s) const
+    std::tuple<bool, uint16_t> Hardware::evaluate_address_expression(std::string_view s) const
     {
         return m_symbols.evaluate_address_expression(s);
     }

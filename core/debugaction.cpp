@@ -12,11 +12,11 @@
 namespace zcpm
 {
 
-    inline const std::string FACILITY("DEBUG");
+    constexpr auto FACILITY = "DEBUG";
 
     std::unique_ptr<DebugAction> DebugAction::create(Type type,
                                                      uint16_t address,
-                                                     const std::string& location,
+                                                     std::string_view location,
                                                      const std::string& count)
     {
         // This is only used for passpoint/watchpoint, but doing this for an empty string for breakpoint won't hurt
@@ -33,8 +33,7 @@ namespace zcpm
         }
     }
 
-    DebugAction::DebugAction(uint16_t address, std::string location)
-        : m_location(std::move(location)), m_address(address)
+    DebugAction::DebugAction(uint16_t address, std::string_view location) : m_location(location), m_address(address)
     {
     }
 
@@ -49,7 +48,7 @@ namespace zcpm
         return os;
     }
 
-    Breakpoint::Breakpoint(uint16_t address, const std::string& location) : DebugAction(address, location)
+    Breakpoint::Breakpoint(uint16_t address, std::string_view location) : DebugAction(address, location)
     {
     }
 
@@ -69,7 +68,7 @@ namespace zcpm
         return fmt::format("Breakpoint at {:04X} (entered as '{}')", m_address, m_location);
     }
 
-    Watchpoint::Watchpoint(uint16_t address, const std::string& location) : DebugAction(address, location)
+    Watchpoint::Watchpoint(uint16_t address, std::string_view location) : DebugAction(address, location)
     {
     }
 
@@ -89,7 +88,7 @@ namespace zcpm
         return fmt::format("Watchpoint at {:04X} (entered as '{}')", m_address, m_location);
     }
 
-    PassPoint::PassPoint(uint16_t address, const std::string& location, uint16_t initial)
+    PassPoint::PassPoint(uint16_t address, std::string_view location, uint16_t initial)
         : DebugAction(address, location), m_remaining(initial)
     {
     }

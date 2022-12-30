@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <ostream>
+#include <vector>
 
 namespace zcpm
 {
