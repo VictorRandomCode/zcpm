@@ -10,7 +10,7 @@ option(USE_ANALYSER "Enable GCC11 static analyser" OFF)
 # Typical invocations:
 #   cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm
 # or for gcc via brew on macOS:
-#   cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=gcc-12 -D CMAKE_CXX_COMPILER=g++-12 ../zcpm
+#   cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13 ../zcpm
 # If needed, append e.g. -DUSE_SANITISERS=OFF or -DUSE_TIDY=ON or -DUSE_PROFILE=ON
 # Or to use gcc analyser:
 #   cmake -DCMAKE_PREFIX_PATH=~/local -DUSE_ANALYSER=ON ../zcpm
@@ -85,7 +85,7 @@ endfunction()
 # ZCPM makes use of fmtlib until std::format is more widely available
 FetchContent_Declare(fmt
   GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG 9.1.0
+  GIT_TAG 10.0.0
 )
 FetchContent_MakeAvailable(fmt)
 

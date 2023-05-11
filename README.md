@@ -132,13 +132,14 @@ Once that's all set up:
     mkdir build && cd build
     cmake ../zcpm
 
-Or if a particular non-default compiler is needed:
+Or if a particular non-default compiler is needed (note that the version numbers are merely examples):
 
-    cmake -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang++ ../zcpm
+    cmake -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/16.0.3/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/16.0.3/bin/clang++ 
+../zcpm
 
 or:
 
-    cmake -DCMAKE_C_COMPILER=/opt/homebrew/bin/gcc-12 -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-12 ../zcpm
+    cmake -DCMAKE_C_COMPILER=/opt/homebrew/bin/gcc-13 -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-13 ../zcpm
 
 Running
 -------

@@ -56,7 +56,7 @@ namespace zcpm
             return;
         }
 
-        std::ifstream file(filename);
+        std::ifstream file(filename.data());
         if (!file.is_open())
         {
             throw std::runtime_error("Can't open keymap file: " + std::string(filename));
