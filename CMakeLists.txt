@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 include(FetchContent)
+include(CheckIPOSupported)
 
 option(USE_TIDY "Enable clang's static analyser" OFF)
 option(USE_SANITISERS "Enable ASAN and UBSAN" OFF)
@@ -15,12 +16,25 @@ option(USE_ANALYSER "Enable GCC11 static analyser" OFF)
 # Or to use gcc analyser:
 #   cmake -DCMAKE_PREFIX_PATH=~/local -DUSE_ANALYSER=ON ../zcpm
 
-project(zcpm_project)
+project(zcpm_project CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 
 # Generate a build commands json file to help some external tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# If supported, enable LTO for all targets
+cmake_policy(SET CMP0069 NEW) 
+set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+check_ipo_supported(RESULT ipo_supported OUTPUT ipo_output)
+if (ipo_supported)
+  message(STATUS "IPO/LTO enabled for all targets")
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+  # The output here can be quite verbose, enable if it is really needed
+  # message(STATUS "IPO/LTO not supported: <${ipo_output}>")
+  message(STATUS "IPO/LTO not supported")
+endif()
 
 # Optional: enable clang-tidy; can be slow and noisy.  This is done globally, not per-project
 if (USE_TIDY)
