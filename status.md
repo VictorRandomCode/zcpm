@@ -23,8 +23,8 @@ Currently, `zcpm` terminal output supports VT100 (aka ANSI) terminals and Televi
 than Televideo, both are a work in progress.
 
 In order to run a binary that uses cursor addressing, you need a binary that either already supports your *host*
-terminal emulation in which case the 'plain' emulation should be used, or a binary that targets VT100/ANSI or Televideo
-925.
+terminal emulation in which case the 'plain' emulation should be used, or a binary that targets VT100/ANSI or
+Televideo 925.
 
 Some CP/M software (e.g. WordStar, Turbo Pascal, etc) included an "installer". Typically this installer needs to be run
 first, and it will ask you for the target terminal type, and will then modify the main binary to support that terminal.

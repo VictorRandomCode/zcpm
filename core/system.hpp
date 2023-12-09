@@ -31,13 +31,13 @@ namespace zcpm
 
         // Configure FBASE and WBOOT (to help the system recognise BDOS & BIOS accesses), and
         // then invoke the BIOS initialisation code
-        void setup_bios(uint16_t fbase, uint16_t wboot);
+        void setup_bios(std::uint16_t fbase, std::uint16_t wboot);
 
         // Perform necessary BDOS initialisation
         void setup_bdos();
 
         // Load a binary file into memory at the specified base address, not worrying about cmdline args
-        bool load_binary(uint16_t base, std::string_view filename);
+        bool load_binary(std::uint16_t base, std::string_view filename);
 
         // Set up the FCB in page zero based on the specified command line arguments
         bool load_fcb(const std::vector<std::string>& args);

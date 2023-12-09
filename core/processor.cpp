@@ -18,66 +18,66 @@
 
 namespace
 {
-    const uint8_t OPCODE_LD_A_I = 0x57;
-    const uint8_t OPCODE_LD_I_A = 0x47;
-    const uint8_t OPCODE_LDI = 0xa0;
-    const uint8_t OPCODE_LDIR = 0xb0;
-    const uint8_t OPCODE_CPI = 0xa1;
-    const uint8_t OPCODE_CPIR = 0xb1;
-    const uint8_t OPCODE_RLD = 0x6f;
+    const std::uint8_t OPCODE_LD_A_I = 0x57;
+    const std::uint8_t OPCODE_LD_I_A = 0x47;
+    const std::uint8_t OPCODE_LDI = 0xa0;
+    const std::uint8_t OPCODE_LDIR = 0xb0;
+    const std::uint8_t OPCODE_CPI = 0xa1;
+    const std::uint8_t OPCODE_CPIR = 0xb1;
+    const std::uint8_t OPCODE_RLD = 0x6f;
 #if defined(Z80_CATCH_RETI) && defined(Z80_CATCH_RETN)
-    const uint8_t OPCODE_RETI = 0x4d;
+    const std::uint8_t OPCODE_RETI = 0x4d;
 #endif
-    const uint8_t OPCODE_INI = 0xa2;
-    const uint8_t OPCODE_INIR = 0xb2;
-    const uint8_t OPCODE_OUTI = 0xa3;
-    const uint8_t OPCODE_OTIR = 0xb3;
+    const std::uint8_t OPCODE_INI = 0xa2;
+    const std::uint8_t OPCODE_INIR = 0xb2;
+    const std::uint8_t OPCODE_OUTI = 0xa3;
+    const std::uint8_t OPCODE_OTIR = 0xb3;
 
     // Opcode decoding helpers.
     // Y() is bits 5-3 of the opcode, Z() is bits 2-0, P() bits 5-4, and Q() bits 4-3.
-    uint8_t Y(uint8_t opcode)
+    std::uint8_t Y(std::uint8_t opcode)
     {
         return (opcode >> 3) & 0x07;
     }
-    uint8_t Z(uint8_t opcode)
+    std::uint8_t Z(std::uint8_t opcode)
     {
         return opcode & 0x07;
     }
-    uint8_t P(uint8_t opcode)
+    std::uint8_t P(std::uint8_t opcode)
     {
         return (opcode >> 4) & 0x03;
     }
-    uint8_t Q(uint8_t opcode)
+    std::uint8_t Q(std::uint8_t opcode)
     {
         return (opcode >> 3) & 0x03;
     }
 
     // Additional bitmasks for convenience
-    const uint8_t SZC_FLAG_MASK =
+    const std::uint8_t SZC_FLAG_MASK =
         zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::C_FLAG_MASK;
-    const uint8_t YX_FLAG_MASK = zcpm::Processor::Y_FLAG_MASK | zcpm::Processor::X_FLAG_MASK;
-    const uint8_t SZ_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK;
-    const uint8_t SZPV_FLAG_MASK =
+    const std::uint8_t YX_FLAG_MASK = zcpm::Processor::Y_FLAG_MASK | zcpm::Processor::X_FLAG_MASK;
+    const std::uint8_t SZ_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK;
+    const std::uint8_t SZPV_FLAG_MASK =
         zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::PV_FLAG_MASK;
-    const uint8_t SYX_FLAG_MASK =
+    const std::uint8_t SYX_FLAG_MASK =
         zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Y_FLAG_MASK | zcpm::Processor::X_FLAG_MASK;
-    const uint8_t HC_FLAG_MASK = zcpm::Processor::H_FLAG_MASK | zcpm::Processor::C_FLAG_MASK;
+    const std::uint8_t HC_FLAG_MASK = zcpm::Processor::H_FLAG_MASK | zcpm::Processor::C_FLAG_MASK;
 
     /* Indirect (HL) or prefixed indexed (IX + d) and (IY + d) memory operands are
      * encoded using the 3 bits "110" (0x06).
      */
-    const uint8_t INDIRECT_HL = 0x06;
+    const std::uint8_t INDIRECT_HL = 0x06;
 
     /* Condition codes are encoded using 2 or 3 bits.  The xor table is needed for
      * negated conditions, it is used along with the and table.
      */
 
-    const std::array<uint8_t, 8> XOR_CONDITION_TABLE{
+    const std::array<std::uint8_t, 8> XOR_CONDITION_TABLE{
         zcpm::Processor::Z_FLAG_MASK,  0, zcpm::Processor::C_FLAG_MASK, 0,
         zcpm::Processor::PV_FLAG_MASK, 0, zcpm::Processor::S_FLAG_MASK, 0,
     };
 
-    const std::array<uint8_t, 8> AND_CONDITION_TABLE{
+    const std::array<std::uint8_t, 8> AND_CONDITION_TABLE{
         zcpm::Processor::Z_FLAG_MASK, zcpm::Processor::Z_FLAG_MASK,  zcpm::Processor::C_FLAG_MASK,
         zcpm::Processor::C_FLAG_MASK, zcpm::Processor::PV_FLAG_MASK, zcpm::Processor::PV_FLAG_MASK,
         zcpm::Processor::S_FLAG_MASK, zcpm::Processor::S_FLAG_MASK,
@@ -85,7 +85,7 @@ namespace
 
     /* RST instruction restart addresses, encoded by Y() bits of the opcode. */
 
-    const std::array<uint8_t, 8> RST_TABLE{
+    const std::array<std::uint8_t, 8> RST_TABLE{
         0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
     };
 
@@ -93,7 +93,7 @@ namespace
      * significant bit is not zero.
      */
 
-    const std::array<uint8_t, 4> OVERFLOW_TABLE{
+    const std::array<std::uint8_t, 4> OVERFLOW_TABLE{
         0,
         zcpm::Processor::PV_FLAG_MASK,
         zcpm::Processor::PV_FLAG_MASK,
@@ -120,7 +120,7 @@ namespace
         SP
     };
 
-    const std::set<uint8_t> DdFdPrefixable = {
+    const std::set<std::uint8_t> DdFdPrefixable = {
         0x09,
         0x19,
         0x21, 0x22, 0x23, 0x24, 0x25, 0x26,             0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e,
@@ -214,7 +214,7 @@ namespace zcpm
         m_im = InterruptMode::IM0;
     }
 
-    size_t Processor::interrupt(uint8_t data_on_bus)
+    size_t Processor::interrupt(std::uint8_t data_on_bus)
     {
         if (m_iff1)
         {
@@ -246,7 +246,7 @@ namespace zcpm
                 size_t elapsed_cycles = 0;
                 reg_sp() -= 2;
                 m_memory.write_word(reg_sp(), m_pc);
-                const uint16_t vector = m_i << 8 | data_on_bus;
+                const std::uint16_t vector = m_i << 8 | data_on_bus;
                 m_pc = m_memory.read_word(vector);
                 return elapsed_cycles + 19;
             }
@@ -273,7 +273,7 @@ namespace zcpm
     size_t Processor::emulate()
     {
         m_effective_pc = m_pc;
-        uint8_t opcode = m_memory.read_byte(m_pc++);
+        std::uint8_t opcode = m_memory.read_byte(m_pc++);
 
         return emulate(opcode, true, 0, 0);
     }
@@ -281,147 +281,147 @@ namespace zcpm
     size_t Processor::emulate_instruction()
     {
         m_effective_pc = m_pc;
-        uint8_t opcode = m_memory.read_byte(m_pc++);
+        std::uint8_t opcode = m_memory.read_byte(m_pc++);
 
         return emulate(opcode, false, 0, 0);
     }
 
-    uint8_t Processor::get_a() const
+    std::uint8_t Processor::get_a() const
     {
         return m_registers.byte[Reg8::A];
     }
 
-    uint8_t Processor::get_f() const
+    std::uint8_t Processor::get_f() const
     {
         return m_registers.byte[Reg8::F];
     }
 
-    uint8_t Processor::get_b() const
+    std::uint8_t Processor::get_b() const
     {
         return m_registers.byte[Reg8::B];
     }
 
-    uint8_t Processor::get_c() const
+    std::uint8_t Processor::get_c() const
     {
         return m_registers.byte[Reg8::C];
     }
 
-    uint8_t Processor::get_d() const
+    std::uint8_t Processor::get_d() const
     {
         return m_registers.byte[Reg8::D];
     }
 
-    uint8_t Processor::get_e() const
+    std::uint8_t Processor::get_e() const
     {
         return m_registers.byte[Reg8::E];
     }
 
-    uint8_t Processor::get_h() const
+    std::uint8_t Processor::get_h() const
     {
         return m_registers.byte[Reg8::H];
     }
 
-    uint8_t Processor::get_l() const
+    std::uint8_t Processor::get_l() const
     {
         return m_registers.byte[Reg8::L];
     }
 
-    uint16_t Processor::get_af() const
+    std::uint16_t Processor::get_af() const
     {
         return m_registers.word[Reg16::AF];
     }
 
-    uint16_t Processor::get_bc() const
+    std::uint16_t Processor::get_bc() const
     {
         return m_registers.word[Reg16::BC];
     }
 
-    uint16_t Processor::get_de() const
+    std::uint16_t Processor::get_de() const
     {
         return m_registers.word[Reg16::DE];
     }
 
-    uint16_t Processor::get_hl() const
+    std::uint16_t Processor::get_hl() const
     {
         return m_registers.word[Reg16::HL];
     }
 
-    uint16_t Processor::get_sp() const
+    std::uint16_t Processor::get_sp() const
     {
         return m_registers.word[Reg16::SP];
     }
 
-    uint16_t Processor::get_pc() const
+    std::uint16_t Processor::get_pc() const
     {
         return m_effective_pc; // Note that we return *effective* PC, not m_pc
     }
 
-    uint8_t& Processor::reg_a()
+    std::uint8_t& Processor::reg_a()
     {
         return m_registers.byte[Reg8::A];
     }
 
-    uint8_t& Processor::reg_f()
+    std::uint8_t& Processor::reg_f()
     {
         return m_registers.byte[Reg8::F];
     }
 
-    uint8_t& Processor::reg_b()
+    std::uint8_t& Processor::reg_b()
     {
         return m_registers.byte[Reg8::B];
     }
 
-    uint8_t& Processor::reg_c()
+    std::uint8_t& Processor::reg_c()
     {
         return m_registers.byte[Reg8::C];
     }
 
-    uint8_t& Processor::reg_d()
+    std::uint8_t& Processor::reg_d()
     {
         return m_registers.byte[Reg8::D];
     }
 
-    uint8_t& Processor::reg_e()
+    std::uint8_t& Processor::reg_e()
     {
         return m_registers.byte[Reg8::E];
     }
 
-    uint8_t& Processor::reg_h()
+    std::uint8_t& Processor::reg_h()
     {
         return m_registers.byte[Reg8::H];
     }
 
-    uint8_t& Processor::reg_l()
+    std::uint8_t& Processor::reg_l()
     {
         return m_registers.byte[Reg8::L];
     }
 
-    uint16_t& Processor::reg_af()
+    std::uint16_t& Processor::reg_af()
     {
         return m_registers.word[Reg16::AF];
     }
 
-    uint16_t& Processor::reg_bc()
+    std::uint16_t& Processor::reg_bc()
     {
         return m_registers.word[Reg16::BC];
     }
 
-    uint16_t& Processor::reg_de()
+    std::uint16_t& Processor::reg_de()
     {
         return m_registers.word[Reg16::DE];
     }
 
-    uint16_t& Processor::reg_hl()
+    std::uint16_t& Processor::reg_hl()
     {
         return m_registers.word[Reg16::HL];
     }
 
-    uint16_t& Processor::reg_sp()
+    std::uint16_t& Processor::reg_sp()
     {
         return m_registers.word[Reg16::SP];
     }
 
-    uint16_t& Processor::reg_pc()
+    std::uint16_t& Processor::reg_pc()
     {
         return m_pc;
     }
@@ -447,14 +447,13 @@ namespace zcpm
         return r;
     }
 
-    std::tuple<uint8_t, uint8_t, uint8_t, uint8_t, std::vector<uint8_t>> Processor::get_opcodes_at(
-        uint16_t pc,
-        uint16_t offset) const
+    std::tuple<std::uint8_t, std::uint8_t, std::uint8_t, std::uint8_t, std::vector<std::uint8_t>>
+    Processor::get_opcodes_at(std::uint16_t pc, std::uint16_t offset) const
     {
         // Find the first non-prefix byte from the requested position (ie, byte other than DD/FD)
-        std::vector<uint8_t> skipped;
-        uint16_t skip_count = 0;
-        uint8_t non_prefix_byte = 0;
+        std::vector<std::uint8_t> skipped;
+        std::uint16_t skip_count = 0;
+        std::uint8_t non_prefix_byte = 0;
         while (pc + offset + skip_count <= 0xFFFF)
         {
             const auto b = m_memory.read_byte(pc + offset + skip_count);
@@ -549,41 +548,41 @@ namespace zcpm
         m_current_register_table = m_fd_register_table;
     }
 
-    uint8_t& Processor::R(int r) const
+    std::uint8_t& Processor::R(int r) const
     {
-        return *(static_cast<uint8_t*>(m_current_register_table[r]));
+        return *(static_cast<std::uint8_t*>(m_current_register_table[r]));
     }
 
-    uint8_t& Processor::S(int s) const
+    std::uint8_t& Processor::S(int s) const
     {
-        return *(static_cast<uint8_t*>(m_register_table[s]));
+        return *(static_cast<std::uint8_t*>(m_register_table[s]));
     }
 
-    uint16_t& Processor::RR(int rr) const
+    std::uint16_t& Processor::RR(int rr) const
     {
-        return *(static_cast<uint16_t*>(m_current_register_table[rr + 8]));
+        return *(static_cast<std::uint16_t*>(m_current_register_table[rr + 8]));
     }
 
-    uint16_t& Processor::SS(int ss) const
+    std::uint16_t& Processor::SS(int ss) const
     {
-        return *(static_cast<uint16_t*>(m_current_register_table[ss + 12]));
+        return *(static_cast<std::uint16_t*>(m_current_register_table[ss + 12]));
     }
 
-    uint16_t& Processor::HL_IX_IY() const
+    std::uint16_t& Processor::HL_IX_IY() const
     {
-        return *(static_cast<uint16_t*>(m_current_register_table[6]));
+        return *(static_cast<std::uint16_t*>(m_current_register_table[6]));
     }
 
-    size_t Processor::emulate(uint8_t opcode, bool unbounded, size_t elapsed_cycles, size_t max_cycles)
+    size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cycles, size_t max_cycles)
     {
-        uint16_t pc = m_pc;
-        uint8_t r = m_r & 0x7f;
+        std::uint16_t pc = m_pc;
+        std::uint8_t r = m_r & 0x7f;
 
         goto start_emulation; // NOLINT: imported 3rd-party code
 
         for (;;)
         {
-            uint8_t instruction;
+            std::uint8_t instruction;
 
             m_effective_pc = pc; // In case the following method causes a debugger hook to fire
             opcode = m_memory.read_byte(pc);
@@ -670,7 +669,7 @@ namespace zcpm
 
             case LD_INDIRECT_HL_N:
             {
-                uint8_t n;
+                std::uint8_t n;
 
                 if (is_default_table())
                 {
@@ -736,8 +735,8 @@ namespace zcpm
 
             case LD_A_I_LD_A_R:
             {
-                const uint8_t a = opcode == OPCODE_LD_A_I ? m_i : (r & 0x80) | (r & 0x7f);
-                uint8_t f = SZYX_FLAGS_TABLE[a];
+                const std::uint8_t a = opcode == OPCODE_LD_A_I ? m_i : (r & 0x80) | (r & 0x7f);
+                std::uint8_t f = SZYX_FLAGS_TABLE[a];
 
                 /* Note: On a real processor, if an interrupt occurs during the execution of either
                  * "LD A, I" or "LD A, R", the parity flag is reset. That can never happen here.
@@ -860,7 +859,7 @@ namespace zcpm
 
             case EX_INDIRECT_SP_HL:
             {
-                const uint16_t t = m_memory.read_word(reg_sp(), elapsed_cycles);
+                const std::uint16_t t = m_memory.read_word(reg_sp(), elapsed_cycles);
                 m_memory.write_word(reg_sp(), HL_IX_IY(), elapsed_cycles);
                 HL_IX_IY() = t;
 
@@ -871,10 +870,10 @@ namespace zcpm
 
             case LDI_LDD:
             {
-                uint8_t n = m_memory.read_byte(reg_hl(), elapsed_cycles);
+                std::uint8_t n = m_memory.read_byte(reg_hl(), elapsed_cycles);
                 m_memory.write_byte(reg_de(), n, elapsed_cycles);
 
-                uint8_t f = reg_f() & SZC_FLAG_MASK;
+                std::uint8_t f = reg_f() & SZC_FLAG_MASK;
                 f |= --reg_bc() ? PV_FLAG_MASK : 0;
 
                 n += reg_a();
@@ -896,12 +895,12 @@ namespace zcpm
             {
                 const int d = opcode == OPCODE_LDIR ? +1 : -1;
 
-                uint8_t f = reg_f() & SZC_FLAG_MASK;
-                uint16_t bc = reg_bc();
-                uint16_t de = reg_de();
-                uint16_t hl = reg_hl();
+                std::uint8_t f = reg_f() & SZC_FLAG_MASK;
+                std::uint16_t bc = reg_bc();
+                std::uint16_t de = reg_de();
+                std::uint16_t hl = reg_hl();
 
-                uint8_t n;
+                std::uint8_t n;
 
                 r -= 2;
                 elapsed_cycles -= 8;
@@ -952,13 +951,13 @@ namespace zcpm
 
             case CPI_CPD:
             {
-                uint8_t a = reg_a();
-                uint8_t n = m_memory.read_byte(reg_hl(), elapsed_cycles);
-                uint8_t z = a - n;
+                std::uint8_t a = reg_a();
+                std::uint8_t n = m_memory.read_byte(reg_hl(), elapsed_cycles);
+                std::uint8_t z = a - n;
 
                 reg_hl() += opcode == OPCODE_CPI ? +1 : -1;
 
-                uint8_t f = (a ^ n ^ z) & H_FLAG_MASK;
+                std::uint8_t f = (a ^ n ^ z) & H_FLAG_MASK;
 
                 n = z - (f >> H_FLAG_BIT);
                 f |= (n << (Y_FLAG_BIT - 1)) & Y_FLAG_MASK;
@@ -977,11 +976,11 @@ namespace zcpm
             {
                 const int d = opcode == OPCODE_CPIR ? +1 : -1;
 
-                uint8_t a = reg_a();
-                uint16_t bc = reg_bc();
-                uint16_t hl = reg_hl();
+                std::uint8_t a = reg_a();
+                std::uint16_t bc = reg_bc();
+                std::uint16_t hl = reg_hl();
 
-                uint8_t n, z;
+                std::uint8_t n, z;
 
                 r -= 2;
                 elapsed_cycles -= 8;
@@ -1017,7 +1016,7 @@ namespace zcpm
                 reg_hl() = hl;
                 reg_bc() = bc;
 
-                uint8_t f = (a ^ n ^ z) & H_FLAG_MASK;
+                std::uint8_t f = (a ^ n ^ z) & H_FLAG_MASK;
 
                 n = z - (f >> H_FLAG_BIT);
                 f |= (n << (Y_FLAG_BIT - 1)) & Y_FLAG_MASK;
@@ -1049,7 +1048,7 @@ namespace zcpm
 
             case ADD_INDIRECT_HL:
             {
-                uint8_t x = read_indirect_hl(pc, elapsed_cycles);
+                std::uint8_t x = read_indirect_hl(pc, elapsed_cycles);
                 op_add(x);
 
                 break;
@@ -1072,7 +1071,7 @@ namespace zcpm
 
             case ADC_INDIRECT_HL:
             {
-                uint8_t x = read_indirect_hl(pc, elapsed_cycles);
+                std::uint8_t x = read_indirect_hl(pc, elapsed_cycles);
 
                 op_adc(x);
                 break;
@@ -1095,7 +1094,7 @@ namespace zcpm
 
             case SUB_INDIRECT_HL:
             {
-                uint8_t x = read_indirect_hl(pc, elapsed_cycles);
+                std::uint8_t x = read_indirect_hl(pc, elapsed_cycles);
                 op_sub(x);
 
                 break;
@@ -1118,7 +1117,7 @@ namespace zcpm
 
             case SBC_INDIRECT_HL:
             {
-                uint8_t x = read_indirect_hl(pc, elapsed_cycles);
+                std::uint8_t x = read_indirect_hl(pc, elapsed_cycles);
                 op_sbc(x);
 
                 break;
@@ -1141,7 +1140,7 @@ namespace zcpm
 
             case AND_INDIRECT_HL:
             {
-                uint8_t x = read_indirect_hl(pc, elapsed_cycles);
+                std::uint8_t x = read_indirect_hl(pc, elapsed_cycles);
                 op_and(x);
 
                 break;
@@ -1163,7 +1162,7 @@ namespace zcpm
 
             case OR_INDIRECT_HL:
             {
-                uint8_t x = read_indirect_hl(pc, elapsed_cycles);
+                std::uint8_t x = read_indirect_hl(pc, elapsed_cycles);
                 op_or(x);
 
                 break;
@@ -1186,7 +1185,7 @@ namespace zcpm
 
             case XOR_INDIRECT_HL:
             {
-                uint8_t x = read_indirect_hl(pc, elapsed_cycles);
+                std::uint8_t x = read_indirect_hl(pc, elapsed_cycles);
                 op_xor(x);
 
                 break;
@@ -1209,7 +1208,7 @@ namespace zcpm
 
             case CP_INDIRECT_HL:
             {
-                uint8_t x = read_indirect_hl(pc, elapsed_cycles);
+                std::uint8_t x = read_indirect_hl(pc, elapsed_cycles);
                 op_cp(x);
 
                 break;
@@ -1227,7 +1226,7 @@ namespace zcpm
 
             case INC_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1263,7 +1262,7 @@ namespace zcpm
 
             case DEC_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1293,9 +1292,9 @@ namespace zcpm
             {
                 // The following algorithm is from comp.sys.sinclair's FAQ.
 
-                const uint8_t a = reg_a();
-                uint8_t c = 0;
-                uint8_t d = 0;
+                const std::uint8_t a = reg_a();
+                std::uint8_t c = 0;
+                std::uint8_t d = 0;
                 if (a > 0x99 || (reg_f() & C_FLAG_MASK))
                 {
                     c = C_FLAG_MASK;
@@ -1322,11 +1321,11 @@ namespace zcpm
 
             case NEG:
             {
-                const uint8_t a = reg_a();
+                const std::uint8_t a = reg_a();
                 int z = -a;
 
                 int c = a ^ z;
-                uint8_t f = N_FLAG_MASK | (c & H_FLAG_MASK);
+                std::uint8_t f = N_FLAG_MASK | (c & H_FLAG_MASK);
                 f |= SZYX_FLAGS_TABLE[z &= 0xff];
                 c &= 0x0180;
                 f |= OVERFLOW_TABLE[c >> 7];
@@ -1340,7 +1339,7 @@ namespace zcpm
 
             case CCF:
             {
-                const uint8_t c = reg_f() & C_FLAG_MASK;
+                const std::uint8_t c = reg_f() & C_FLAG_MASK;
                 reg_f() = (reg_f() & (SZPV_FLAG_MASK | YX_FLAG_MASK)) | (c << H_FLAG_BIT) | (reg_a() & YX_FLAG_MASK) |
                           (c ^ C_FLAG_MASK);
 
@@ -1422,12 +1421,12 @@ namespace zcpm
 
             case ADD_HL_RR:
             {
-                const uint16_t x = HL_IX_IY();
-                const uint16_t y = RR(P(opcode));
+                const std::uint16_t x = HL_IX_IY();
+                const std::uint16_t y = RR(P(opcode));
                 const int z = x + y;
 
                 const int c = x ^ y ^ z;
-                uint8_t f = reg_f() & SZPV_FLAG_MASK;
+                std::uint8_t f = reg_f() & SZPV_FLAG_MASK;
                 f |= (z >> 8) & YX_FLAG_MASK;
                 f |= (c >> 8) & H_FLAG_MASK;
                 f |= c >> (16 - C_FLAG_BIT);
@@ -1442,12 +1441,12 @@ namespace zcpm
 
             case ADC_HL_RR:
             {
-                const uint16_t x = reg_hl();
-                const uint16_t y = RR(P(opcode));
+                const std::uint16_t x = reg_hl();
+                const std::uint16_t y = RR(P(opcode));
                 const int z = x + y + (reg_f() & C_FLAG_MASK);
 
                 const int c = x ^ y ^ z;
-                uint8_t f = z & 0xffff ? (z >> 8) & SYX_FLAG_MASK : Z_FLAG_MASK;
+                std::uint8_t f = z & 0xffff ? (z >> 8) & SYX_FLAG_MASK : Z_FLAG_MASK;
                 f |= (c >> 8) & H_FLAG_MASK;
                 f |= OVERFLOW_TABLE[c >> 15];
                 f |= z >> (16 - C_FLAG_BIT);
@@ -1462,12 +1461,12 @@ namespace zcpm
 
             case SBC_HL_RR:
             {
-                const uint16_t x = reg_hl();
-                const uint16_t y = RR(P(opcode));
+                const std::uint16_t x = reg_hl();
+                const std::uint16_t y = RR(P(opcode));
                 const int z = x - y - (reg_f() & C_FLAG_MASK);
 
                 int c = x ^ y ^ z;
-                uint8_t f = N_FLAG_MASK;
+                std::uint8_t f = N_FLAG_MASK;
                 f |= z & 0xffff ? (z >> 8) & SYX_FLAG_MASK : Z_FLAG_MASK;
                 f |= (c >> 8) & H_FLAG_MASK;
                 c &= 0x018000;
@@ -1484,7 +1483,7 @@ namespace zcpm
 
             case INC_RR:
             {
-                uint16_t x = RR(P(opcode));
+                std::uint16_t x = RR(P(opcode));
                 x++;
                 RR(P(opcode)) = x;
 
@@ -1495,7 +1494,7 @@ namespace zcpm
 
             case DEC_RR:
             {
-                uint16_t x = RR(P(opcode));
+                std::uint16_t x = RR(P(opcode));
                 x--;
                 RR(P(opcode)) = x;
 
@@ -1516,8 +1515,8 @@ namespace zcpm
 
             case RLA:
             {
-                uint8_t a = reg_a() << 1;
-                uint8_t f = (reg_f() & SZPV_FLAG_MASK) | (a & YX_FLAG_MASK) | (reg_a() >> 7);
+                std::uint8_t a = reg_a() << 1;
+                std::uint8_t f = (reg_f() & SZPV_FLAG_MASK) | (a & YX_FLAG_MASK) | (reg_a() >> 7);
                 reg_a() = a | (reg_f() & C_FLAG_MASK);
                 reg_f() = f;
 
@@ -1526,7 +1525,7 @@ namespace zcpm
 
             case RRCA:
             {
-                const uint8_t c = reg_a() & 0x01;
+                const std::uint8_t c = reg_a() & 0x01;
                 reg_a() = (reg_a() >> 1) | (reg_a() << 7);
                 reg_f() = (reg_f() & SZPV_FLAG_MASK) | (reg_a() & YX_FLAG_MASK) | c;
 
@@ -1535,7 +1534,7 @@ namespace zcpm
 
             case RRA:
             {
-                const uint8_t c = reg_a() & 0x01;
+                const std::uint8_t c = reg_a() & 0x01;
                 reg_a() = (reg_a() >> 1) | ((reg_f() & C_FLAG_MASK) << 7);
                 reg_f() = (reg_f() & SZPV_FLAG_MASK) | (reg_a() & YX_FLAG_MASK) | c;
 
@@ -1544,7 +1543,7 @@ namespace zcpm
 
             case RLC_R:
             {
-                uint8_t x = R(Z(opcode));
+                std::uint8_t x = R(Z(opcode));
                 op_rlc(x);
                 R(Z(opcode)) = x;
 
@@ -1553,7 +1552,7 @@ namespace zcpm
 
             case RLC_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1586,7 +1585,7 @@ namespace zcpm
 
             case RL_R:
             {
-                uint8_t x = R(Z(opcode));
+                std::uint8_t x = R(Z(opcode));
                 op_rl(x);
                 R(Z(opcode)) = x;
 
@@ -1595,7 +1594,7 @@ namespace zcpm
 
             case RL_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1628,7 +1627,7 @@ namespace zcpm
 
             case RRC_R:
             {
-                uint8_t x = R(Z(opcode));
+                std::uint8_t x = R(Z(opcode));
                 op_rrc(x);
                 R(Z(opcode)) = x;
 
@@ -1637,7 +1636,7 @@ namespace zcpm
 
             case RRC_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1670,7 +1669,7 @@ namespace zcpm
 
             case RR_R:
             {
-                uint8_t x = R(Z(opcode));
+                std::uint8_t x = R(Z(opcode));
                 op_rr_instruction(x);
                 R(Z(opcode)) = x;
 
@@ -1679,7 +1678,7 @@ namespace zcpm
 
             case RR_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1712,7 +1711,7 @@ namespace zcpm
 
             case SLA_R:
             {
-                uint8_t x = R(Z(opcode));
+                std::uint8_t x = R(Z(opcode));
                 op_sla(x);
                 R(Z(opcode)) = x;
 
@@ -1721,7 +1720,7 @@ namespace zcpm
 
             case SLA_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1754,7 +1753,7 @@ namespace zcpm
 
             case SLL_R:
             {
-                uint8_t x = R(Z(opcode));
+                std::uint8_t x = R(Z(opcode));
                 op_sll(x);
                 R(Z(opcode)) = x;
 
@@ -1763,7 +1762,7 @@ namespace zcpm
 
             case SLL_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1796,7 +1795,7 @@ namespace zcpm
 
             case SRA_R:
             {
-                uint8_t x = R(Z(opcode));
+                std::uint8_t x = R(Z(opcode));
                 op_sra(x);
                 R(Z(opcode)) = x;
 
@@ -1805,7 +1804,7 @@ namespace zcpm
 
             case SRA_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1838,7 +1837,7 @@ namespace zcpm
 
             case SRL_R:
             {
-                uint8_t x = R(Z(opcode));
+                std::uint8_t x = R(Z(opcode));
                 op_srl(x);
                 R(Z(opcode)) = x;
                 break;
@@ -1846,7 +1845,7 @@ namespace zcpm
 
             case SRL_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1879,9 +1878,9 @@ namespace zcpm
 
             case RLD_RRD:
             {
-                uint8_t x = m_memory.read_byte(reg_hl(), elapsed_cycles);
+                std::uint8_t x = m_memory.read_byte(reg_hl(), elapsed_cycles);
 
-                uint16_t y = (reg_a() & 0xf0) << 8;
+                std::uint16_t y = (reg_a() & 0xf0) << 8;
                 y |= opcode == OPCODE_RLD ? (x << 4) | (reg_a() & 0x0f)
                                           : ((x & 0x0f) << 8) | ((reg_a() & 0x0f) << 4) | (x >> 4);
                 m_memory.write_byte(reg_hl(), y, elapsed_cycles);
@@ -1908,7 +1907,7 @@ namespace zcpm
 
             case BIT_B_INDIRECT_HL:
             {
-                uint16_t d;
+                std::uint16_t d;
 
                 if (is_default_table())
                 {
@@ -1926,7 +1925,7 @@ namespace zcpm
                     elapsed_cycles += 5;
                 }
 
-                uint8_t x = m_memory.read_byte(d, elapsed_cycles);
+                std::uint8_t x = m_memory.read_byte(d, elapsed_cycles);
                 x &= 1 << Y(opcode);
                 reg_f() = (x ? 0 : Z_FLAG_MASK | PV_FLAG_MASK) | (x & S_FLAG_MASK) | (d & YX_FLAG_MASK) | H_FLAG_MASK |
                           (reg_f() & C_FLAG_MASK);
@@ -1943,7 +1942,7 @@ namespace zcpm
 
             case SET_B_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -1984,7 +1983,7 @@ namespace zcpm
 
             case RES_B_INDIRECT_HL:
             {
-                uint8_t x;
+                std::uint8_t x;
 
                 if (is_default_table())
                 {
@@ -2019,7 +2018,7 @@ namespace zcpm
 
             case JP_NN:
             {
-                const uint16_t nn = m_memory.read_word(pc);
+                const std::uint16_t nn = m_memory.read_word(pc);
                 pc = nn;
 
                 elapsed_cycles += 6;
@@ -2031,7 +2030,7 @@ namespace zcpm
             {
                 if (test_cc(Y(opcode)))
                 {
-                    const uint16_t nn = m_memory.read_word(pc);
+                    const std::uint16_t nn = m_memory.read_word(pc);
 
                     pc = nn;
                 }
@@ -2200,7 +2199,7 @@ namespace zcpm
 
             case IN_R_C:
             {
-                uint8_t x = m_memory.input_byte(reg_c());
+                std::uint8_t x = m_memory.input_byte(reg_c());
                 if (Y(opcode) != INDIRECT_HL)
                 {
                     R(Y(opcode)) = x;
@@ -2312,7 +2311,7 @@ namespace zcpm
 
             case OUT_C_R:
             {
-                const uint8_t x = Y(opcode) != INDIRECT_HL ? R(Y(opcode)) : 0;
+                const std::uint8_t x = Y(opcode) != INDIRECT_HL ? R(Y(opcode)) : 0;
                 m_memory.output_byte(reg_c(), x);
 
                 elapsed_cycles += 4;
@@ -2322,12 +2321,12 @@ namespace zcpm
 
             case OUTI_OUTD:
             {
-                uint8_t x = m_memory.read_byte(reg_hl(), elapsed_cycles);
+                std::uint8_t x = m_memory.read_byte(reg_hl(), elapsed_cycles);
                 m_memory.output_byte(reg_c(), x);
 
                 reg_hl() += opcode == OPCODE_OUTI ? +1 : -1;
 
-                uint8_t f = SZYX_FLAGS_TABLE[--reg_b() & 0xff] | (x >> (7 - N_FLAG_BIT));
+                std::uint8_t f = SZYX_FLAGS_TABLE[--reg_b() & 0xff] | (x >> (7 - N_FLAG_BIT));
                 x += reg_hl() & 0xff;
                 f |= x & 0x0100 ? HC_FLAG_MASK : 0;
                 f |= SZYXP_FLAGS_TABLE[(x & 0x07) ^ reg_b()] & PV_FLAG_MASK;
@@ -2343,7 +2342,7 @@ namespace zcpm
                 int b = reg_b();
                 int hl = reg_hl();
 
-                uint8_t x, f;
+                std::uint8_t x, f;
 
                 r -= 2;
                 elapsed_cycles -= 8;
@@ -2477,19 +2476,19 @@ namespace zcpm
         return elapsed_cycles;
     }
 
-    bool Processor::test_cc(uint8_t cc)
+    bool Processor::test_cc(std::uint8_t cc)
     {
         return (reg_f() ^ XOR_CONDITION_TABLE[cc]) & AND_CONDITION_TABLE[cc];
     }
 
-    bool Processor::test_dd(uint8_t dd)
+    bool Processor::test_dd(std::uint8_t dd)
     {
         return test_cc(dd);
     }
 
-    uint8_t Processor::read_indirect_hl(uint16_t& pc, size_t& elapsed_cycles)
+    std::uint8_t Processor::read_indirect_hl(std::uint16_t& pc, size_t& elapsed_cycles)
     {
-        uint8_t x;
+        std::uint8_t x;
         if (is_default_table())
         {
             x = m_memory.read_byte(reg_hl(), elapsed_cycles);
@@ -2504,9 +2503,9 @@ namespace zcpm
         return x;
     }
 
-    void Processor::op_add(uint8_t x)
+    void Processor::op_add(std::uint8_t x)
     {
-        const uint8_t a = reg_a();
+        const std::uint8_t a = reg_a();
         int z = a + x;
         int c = a ^ x ^ z;
         int f = c & H_FLAG_MASK;
@@ -2517,9 +2516,9 @@ namespace zcpm
         reg_f() = f;
     }
 
-    void Processor::op_adc(uint8_t x)
+    void Processor::op_adc(std::uint8_t x)
     {
-        const uint8_t a = reg_a();
+        const std::uint8_t a = reg_a();
         int z = a + x + (reg_f() & C_FLAG_MASK);
         int c = a ^ x ^ z;
         int f = c & H_FLAG_MASK;
@@ -2530,9 +2529,9 @@ namespace zcpm
         reg_f() = f;
     }
 
-    void Processor::op_sub(uint8_t x)
+    void Processor::op_sub(std::uint8_t x)
     {
-        const uint8_t a = reg_a();
+        const std::uint8_t a = reg_a();
         int z = a - x;
         int c = a ^ x ^ z;
         int f = N_FLAG_MASK | (c & H_FLAG_MASK);
@@ -2544,9 +2543,9 @@ namespace zcpm
         reg_f() = f;
     }
 
-    void Processor::op_sbc(uint8_t x)
+    void Processor::op_sbc(std::uint8_t x)
     {
-        const uint8_t a = reg_a();
+        const std::uint8_t a = reg_a();
         int z = a - x - (reg_f() & C_FLAG_MASK);
         int c = a ^ x ^ z;
         int f = N_FLAG_MASK | (c & H_FLAG_MASK);
@@ -2558,24 +2557,24 @@ namespace zcpm
         reg_f() = f;
     }
 
-    void Processor::op_and(uint8_t x)
+    void Processor::op_and(std::uint8_t x)
     {
         reg_f() = SZYXP_FLAGS_TABLE[reg_a() &= x] | H_FLAG_MASK;
     }
 
-    void Processor::op_or(uint8_t x)
+    void Processor::op_or(std::uint8_t x)
     {
         reg_f() = SZYXP_FLAGS_TABLE[reg_a() |= x];
     }
 
-    void Processor::op_xor(uint8_t x)
+    void Processor::op_xor(std::uint8_t x)
     {
         reg_f() = SZYXP_FLAGS_TABLE[reg_a() ^= x];
     }
 
-    void Processor::op_cp(uint8_t x)
+    void Processor::op_cp(std::uint8_t x)
     {
-        const uint8_t a = reg_a();
+        const std::uint8_t a = reg_a();
         int z = a - x;
 
         int c = a ^ x ^ z;
@@ -2589,7 +2588,7 @@ namespace zcpm
         reg_f() = f;
     }
 
-    void Processor::op_inc(uint8_t& x)
+    void Processor::op_inc(std::uint8_t& x)
     {
         int z = x + 1;
         int c = x ^ z;
@@ -2603,7 +2602,7 @@ namespace zcpm
         reg_f() = f;
     }
 
-    void Processor::op_dec(uint8_t& x)
+    void Processor::op_dec(std::uint8_t& x)
     {
         int z = x - 1;
         int c = x ^ z;
@@ -2617,58 +2616,58 @@ namespace zcpm
         reg_f() = f;
     }
 
-    void Processor::op_rlc(uint8_t& x)
+    void Processor::op_rlc(std::uint8_t& x)
     {
-        const uint8_t c = x >> 7;
+        const std::uint8_t c = x >> 7;
         x = (x << 1) | c;
         reg_f() = SZYXP_FLAGS_TABLE[x & 0xff] | c;
     }
 
-    void Processor::op_rl(uint8_t& x)
+    void Processor::op_rl(std::uint8_t& x)
     {
-        const uint8_t c = x >> 7;
+        const std::uint8_t c = x >> 7;
         x = (x << 1) | (reg_f() & C_FLAG_MASK);
         reg_f() = SZYXP_FLAGS_TABLE[x & 0xff] | c;
     }
 
-    void Processor::op_rrc(uint8_t& x)
+    void Processor::op_rrc(std::uint8_t& x)
     {
-        const uint8_t c = x & 0x01;
+        const std::uint8_t c = x & 0x01;
         x = (x >> 1) | (c << 7);
         reg_f() = SZYXP_FLAGS_TABLE[x & 0xff] | c;
     }
 
-    void Processor::op_rr_instruction(uint8_t& x)
+    void Processor::op_rr_instruction(std::uint8_t& x)
     {
-        const uint8_t c = x & 0x01;
+        const std::uint8_t c = x & 0x01;
         x = (x >> 1) | ((reg_f() & C_FLAG_MASK) << 7);
         reg_f() = SZYXP_FLAGS_TABLE[x & 0xff] | c;
     }
 
-    void Processor::op_sla(uint8_t& x)
+    void Processor::op_sla(std::uint8_t& x)
     {
-        const uint8_t c = x >> 7;
+        const std::uint8_t c = x >> 7;
         x <<= 1;
         reg_f() = SZYXP_FLAGS_TABLE[x & 0xff] | c;
     }
 
-    void Processor::op_sll(uint8_t& x)
+    void Processor::op_sll(std::uint8_t& x)
     {
-        const uint8_t c = x >> 7;
+        const std::uint8_t c = x >> 7;
         x = (x << 1) | 0x01;
         reg_f() = SZYXP_FLAGS_TABLE[x & 0xff] | c;
     }
 
-    void Processor::op_sra(uint8_t& x)
+    void Processor::op_sra(std::uint8_t& x)
     {
-        const uint8_t c = x & 0x01;
+        const std::uint8_t c = x & 0x01;
         x = static_cast<signed char>(x) >> 1;
         reg_f() = SZYXP_FLAGS_TABLE[x & 0xff] | c;
     }
 
-    void Processor::op_srl(uint8_t& x)
+    void Processor::op_srl(std::uint8_t& x)
     {
-        const uint8_t c = x & 0x01;
+        const std::uint8_t c = x & 0x01;
         x >>= 1;
         reg_f() = SZYXP_FLAGS_TABLE[x & 0xff] | c;
     }

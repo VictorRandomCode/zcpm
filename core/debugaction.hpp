@@ -11,7 +11,7 @@ namespace zcpm
     class DebugAction
     {
     public:
-        DebugAction(uint16_t address, std::string_view location);
+        DebugAction(std::uint16_t address, std::string_view location);
 
         DebugAction(const DebugAction&) = delete;
         DebugAction& operator=(const DebugAction&) = delete;
@@ -29,24 +29,24 @@ namespace zcpm
 
         // Factory method to instantiate a concrete subclass based on the supplied parameters
         static std::unique_ptr<DebugAction> create(Type type,
-                                                   uint16_t address,
+                                                   std::uint16_t address,
                                                    std::string_view location,
                                                    const std::string& count = "");
 
-        [[nodiscard]] uint16_t get_address() const;
+        [[nodiscard]] std::uint16_t get_address() const;
 
         // Called each time we reach a new address.  This method should return true
         // if the system should continue, false if it should break (returning to the
         // debugger prompt)
-        [[nodiscard]] virtual bool evaluate(uint16_t address) const = 0;
+        [[nodiscard]] virtual bool evaluate(std::uint16_t address) const = 0;
 
         [[nodiscard]] virtual std::string describe() const = 0;
 
         friend std::ostream& operator<<(std::ostream& os, const DebugAction& a);
 
     protected:
-        const std::string m_location; // Textual description of address being monitored, as entered by user
-        const uint16_t m_address;     // Binary equivalent of the above
+        const std::string m_location;  // Textual description of address being monitored, as entered by user
+        const std::uint16_t m_address; // Binary equivalent of the above
     };
 
     // Each time we reach the specified address, indicate that we should
@@ -54,8 +54,8 @@ namespace zcpm
     class Breakpoint : public DebugAction
     {
     public:
-        Breakpoint(uint16_t address, std::string_view location);
-        [[nodiscard]] bool evaluate(uint16_t address) const override; // Will return false if we hit "our" address
+        Breakpoint(std::uint16_t address, std::string_view location);
+        [[nodiscard]] bool evaluate(std::uint16_t address) const override; // Will return false if we hit "our" address
         [[nodiscard]] std::string describe() const override;
     };
 
@@ -63,8 +63,8 @@ namespace zcpm
     class Watchpoint : public DebugAction
     {
     public:
-        Watchpoint(uint16_t address, std::string_view location);
-        [[nodiscard]] bool evaluate(uint16_t address) const override; // Will always return true
+        Watchpoint(std::uint16_t address, std::string_view location);
+        [[nodiscard]] bool evaluate(std::uint16_t address) const override; // Will always return true
         [[nodiscard]] std::string describe() const override;
     };
 
@@ -73,12 +73,12 @@ namespace zcpm
     class PassPoint : public DebugAction
     {
     public:
-        PassPoint(uint16_t address, std::string_view location, uint16_t initial);
-        [[nodiscard]] bool evaluate(uint16_t address) const override;
+        PassPoint(std::uint16_t address, std::string_view location, std::uint16_t initial);
+        [[nodiscard]] bool evaluate(std::uint16_t address) const override;
         [[nodiscard]] std::string describe() const override;
 
     private:
-        mutable uint16_t m_remaining;
+        mutable std::uint16_t m_remaining;
     };
 
 } // namespace zcpm

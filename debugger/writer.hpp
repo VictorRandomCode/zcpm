@@ -38,15 +38,15 @@ public:
 
 private:
     // For displaying a line in a 'list' output
-    void display(uint16_t address, std::string_view s1, std::string_view s2) const;
+    void display(std::uint16_t address, std::string_view s1, std::string_view s2) const;
 
     // For displaying a line in an 'examine' output
     void display(const zcpm::Registers& registers,
                  std::string_view s1,
                  std::string_view s2,
-                 const uint16_t offset = 0) const;
+                 const std::uint16_t offset = 0) const;
 
-    std::string flags_to_string(uint8_t f) const;
+    std::string flags_to_string(std::uint8_t f) const;
 
     const zcpm::IDebuggable* m_pdebuggable;
     zcpm::IMemory& m_memory;

@@ -21,24 +21,24 @@ namespace
     const std::array<const char*, 8> CondMask{ "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
     const std::array<const char*, 8> DDByteRegMask{ "B", "C", "D", "E", "IXH", "IXL", "(HL)", "A" };
     const std::array<const char*, 8> FDByteRegMask{ "B", "C", "D", "E", "IYH", "IYL", "(HL)", "A" };
-    const std::map<uint8_t, const char*> DdFdCbLogicals = {
+    const std::map<std::uint8_t, const char*> DdFdCbLogicals = {
         { 0x06, "RLC" }, { 0x0E, "RRC" }, { 0x16, "RL" },  { 0x1E, "RR" },
         { 0x26, "SLA" }, { 0x2E, "SRA" }, { 0x36, "SLL" }, { 0x3E, "SRL" },
     };
 
     // A 8-bit literal as a 2 digit hex string
-    auto byte(uint8_t x)
+    auto byte(std::uint8_t x)
     {
         return fmt::format("{:02X}", x);
     }
 
     // A 16-bit literal as a 4 digit hex string
-    auto word(uint8_t low, uint8_t high)
+    auto word(std::uint8_t low, std::uint8_t high)
     {
         return fmt::format("{:04X}", high << 8 | low);
     }
 
-    std::string byte_array_to_string(const std::vector<uint8_t>& bytes)
+    std::string byte_array_to_string(const std::vector<std::uint8_t>& bytes)
     {
         std::string result;
         for (const auto& b : bytes)
@@ -53,110 +53,110 @@ namespace
     }
 
     // Dereference NN from (string)
-    auto nn_string(uint8_t low, uint8_t high, const std::string& s)
+    auto nn_string(std::uint8_t low, std::uint8_t high, const std::string& s)
     {
         return fmt::format("({:04X}),{}", high << 8 | low, s);
     }
 
     // Dereference (string) from NN
-    auto string_nn(uint8_t low, uint8_t high, const std::string& s)
+    auto string_nn(std::uint8_t low, std::uint8_t high, const std::string& s)
     {
         return fmt::format("{},({:04X})", s, high << 8 | low);
     }
 
     // Dereference N from (string)
-    auto n_string(uint8_t n, const std::string& s)
+    auto n_string(std::uint8_t n, const std::string& s)
     {
         return fmt::format("({:02X}),{}", n, s);
     }
 
     // Dereference (string) from N
-    // auto string_n(uint8_t n, const std::string& s)
+    // auto string_n(std::uint8_t n, const std::string& s)
     //{
     //  return fmt::format("{},({:02X})", s, n);
     //}
 
-    auto hl_ss(uint8_t ss)
+    auto hl_ss(std::uint8_t ss)
     {
         return fmt::format("HL,{}", WordRegMask[ss]);
     }
 
-    auto byte_register(uint8_t r)
+    auto byte_register(std::uint8_t r)
     {
         return ByteRegMask[r];
     }
 
-    auto qq_word_register(uint8_t qq)
+    auto qq_word_register(std::uint8_t qq)
     {
         return WordRegMaskQq[qq];
     }
 
     // r,n where r is a byte register and n is a 8-bit literal
-    auto r_n(uint8_t r, uint8_t n)
+    auto r_n(std::uint8_t r, std::uint8_t n)
     {
         return fmt::format("{},{:02X}", ByteRegMask[r], n);
     }
 
     // r,r where r1 and r2 are both byte registers
-    auto r_r(uint8_t r1, uint8_t r2)
+    auto r_r(std::uint8_t r1, std::uint8_t r2)
     {
         return fmt::format("{},{}", ByteRegMask[r1], ByteRegMask[r2]);
     }
 
     // dd,nn where dd is a word register and nn is a 16-bit literal
-    auto dd_nn(uint8_t dd, uint8_t nn_low, uint8_t nn_high)
+    auto dd_nn(std::uint8_t dd, std::uint8_t nn_low, std::uint8_t nn_high)
     {
-        const uint16_t nn = (nn_high << 8) | nn_low;
+        const std::uint16_t nn = (nn_high << 8) | nn_low;
         return fmt::format("{},{:04X}", WordRegMask[dd], nn);
     }
 
     // (nn),dd where dd is a word register and nn is a 16-bit literal
-    auto inn_dd(uint8_t dd, uint8_t nn_low, uint8_t nn_high)
+    auto inn_dd(std::uint8_t dd, std::uint8_t nn_low, std::uint8_t nn_high)
     {
-        const uint16_t nn = (nn_high << 8) | nn_low;
+        const std::uint16_t nn = (nn_high << 8) | nn_low;
         return fmt::format("({:04X}),{}", nn, WordRegMask[dd]);
     }
 
     // dd,(nn) where dd is a word register and nn is a 16-bit literal
-    auto dd_inn(uint8_t dd, uint8_t nn_low, uint8_t nn_high)
+    auto dd_inn(std::uint8_t dd, std::uint8_t nn_low, std::uint8_t nn_high)
     {
-        const uint16_t nn = (nn_high << 8) | nn_low;
+        const std::uint16_t nn = (nn_high << 8) | nn_low;
         return fmt::format("{},({:04X})", WordRegMask[dd], nn);
     }
 
     // cc,pq where cc is a 3-bit condition and pq is a 16-bit literal
-    auto cc_pq(uint8_t cc, uint8_t pq_low, uint8_t pq_high)
+    auto cc_pq(std::uint8_t cc, std::uint8_t pq_low, std::uint8_t pq_high)
     {
-        const uint16_t pq = (pq_high << 8) | pq_low;
+        const std::uint16_t pq = (pq_high << 8) | pq_low;
         return fmt::format("{},{:04X}", CondMask[cc], pq);
     }
 
     // Relative target as a 4 digit hex value (PC+e)
-    auto offset(uint16_t pc, uint8_t e)
+    auto offset(std::uint16_t pc, std::uint8_t e)
     {
         const int8_t ee = e;
-        const uint16_t dest = pc + 2 + ee;
+        const std::uint16_t dest = pc + 2 + ee;
         return fmt::format("{:04X}", dest);
     }
 
     // cc,e where cc is a 2-bit condition and e is a relative jump, which
     // we combine with pc for display purposes for compatibility with DebugZ
-    auto cc_offset(uint8_t cc, uint8_t e, uint16_t pc)
+    auto cc_offset(std::uint8_t cc, std::uint8_t e, std::uint16_t pc)
     {
         const int8_t ee = e;
-        const uint16_t dest = pc + 2 + ee;
+        const std::uint16_t dest = pc + 2 + ee;
         return fmt::format("{},{:04X}", CondMask[cc], dest);
     }
 
     // "r,(reg+d)"  where r is a 8-bit register index and reg is an index register name and d is an offset
-    auto r_ind_offset(uint8_t r, const std::string& reg, uint8_t offset)
+    auto r_ind_offset(std::uint8_t r, const std::string& reg, std::uint8_t offset)
     {
         const int8_t o = offset;
         return fmt::format("{},({}+{:02X})", ByteRegMask[r], reg, o);
     }
 
     // "(reg+d),r"  where r is a 8-bit register index and reg is an index register name and d is an offset
-    auto ind_offset_r(uint8_t r, const std::string& reg, uint8_t offset)
+    auto ind_offset_r(std::uint8_t r, const std::string& reg, std::uint8_t offset)
     {
         const int8_t o = offset;
         return fmt::format("({}+{:02X}),{}", reg, o, ByteRegMask[r]);
@@ -164,7 +164,9 @@ namespace
 
     // TODO: Collate string constants
 
-    std::tuple<size_t, std::string, std::string> disassemble_cb(uint8_t op2, uint8_t /*op3*/, uint8_t /*op4*/)
+    std::tuple<size_t, std::string, std::string> disassemble_cb(std::uint8_t op2,
+                                                                std::uint8_t /*op3*/,
+                                                                std::uint8_t /*op4*/)
     {
         // First check for specific opcodes
         switch (op2)
@@ -178,65 +180,65 @@ namespace
         // Now check for bytefields
         if ((op2 & 0xC0) == 0x40)
         {
-            const uint16_t b = (op2 >> 3) & 0x07;
-            const uint8_t r = op2 & 0x07;
+            const std::uint16_t b = (op2 >> 3) & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "BIT", fmt::format("{:d},", b) + ByteRegMask[r] };
         }
         if ((op2 & 0xC0) == 0x80)
         {
-            const uint16_t b = (op2 >> 3) & 0x07;
-            const uint8_t r = op2 & 0x07;
+            const std::uint16_t b = (op2 >> 3) & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "RES", fmt::format("{:d},", b) + ByteRegMask[r] };
         }
         if ((op2 & 0xC0) == 0xC0)
         {
-            const uint16_t b = (op2 >> 3) & 0x07;
-            const uint8_t r = op2 & 0x07;
+            const std::uint16_t b = (op2 >> 3) & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "SET", fmt::format("{:d},", b) + ByteRegMask[r] };
         }
         if ((op2 & 0xC7) == 0x46)
         {
-            const uint16_t b = (op2 >> 3) & 0x07;
+            const std::uint16_t b = (op2 >> 3) & 0x07;
             return { 2, "BIT", fmt::format("{:d},(HL)", b) };
         }
         if ((op2 & 0xF8) == 0x00)
         {
-            const uint8_t r = op2 & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "RLC", ByteRegMask[r] };
         }
         if ((op2 & 0xF8) == 0x08)
         {
-            const uint8_t r = op2 & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "RRC", ByteRegMask[r] };
         }
         if ((op2 & 0xF8) == 0x10)
         {
-            const uint8_t r = op2 & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "RL", ByteRegMask[r] };
         }
         if ((op2 & 0xF8) == 0x18)
         {
-            const uint8_t r = op2 & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "RR", ByteRegMask[r] };
         }
         if ((op2 & 0xF8) == 0x20)
         {
-            const uint8_t r = op2 & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "SLA", ByteRegMask[r] };
         }
         if ((op2 & 0xF8) == 0x28)
         {
-            const uint8_t r = op2 & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "SRA", ByteRegMask[r] };
         }
         if ((op2 & 0xF8) == 0x30)
         {
-            const uint8_t r = op2 & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "SLL", ByteRegMask[r] };
         }
         if ((op2 & 0xF8) == 0x38)
         {
-            const uint8_t r = op2 & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 2, "SRL", ByteRegMask[r] };
         }
 
@@ -245,10 +247,10 @@ namespace
     }
 
     std::tuple<size_t, std::string, std::string> disassemble_ddfd(const std::string& xy,
-                                                                  uint8_t op1,
-                                                                  uint8_t op2,
-                                                                  uint8_t op3,
-                                                                  uint8_t op4)
+                                                                  std::uint8_t op1,
+                                                                  std::uint8_t op2,
+                                                                  std::uint8_t op3,
+                                                                  std::uint8_t op4)
     {
         // First check for specific opcodes
         switch (op2)
@@ -346,12 +348,12 @@ namespace
         }
         if ((op2 & 0xC7) == 0x46)
         {
-            const uint8_t r = (op2 >> 3) & 0x07;
+            const std::uint8_t r = (op2 >> 3) & 0x07;
             return { 3, "LD", r_ind_offset(r, xy, op3) };
         }
         if ((op2 & 0xF8) == 0x70)
         {
-            const uint8_t r = op2 & 0x07;
+            const std::uint8_t r = op2 & 0x07;
             return { 3, "LD", ind_offset_r(r, xy, op3) };
         }
 
@@ -360,7 +362,7 @@ namespace
         throw std::logic_error(message);
     }
 
-    std::tuple<size_t, std::string, std::string> disassemble_ed(uint8_t op2, uint8_t op3, uint8_t op4)
+    std::tuple<size_t, std::string, std::string> disassemble_ed(std::uint8_t op2, std::uint8_t op3, std::uint8_t op4)
     {
         // First check for specific opcodes
         switch (op2)
@@ -384,22 +386,22 @@ namespace
         // Now check for bytefields
         if ((op2 & 0xCF) == 0x42)
         {
-            const uint8_t ss = (op2 >> 4) & 0x03;
+            const std::uint8_t ss = (op2 >> 4) & 0x03;
             return { 2, "SBC", "HL," + std::string(WordRegMask[ss]) };
         }
         if ((op2 & 0xCF) == 0x43)
         {
-            const uint8_t dd = (op2 >> 4) & 0x03;
+            const std::uint8_t dd = (op2 >> 4) & 0x03;
             return { 4, "LD", inn_dd(dd, op3, op4) };
         }
         if ((op2 & 0xCF) == 0x4A)
         {
-            const uint8_t ss = (op2 >> 4) & 0x03;
+            const std::uint8_t ss = (op2 >> 4) & 0x03;
             return { 2, "ADC", "HL," + std::string(WordRegMask[ss]) };
         }
         if ((op2 & 0xCF) == 0x4B)
         {
-            const uint8_t dd = (op2 >> 4) & 0x03;
+            const std::uint8_t dd = (op2 >> 4) & 0x03;
             return { 4, "LD", dd_inn(dd, op3, op4) };
         }
 
@@ -409,11 +411,11 @@ namespace
 
     // Given 4 bytes at the current PC (plus the PC), returns two human-readable "words" of disassembly,
     // plus the count of bytes actually used (as each disassembled instruction can be 1-4 bytes)
-    std::tuple<size_t, std::string, std::string> disassemble(uint8_t op1,
-                                                             uint8_t op2,
-                                                             uint8_t op3,
-                                                             uint8_t op4,
-                                                             uint16_t pc)
+    std::tuple<size_t, std::string, std::string> disassemble(std::uint8_t op1,
+                                                             std::uint8_t op2,
+                                                             std::uint8_t op3,
+                                                             std::uint8_t op4,
+                                                             std::uint16_t pc)
     {
         // First check for specific opcodes
         switch (op1)
@@ -424,8 +426,8 @@ namespace
         case 0x0A: return { 1, "LD", "A,(BC)" }; // Special case, can't use the usual lookups
         case 0x0E:
         {
-            const uint8_t r = (op1 >> 3) & 0x07;
-            const uint8_t n = op2;
+            const std::uint8_t r = (op1 >> 3) & 0x07;
+            const std::uint8_t n = op2;
             return { 2, "LD", r_n(r, n) };
         }
         case 0x0F: return { 1, "RRCA", "" };
@@ -476,122 +478,122 @@ namespace
 
         if ((op1 & 0xC0) == 0x40)
         {
-            const uint8_t r1 = (op1 >> 3) & 0x07;
-            const uint8_t r2 = op1 & 0x07;
+            const std::uint8_t r1 = (op1 >> 3) & 0x07;
+            const std::uint8_t r2 = op1 & 0x07;
             return { 1, "LD", r_r(r1, r2) };
         }
 
         if ((op1 & 0xC7) == 0x04)
         {
-            const uint8_t r = (op1 >> 3) & 0x07;
+            const std::uint8_t r = (op1 >> 3) & 0x07;
             return { 1, "INC", ByteRegMask[r] };
         }
         if ((op1 & 0xC7) == 0x05)
         {
-            const uint8_t r = (op1 >> 3) & 0x07;
+            const std::uint8_t r = (op1 >> 3) & 0x07;
             return { 1, "DEC", ByteRegMask[r] };
         }
         if ((op1 & 0xC7) == 0x06)
         {
-            const uint8_t r = (op1 >> 3) & 0x07;
+            const std::uint8_t r = (op1 >> 3) & 0x07;
             return { 2, "LD", r_n(r, op2) };
         }
         if ((op1 & 0xC7) == 0xC0)
         {
-            const uint8_t cc = (op1 >> 3) & 0x07;
+            const std::uint8_t cc = (op1 >> 3) & 0x07;
             return { 1, "RET", CondMask[cc] };
         }
         if ((op1 & 0xC7) == 0xC2)
         {
-            const uint8_t cc = (op1 >> 3) & 0x07;
+            const std::uint8_t cc = (op1 >> 3) & 0x07;
             return { 3, "JP", cc_pq(cc, op2, op3) };
         }
         if ((op1 & 0xC7) == 0xC4)
         {
-            const uint8_t cc = (op1 >> 3) & 0x07;
+            const std::uint8_t cc = (op1 >> 3) & 0x07;
             return { 3, "CALL", cc_pq(cc, op2, op3) };
         }
         if ((op1 & 0xC7) == 0xC7)
         {
-            const uint8_t p = (op1 >> 3) & 0x07;
+            const std::uint8_t p = (op1 >> 3) & 0x07;
             return { 1, "RST", byte(p << 3) };
         }
 
         if ((op1 & 0xCF) == 0x01)
         {
-            const uint8_t dd = (op1 >> 4) & 0x03;
+            const std::uint8_t dd = (op1 >> 4) & 0x03;
             return { 3, "LD", dd_nn(dd, op2, op3) };
         }
         if ((op1 & 0xCF) == 0x03)
         {
-            const uint8_t rr = (op1 >> 4) & 0x03;
+            const std::uint8_t rr = (op1 >> 4) & 0x03;
             return { 1, "INC", WordRegMask[rr] };
         }
         if ((op1 & 0xCF) == 0x09)
         {
-            const uint8_t ss = (op1 >> 4) & 0x03;
+            const std::uint8_t ss = (op1 >> 4) & 0x03;
             return { 1, "ADD", hl_ss(ss) };
         }
         if ((op1 & 0xCF) == 0x0B)
         {
-            const uint8_t rr = (op1 >> 4) & 0x03;
+            const std::uint8_t rr = (op1 >> 4) & 0x03;
             return { 1, "DEC", WordRegMask[rr] };
         }
         if ((op1 & 0xCF) == 0xC1)
         {
-            const uint8_t qq = (op1 >> 4) & 0x03;
+            const std::uint8_t qq = (op1 >> 4) & 0x03;
             return { 1, "POP", qq_word_register(qq) };
         }
         if ((op1 & 0xCF) == 0xC5)
         {
-            const uint8_t qq = (op1 >> 4) & 0x03;
+            const std::uint8_t qq = (op1 >> 4) & 0x03;
             return { 1, "PUSH", qq_word_register(qq) };
         }
 
         if ((op1 & 0xE7) == 0x20)
         {
-            const uint8_t cc = (op1 >> 3) & 0x03;
+            const std::uint8_t cc = (op1 >> 3) & 0x03;
             return { 2, "JR", cc_offset(cc, op2, pc) };
         }
 
         if ((op1 & 0xF8) == 0x80)
         {
-            const uint8_t r = op1 & 0x07;
+            const std::uint8_t r = op1 & 0x07;
             return { 1, "ADD", "A," + std::string(ByteRegMask[r]) };
         }
         if ((op1 & 0xF8) == 0x88)
         {
-            const uint8_t r = op1 & 0x07;
+            const std::uint8_t r = op1 & 0x07;
             return { 1, "ADC", ByteRegMask[r] };
         }
         if ((op1 & 0xF8) == 0x90)
         {
-            const uint8_t r = op1 & 0x07;
+            const std::uint8_t r = op1 & 0x07;
             return { 1, "SUB", ByteRegMask[r] };
         }
         if ((op1 & 0xF8) == 0x98)
         {
-            const uint8_t r = op1 & 0x07;
+            const std::uint8_t r = op1 & 0x07;
             return { 1, "SBC", ByteRegMask[r] };
         }
         if ((op1 & 0xF8) == 0xA0)
         {
-            const uint8_t r = op1 & 0x07;
+            const std::uint8_t r = op1 & 0x07;
             return { 1, "AND", ByteRegMask[r] };
         }
         if ((op1 & 0xF8) == 0xA8)
         {
-            const uint8_t r = op1 & 0x07;
+            const std::uint8_t r = op1 & 0x07;
             return { 1, "XOR", byte_register(r) };
         }
         if ((op1 & 0xF8) == 0xB0)
         {
-            const uint8_t r = op1 & 0x07;
+            const std::uint8_t r = op1 & 0x07;
             return { 1, "OR", byte_register(r) };
         }
         if ((op1 & 0xF8) == 0xB8)
         {
-            const uint8_t r = op1 & 0x07;
+            const std::uint8_t r = op1 & 0x07;
             return { 1, "CP", ByteRegMask[r] };
         }
 
@@ -638,7 +640,7 @@ void Writer::examine() const
 void Writer::list(int start, size_t instructions) const
 {
     const auto registers = m_pdebuggable->get_registers();
-    const uint16_t base = (start < 0) ? registers.PC : start;
+    const std::uint16_t base = (start < 0) ? registers.PC : start;
 
     size_t offset = 0;
     for (size_t i = 0; i < instructions; ++i)
@@ -664,7 +666,7 @@ void Writer::dump(int start, size_t bytes) const
     }
 
     const auto registers = m_pdebuggable->get_registers();
-    const uint16_t base = (start < 0) ? registers.PC : start;
+    const std::uint16_t base = (start < 0) ? registers.PC : start;
 
     std::string hex_bytes, ascii_bytes;
     for (size_t offset = 0; offset < bytes; ++offset)
@@ -691,7 +693,7 @@ void Writer::dump(int start, size_t bytes) const
     }
 }
 
-void Writer::display(uint16_t address, std::string_view s1, std::string_view s2) const
+void Writer::display(std::uint16_t address, std::string_view s1, std::string_view s2) const
 {
     m_os << fmt::format("{:04X}     {:<5}{}", address, s1, s2) << std::endl;
 }
@@ -699,7 +701,7 @@ void Writer::display(uint16_t address, std::string_view s1, std::string_view s2)
 void Writer::display(const zcpm::Registers& registers,
                      std::string_view s1,
                      std::string_view s2,
-                     const uint16_t offset) const
+                     const std::uint16_t offset) const
 {
     m_os << fmt::format("{} A={:02X} B={:04X} D={:04X} H={:04X} S={:04X} P={:04X}  {:<5}{}",
                         flags_to_string(registers.AF & 0xFF),
@@ -724,7 +726,7 @@ void Writer::display(const zcpm::Registers& registers,
          << std::endl;
 }
 
-std::string Writer::flags_to_string(uint8_t f) const
+std::string Writer::flags_to_string(std::uint8_t f) const
 {
     std::string result("------");
 

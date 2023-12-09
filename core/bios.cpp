@@ -35,7 +35,7 @@ namespace zcpm
         // Address 0 should be a JP, 1 and 2 are the destination. See "CP/M 3 System Guide", Table 2-3
         // That destination should be the warm boot (WBOOT) in the BIOS. WBOOT is the second jump vector
         // in the jump table, so subtract 3 bytes to get the actual start.
-        const uint16_t base = m_phardware->read_byte(1) + (m_phardware->read_byte(2) << 8) - 3;
+        const std::uint16_t base = m_phardware->read_byte(1) + (m_phardware->read_byte(2) << 8) - 3;
         m_discovered_base = base;
 
         // Sanity check; we expect to be modifying a jump table, i.e. a series of JP XXXX instructions.
@@ -148,7 +148,7 @@ namespace zcpm
 
     Bios::~Bios() = default;
 
-    bool Bios::is_bios(uint16_t address) const
+    bool Bios::is_bios(std::uint16_t address) const
     {
         // Check for the whole range including the jump table (whose address is already determined by
         // the loaded binary memory image) as well as our set of targets of each of the jump vectors.
@@ -157,7 +157,7 @@ namespace zcpm
         return (address >= m_discovered_base) && (address <= m_stubs_top);
     }
 
-    bool Bios::check_and_handle(uint16_t address)
+    bool Bios::check_and_handle(std::uint16_t address)
     {
         if ((address < m_stubs_base) || (address > m_stubs_top))
         {
@@ -330,7 +330,7 @@ namespace zcpm
         fn_settrk(0);
     }
 
-    void Bios::fn_seldsk(uint8_t /*disk*/, uint8_t /*flag*/)
+    void Bios::fn_seldsk(std::uint8_t /*disk*/, std::uint8_t /*flag*/)
     {
         // See http://www.seasip.info/Cpm/bios.html#seldsk
 
@@ -340,25 +340,25 @@ namespace zcpm
         m_phardware->m_processor->reg_hl() = m_dph_base;
     }
 
-    void Bios::fn_settrk(uint16_t track)
+    void Bios::fn_settrk(std::uint16_t track)
     {
         // See http://www.seasip.info/Cpm/bios.html#settrk
         m_track = track;
     }
 
-    void Bios::fn_setsec(uint16_t sector)
+    void Bios::fn_setsec(std::uint16_t sector)
     {
         // See http://www.seasip.info/Cpm/bios.html#setsec
         m_sector = sector;
     }
 
-    void Bios::fn_setdma(uint16_t base)
+    void Bios::fn_setdma(std::uint16_t base)
     {
         // See http://www.seasip.info/Cpm/bios.html#setdma
         m_dma = base;
     }
 
-    uint8_t Bios::fn_read()
+    std::uint8_t Bios::fn_read()
     {
         // See http://www.seasip.info/Cpm/bios.html#read
         // Read the sector at m_track/m_sector into m_dma, return success status (which ends up in register A)
@@ -376,7 +376,7 @@ namespace zcpm
         return 0;
     }
 
-    uint8_t Bios::fn_write(uint8_t /*deblocking*/)
+    std::uint8_t Bios::fn_write(std::uint8_t /*deblocking*/)
     {
         // See http://www.seasip.info/Cpm/bios.html#write
         // Write from m_dma to the sector at m_track/m_sector, return success status (which ends up in register A)
@@ -400,7 +400,7 @@ namespace zcpm
         return 0;
     }
 
-    uint16_t Bios::fn_sectran(uint16_t logical_sector_number, uint16_t /*trans_table*/) const
+    std::uint16_t Bios::fn_sectran(std::uint16_t logical_sector_number, std::uint16_t /*trans_table*/) const
     {
         // Simplification: directly map a logical sector number to a physical sector number and
         // ignore the translation table. (This is what the BIOS would do if skewing was implemented

@@ -13,7 +13,7 @@ namespace zcpm::bdos
     {
 
         // Given a CP/M-style string terminated by '$' at addr in memory, return a version of it suitable for logging
-        std::string cpm_string_at(const IMemory& memory, uint16_t address)
+        std::string cpm_string_at(const IMemory& memory, std::uint16_t address)
         {
             // Build the result, but limit the length in case the CP/M code is trying to print something particularly
             // long or is pointing at rubbish (which isn't our problem, but we don't want logging of that to break us!).
@@ -40,7 +40,7 @@ namespace zcpm::bdos
         }
 
         // Given a FCB, return a simple string that describes it, suitable for debug logs
-        std::string describe_fcb(const IMemory& memory, uint16_t address, bool both = false)
+        std::string describe_fcb(const IMemory& memory, std::uint16_t address, bool both = false)
         {
             const Fcb fcb(memory, address);
             return fmt::format("FCB at {:04X}: {}", address, fcb.describe(both));

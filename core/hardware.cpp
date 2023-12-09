@@ -58,7 +58,7 @@ namespace zcpm
         m_output_handler = h;
     }
 
-    void Hardware::set_fbase_and_wboot(uint16_t fbase, uint16_t wboot)
+    void Hardware::set_fbase_and_wboot(std::uint16_t fbase, std::uint16_t wboot)
     {
         m_fbase = fbase;
 
@@ -105,7 +105,7 @@ namespace zcpm
         return !m_finished;
     }
 
-    bool Hardware::check_and_handle_bdos_and_bios(uint16_t address) const
+    bool Hardware::check_and_handle_bdos_and_bios(std::uint16_t address) const
     {
         // Note that BDOS calls are logged but not intercepted.  But BIOS calls are logged *and* intercepted. This is
         // because our BDOS is implemented via a binary blob (a real BDOS implementation), which will in turn make calls
@@ -139,7 +139,7 @@ namespace zcpm
         }
     }
 
-    void Hardware::add_watch_read(uint16_t base, uint16_t count)
+    void Hardware::add_watch_read(std::uint16_t base, std::uint16_t count)
     {
         for (auto i = base; i < base + count; ++i)
         {
@@ -147,7 +147,7 @@ namespace zcpm
         }
     }
 
-    void Hardware::add_watch_write(uint16_t base, uint16_t count)
+    void Hardware::add_watch_write(std::uint16_t base, std::uint16_t count)
     {
         for (auto i = base; i < base + count; ++i)
         {
@@ -155,26 +155,26 @@ namespace zcpm
         }
     }
 
-    void Hardware::add_symbol(uint16_t a, std::string_view label)
+    void Hardware::add_symbol(std::uint16_t a, std::string_view label)
     {
         m_symbols.add("ZCPM", a, label);
     }
 
-    uint8_t Hardware::read_byte(uint16_t address) const
+    std::uint8_t Hardware::read_byte(std::uint16_t address) const
     {
         const auto result = m_memory[address];
         check_watched_memory_byte(address, Access::READ, result);
         return result;
     }
 
-    uint8_t Hardware::read_byte(uint16_t address, size_t& elapsed_cycles) const
+    std::uint8_t Hardware::read_byte(std::uint16_t address, size_t& elapsed_cycles) const
     {
         const auto result = read_byte(address);
         elapsed_cycles += 3;
         return result;
     }
 
-    uint16_t Hardware::read_word(uint16_t address) const
+    std::uint16_t Hardware::read_word(std::uint16_t address) const
     {
         const auto result_low = m_memory[address];
         const auto result_high = m_memory[(address + 1) & 0xffff];
@@ -183,39 +183,39 @@ namespace zcpm
         return result;
     }
 
-    uint16_t Hardware::read_word(uint16_t address, size_t& elapsed_cycles) const
+    std::uint16_t Hardware::read_word(std::uint16_t address, size_t& elapsed_cycles) const
     {
         const auto result = read_word(address);
         elapsed_cycles += 6;
         return result;
     }
 
-    void Hardware::write_byte(uint16_t address, uint8_t x)
+    void Hardware::write_byte(std::uint16_t address, std::uint8_t x)
     {
         check_watched_memory_byte(address, Access::WRITE, x);
         m_memory[address] = x;
     }
 
-    void Hardware::write_byte(uint16_t address, uint8_t x, size_t& elapsed_cycles)
+    void Hardware::write_byte(std::uint16_t address, std::uint8_t x, size_t& elapsed_cycles)
     {
         write_byte(address, x);
         elapsed_cycles += 3;
     }
 
-    void Hardware::write_word(uint16_t address, uint16_t x)
+    void Hardware::write_word(std::uint16_t address, std::uint16_t x)
     {
         check_watched_memory_word(address, Access::WRITE, x);
         m_memory[address] = x;
         m_memory[(address + 1) & 0xffff] = x >> 8;
     }
 
-    void Hardware::write_word(uint16_t address, uint16_t x, size_t& elapsed_cycles)
+    void Hardware::write_word(std::uint16_t address, std::uint16_t x, size_t& elapsed_cycles)
     {
         write_word(address, x);
         elapsed_cycles += 6;
     }
 
-    uint8_t Hardware::read_byte_step(uint16_t& address, size_t& elapsed_cycles) const
+    std::uint8_t Hardware::read_byte_step(std::uint16_t& address, size_t& elapsed_cycles) const
     {
         const auto result = read_byte(address);
         address++;
@@ -223,7 +223,7 @@ namespace zcpm
         return result;
     }
 
-    uint16_t Hardware::read_word_step(uint16_t& address, size_t& elapsed_cycles) const
+    std::uint16_t Hardware::read_word_step(std::uint16_t& address, size_t& elapsed_cycles) const
     {
         const auto result = read_word(address);
         address += 2;
@@ -231,20 +231,20 @@ namespace zcpm
         return result;
     }
 
-    void Hardware::push(uint16_t x, size_t& elapsed_cycles)
+    void Hardware::push(std::uint16_t x, size_t& elapsed_cycles)
     {
         m_processor->reg_sp() -= 2;
         write_word(m_processor->reg_sp(), x, elapsed_cycles);
     }
 
-    uint16_t Hardware::pop(size_t& elapsed_cycles)
+    std::uint16_t Hardware::pop(size_t& elapsed_cycles)
     {
         const auto result = read_word(m_processor->reg_sp(), elapsed_cycles);
         m_processor->reg_sp() += 2;
         return result;
     }
 
-    uint8_t Hardware::input_byte(int port)
+    std::uint8_t Hardware::input_byte(int port)
     {
         if (m_input_handler)
         {
@@ -264,7 +264,7 @@ namespace zcpm
         }
     }
 
-    void Hardware::output_byte(int port, uint8_t x)
+    void Hardware::output_byte(int port, std::uint8_t x)
     {
         if (m_output_handler)
         {
@@ -279,7 +279,7 @@ namespace zcpm
         }
     }
 
-    void Hardware::copy_to_ram(const uint8_t* buffer, size_t count, uint16_t base)
+    void Hardware::copy_to_ram(const std::uint8_t* buffer, size_t count, std::uint16_t base)
     {
         if (!buffer || !count)
         {
@@ -293,7 +293,7 @@ namespace zcpm
         std::memcpy(m_memory.data() + base, buffer, count);
     }
 
-    void Hardware::copy_from_ram(uint8_t* buffer, size_t count, uint16_t base) const
+    void Hardware::copy_from_ram(std::uint8_t* buffer, size_t count, std::uint16_t base) const
     {
         if (!buffer || !count)
         {
@@ -307,7 +307,7 @@ namespace zcpm
         std::memcpy(buffer, m_memory.data() + base, count);
     }
 
-    void Hardware::dump(uint16_t base, size_t count) const
+    void Hardware::dump(std::uint16_t base, size_t count) const
     {
         const size_t bytes_per_line = 16;
         size_t bytes_this_line = 0;
@@ -367,13 +367,13 @@ namespace zcpm
 
         std::stringstream ss;
 
-        const uint16_t sp = m_processor->get_sp();
+        const std::uint16_t sp = m_processor->get_sp();
 
         auto user = false;
         auto startup = false;
         for (auto step = 0; !user && !startup && (step < max_steps); ++step)
         {
-            uint16_t ret = read_word(sp + step * 2);
+            std::uint16_t ret = read_word(sp + step * 2);
             if (use_source_value)
             {
                 ret -= 3;
@@ -404,7 +404,7 @@ namespace zcpm
         m_symbols.dump();
     }
 
-    std::tuple<bool, uint16_t> Hardware::evaluate_address_expression(std::string_view s) const
+    std::tuple<bool, std::uint16_t> Hardware::evaluate_address_expression(std::string_view s) const
     {
         return m_symbols.evaluate_address_expression(s);
     }
@@ -414,7 +414,7 @@ namespace zcpm
         return m_processor.get();
     }
 
-    void Hardware::check_watched_memory_byte(uint16_t address, Access mode, uint8_t value) const
+    void Hardware::check_watched_memory_byte(std::uint16_t address, Access mode, std::uint8_t value) const
     {
         if (!m_config.memcheck || !m_check_memory_accesses)
         {
@@ -447,7 +447,7 @@ namespace zcpm
         }
     }
 
-    void Hardware::check_watched_memory_word(uint16_t address, Access mode, uint16_t value) const
+    void Hardware::check_watched_memory_word(std::uint16_t address, Access mode, std::uint16_t value) const
     {
         if (!m_config.memcheck || !m_check_memory_accesses)
         {
@@ -480,7 +480,7 @@ namespace zcpm
         }
     }
 
-    std::string Hardware::describe_address(uint16_t a) const
+    std::string Hardware::describe_address(std::uint16_t a) const
     {
         auto result = fmt::format("{:04X}", a);
 
@@ -492,7 +492,7 @@ namespace zcpm
         return result;
     }
 
-    bool Hardware::is_fatal_write(uint16_t address) const
+    bool Hardware::is_fatal_write(std::uint16_t address) const
     {
         // A few programs will try to modify the warm start vector (at locations 0000,0001,0002)
         // to hook in their own intercepts. For example Supercalc.

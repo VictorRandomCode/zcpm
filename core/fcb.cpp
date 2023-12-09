@@ -15,7 +15,7 @@ namespace
     // e.g. "a.b" will set dr=0 name="A       " extn="B  "
     //
     // Returns <dr, name, extn>
-    std::tuple<uint8_t, std::string, std::string> parse_filename(std::string_view s)
+    std::tuple<std::uint8_t, std::string, std::string> parse_filename(std::string_view s)
     {
         // TODO: Needs to be less simplistic; probably also need to create some unit tests for this logic
 
@@ -24,12 +24,12 @@ namespace
         const auto input(boost::to_upper_copy(std::string(s)));
         boost::split(fields, input, boost::is_any_of(":"));
 
-        uint8_t dr = 0;
+        std::uint8_t dr = 0;
 
         std::string filename;
         if (fields.size() > 1)
         {
-            dr = static_cast<uint8_t>(fields[0][0] - 'A' + 1);
+            dr = static_cast<std::uint8_t>(fields[0][0] - 'A' + 1);
             filename = fields[1];
         }
         else
@@ -109,7 +109,7 @@ namespace zcpm
         m_u.m_bytes[i++] = 0xFB;
     }
 
-    Fcb::Fcb(const IMemory& memory, uint16_t address) : m_u()
+    Fcb::Fcb(const IMemory& memory, std::uint16_t address) : m_u()
     {
         for (unsigned int i = 0; i < size(); ++i)
         {
@@ -128,7 +128,7 @@ namespace zcpm
         set_second(s2);
     }
 
-    const uint8_t* Fcb::get() const
+    const std::uint8_t* Fcb::get() const
     {
         return m_u.m_bytes;
     }
@@ -206,12 +206,12 @@ namespace zcpm
 
         for (size_t i = 0; (i < name.size()) && (i < sizeof(m_u.m_fields.m_f)); i++)
         {
-            m_u.m_fields.m_f[i] = static_cast<uint8_t>(name[i]);
+            m_u.m_fields.m_f[i] = static_cast<std::uint8_t>(name[i]);
         }
 
         for (size_t i = 0; (i < extn.size()) && (i < sizeof(m_u.m_fields.m_t)); i++)
         {
-            m_u.m_fields.m_t[i] = static_cast<uint8_t>(extn[i]);
+            m_u.m_fields.m_t[i] = static_cast<std::uint8_t>(extn[i]);
         }
     }
 
@@ -224,12 +224,12 @@ namespace zcpm
 
         for (size_t i = 0; i < name.size(); i++)
         {
-            m_u.m_bytes[0x11 + i] = static_cast<uint8_t>(name[i]);
+            m_u.m_bytes[0x11 + i] = static_cast<std::uint8_t>(name[i]);
         }
 
         for (size_t i = 0; i < extn.size(); i++)
         {
-            m_u.m_bytes[0x19 + i] = static_cast<uint8_t>(extn[i]);
+            m_u.m_bytes[0x19 + i] = static_cast<std::uint8_t>(extn[i]);
         }
     }
 

@@ -3,7 +3,7 @@
 namespace zcpm
 {
 
-    enum Instruction : uint8_t
+    enum Instruction : std::uint8_t
     {
 
         /* 8-bit load group. */

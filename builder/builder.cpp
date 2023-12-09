@@ -31,9 +31,9 @@ namespace zcpm
         // Command line parameters and their defaults
         std::string logfile = "zcpm.log";
         std::string bdos_file_name;                      // The file that provides a binary BDOS (and CCP etc)
-        uint16_t bdos_file_base = 0xDC00;                // Where to load that binary image
-        uint16_t wboot = 0xF203;                         // Address of WBOOT in loaded binary BDOS
-        uint16_t fbase = 0xE406;                         // Address of FBASE in loaded binary BDOS
+        std::uint16_t bdos_file_base = 0xDC00;           // Where to load that binary image
+        std::uint16_t wboot = 0xF203;                    // Address of WBOOT in loaded binary BDOS
+        std::uint16_t fbase = 0xE406;                    // Address of FBASE in loaded binary BDOS
         terminal::Type terminal = terminal::Type::PLAIN; // Terminal type
         std::string keymap_file_name; // The file that provides keystroke mapping for terminal emulation
         int columns = 80;             // Number of display columns
@@ -55,9 +55,9 @@ namespace zcpm
                 "bdosfile", po::value<std::string>(), "Binary file that provides BDOS etc")(
                 "bdossym", po::value<std::string>(), "Optional symbol (.lab) file for BDOS")(
                 "usersym", po::value<std::string>(), "Optional symbol (.lab) file for user executable")(
-                "bdosbase", po::value<uint16_t>(), "Base address for binary BDOS file")(
-                "wboot", po::value<uint16_t>(), "Address of WBOOT in loaded binary BDOS")(
-                "fbase", po::value<uint16_t>(), "Address of FBASE in loaded binary BDOS")(
+                "bdosbase", po::value<std::uint16_t>(), "Base address for binary BDOS file")(
+                "wboot", po::value<std::uint16_t>(), "Address of WBOOT in loaded binary BDOS")(
+                "fbase", po::value<std::uint16_t>(), "Address of FBASE in loaded binary BDOS")(
                 "terminal", po::value<terminal::Type>(), "Terminal type to emulate")(
                 "keymap", po::value<std::string>(), "Optional keymap file for terminal emulation")(
                 "columns", po::value<int>(), "Terminal column count")("rows", po::value<int>(), "Terminal row count")(
@@ -87,15 +87,15 @@ namespace zcpm
             config.bdos_sym = (vm.count("bdossym")) ? vm["bdossym"].as<std::string>() : home_plus("zcpm/bdos.lab");
             if (vm.count("bdosbase"))
             {
-                bdos_file_base = vm["bdosbase"].as<uint16_t>();
+                bdos_file_base = vm["bdosbase"].as<std::uint16_t>();
             }
             if (vm.count("wboot"))
             {
-                wboot = vm["wboot"].as<uint16_t>();
+                wboot = vm["wboot"].as<std::uint16_t>();
             }
             if (vm.count("fbase"))
             {
-                fbase = vm["fbase"].as<uint16_t>();
+                fbase = vm["fbase"].as<std::uint16_t>();
             }
             if (vm.count("terminal"))
             {

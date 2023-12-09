@@ -21,7 +21,7 @@ namespace
         {
         }
 
-        void load_memory_and_set_pc(uint16_t address, const std::vector<uint8_t>& bytes)
+        void load_memory_and_set_pc(std::uint16_t address, const std::vector<std::uint8_t>& bytes)
         {
             copy_to_ram(bytes.data(), bytes.size(), address);
             m_processor->reg_pc() = address;
@@ -29,20 +29,20 @@ namespace
 
         // Implements IMemory
 
-        uint8_t read_byte(uint16_t address) const override
+        std::uint8_t read_byte(std::uint16_t address) const override
         {
             const auto result = m_memory[address];
             return result;
         }
 
-        uint8_t read_byte(uint16_t address, size_t& elapsed_cycles) const override
+        std::uint8_t read_byte(std::uint16_t address, size_t& elapsed_cycles) const override
         {
             const auto result = read_byte(address);
             elapsed_cycles += 3;
             return result;
         }
 
-        uint16_t read_word(uint16_t address) const override
+        std::uint16_t read_word(std::uint16_t address) const override
         {
             const auto result_low = m_memory[address];
             const auto result_high = m_memory[(address + 1) & 0xffff];
@@ -50,37 +50,37 @@ namespace
             return result;
         }
 
-        uint16_t read_word(uint16_t address, size_t& elapsed_cycles) const override
+        std::uint16_t read_word(std::uint16_t address, size_t& elapsed_cycles) const override
         {
             const auto result = read_word(address);
             elapsed_cycles += 6;
             return result;
         }
 
-        void write_byte(uint16_t address, uint8_t x) override
+        void write_byte(std::uint16_t address, std::uint8_t x) override
         {
             m_memory[address] = x;
         }
 
-        void write_byte(uint16_t address, uint8_t x, size_t& elapsed_cycles) override
+        void write_byte(std::uint16_t address, std::uint8_t x, size_t& elapsed_cycles) override
         {
             write_byte(address, x);
             elapsed_cycles += 3;
         }
 
-        void write_word(uint16_t address, uint16_t x) override
+        void write_word(std::uint16_t address, std::uint16_t x) override
         {
             m_memory[address] = x;
             m_memory[(address + 1) & 0xffff] = x >> 8;
         }
 
-        void write_word(uint16_t address, uint16_t x, size_t& elapsed_cycles) override
+        void write_word(std::uint16_t address, std::uint16_t x, size_t& elapsed_cycles) override
         {
             write_word(address, x);
             elapsed_cycles += 6;
         }
 
-        uint8_t read_byte_step(uint16_t& address, size_t& elapsed_cycles) const override
+        std::uint8_t read_byte_step(std::uint16_t& address, size_t& elapsed_cycles) const override
         {
             const auto result = read_byte(address);
             address++;
@@ -88,7 +88,7 @@ namespace
             return result;
         }
 
-        uint16_t read_word_step(uint16_t& address, size_t& elapsed_cycles) const override
+        std::uint16_t read_word_step(std::uint16_t& address, size_t& elapsed_cycles) const override
         {
             const auto result = read_word(address);
             address += 2;
@@ -96,31 +96,31 @@ namespace
             return result;
         }
 
-        void push(uint16_t x, size_t& elapsed_cycles) override
+        void push(std::uint16_t x, size_t& elapsed_cycles) override
         {
             m_processor->reg_sp() -= 2;
             write_word(m_processor->reg_sp(), x, elapsed_cycles);
         }
 
-        uint16_t pop(size_t& elapsed_cycles) override
+        std::uint16_t pop(size_t& elapsed_cycles) override
         {
             const auto result = read_word(m_processor->reg_sp(), elapsed_cycles);
             m_processor->reg_sp() += 2;
             return result;
         }
 
-        uint8_t input_byte(int port) override
+        std::uint8_t input_byte(int port) override
         {
             // TODO
             return 0;
         }
 
-        void output_byte(int port, uint8_t x) override
+        void output_byte(int port, std::uint8_t x) override
         {
             // TODO
         }
 
-        void copy_to_ram(const uint8_t* buffer, size_t count, uint16_t base) override
+        void copy_to_ram(const std::uint8_t* buffer, size_t count, std::uint16_t base) override
         {
             if (!buffer || !count)
             {
@@ -134,7 +134,7 @@ namespace
             std::memcpy(m_memory.data() + base, buffer, count);
         }
 
-        void copy_from_ram(uint8_t* buffer, size_t count, uint16_t base) const override
+        void copy_from_ram(std::uint8_t* buffer, size_t count, std::uint16_t base) const override
         {
             if (!buffer || !count)
             {
@@ -148,7 +148,7 @@ namespace
             std::memcpy(buffer, m_memory.data() + base, count);
         }
 
-        void dump(uint16_t base, size_t count) const override
+        void dump(std::uint16_t base, size_t count) const override
         {
             // TODO
         }
@@ -169,22 +169,22 @@ namespace
             return true;
         }
 
-        bool check_and_handle_bdos_and_bios(uint16_t address) const override
+        bool check_and_handle_bdos_and_bios(std::uint16_t address) const override
         {
             return false; // TODO
         }
 
         std::unique_ptr<zcpm::Processor> m_processor;
 
-        std::array<uint8_t, 0x10000> m_memory{};
+        std::array<std::uint8_t, 0x10000> m_memory{};
     };
 
     // Perform a single instruction on the A register
-    void test_8bit_register_instruction(uint8_t instruction,
+    void test_8bit_register_instruction(std::uint8_t instruction,
                                         size_t expected_cycles,
-                                        uint8_t initial_value,
-                                        uint8_t expected_value,
-                                        uint8_t expected_flags)
+                                        std::uint8_t initial_value,
+                                        std::uint8_t expected_value,
+                                        std::uint8_t expected_flags)
     {
         Hardware hardware;
 

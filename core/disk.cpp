@@ -36,15 +36,16 @@ namespace
         return result;
     }
 
-    static const inline uint16_t EntrySize = 0x0020;
-    static const inline uint16_t BlockSize = 0x0800;
-    static const inline uint16_t SectorsPerBlock = BlockSize / zcpm::Disk::SectorSize;
+    const inline std::uint16_t EntrySize = 0x0020;
+    const inline std::uint16_t BlockSize = 0x0800;
+    const inline std::uint16_t SectorsPerBlock = BlockSize / zcpm::Disk::SectorSize;
 
-    using Location = std::tuple<uint16_t, uint16_t>; // Track/Sector which identify a particular sector on the disk
+    using Location =
+        std::tuple<std::uint16_t, std::uint16_t>; // Track/Sector which identify a particular sector on the disk
 
     // Given a block number and a sector offset, works out the actual track/sector. Assumes that sector_offset is
     // strictly within that same block, not overflowing into an adjacent block!
-    Location find_location_within_block(uint16_t block, uint16_t sector_offset)
+    Location find_location_within_block(std::uint16_t block, std::uint16_t sector_offset)
     {
         const auto s = block * SectorsPerBlock + sector_offset;
         const auto track_index = s / zcpm::Disk::SectorSize;
@@ -54,7 +55,7 @@ namespace
 
     // Map a track/sector to a block number and offset, where the offset is the index of the sequence within the block
     // (first sector is zero, second sector is one, etc)
-    std::tuple<uint16_t, uint8_t> track_sector_to_block_and_offset(uint16_t track, uint16_t sector)
+    std::tuple<std::uint16_t, std::uint8_t> track_sector_to_block_and_offset(std::uint16_t track, std::uint16_t sector)
     {
         const auto n = track * zcpm::Disk::SectorSize + sector;
         const auto block = n >> zcpm::Disk::BSH;
@@ -72,7 +73,10 @@ namespace zcpm
     {
     public:
         // Construct from a host filesystem file
-        Entry(const std::filesystem::directory_entry& e, uint8_t extent, uint16_t sectors, uint16_t first_block)
+        Entry(const std::filesystem::directory_entry& e,
+              std::uint8_t extent,
+              std::uint16_t sectors,
+              std::uint16_t first_block)
             : m_raw_name(e.path().filename()),
               m_name(convert(e.path().stem(), e.path().extension())),
               m_exists(true),
@@ -84,7 +88,7 @@ namespace zcpm
         }
 
         // Construct from a CP/M directory entry (16 bytes)
-        explicit Entry(const uint8_t* buffer)
+        explicit Entry(const std::uint8_t* buffer)
             : m_modified(true) // Needs to be flushed on shutdown because it is not (originally) a host filesystem file
         {
             m_exists = (buffer[0x00] != 0xE5);
@@ -95,7 +99,7 @@ namespace zcpm
             m_sectors = buffer[0x0F];
             for (size_t i = 0; i < 8; i++)
             {
-                const uint16_t block = buffer[0x10 + i * 2 + 0] | (buffer[0x10 + i * 2 + 1] << 8);
+                const std::uint16_t block = buffer[0x10 + i * 2 + 0] | (buffer[0x10 + i * 2 + 1] << 8);
                 if (block > 0)
                 {
                     m_blocks.push_back(block);
@@ -116,15 +120,17 @@ namespace zcpm
                                      << " ] Exists:" << (m_exists ? 'Y' : 'N');
         }
 
-        std::string m_raw_name;     // e.g. "file.txt"
-        std::string m_name;         // e.g. "FILE    TXT"
-        bool m_exists = false;      // True normally, false if the file has been deleted
-        size_t m_size = 0;          // Size in bytes; for the *whole* file
-        size_t m_sectors = 0;       // Number of sectors in *this* extent
-        size_t m_extent = 0;        // Extent number (always zero for small files, can be other for bigger files)
-        uint16_t m_first_block = 0; // What is the first block number of this file (across *all* of its extents/entries)
-        std::vector<uint16_t> m_blocks; // Block indexes allocated for this entry for this file.  Always contiguous!!!
-        bool m_modified = false;        // Does this need to be "flushed" to the host filesystem on completion?
+        std::string m_raw_name; // e.g. "file.txt"
+        std::string m_name;     // e.g. "FILE    TXT"
+        bool m_exists = false;  // True normally, false if the file has been deleted
+        size_t m_size = 0;      // Size in bytes; for the *whole* file
+        size_t m_sectors = 0;   // Number of sectors in *this* extent
+        size_t m_extent = 0;    // Extent number (always zero for small files, can be other for bigger files)
+        std::uint16_t m_first_block =
+            0; // What is the first block number of this file (across *all* of its extents/entries)
+        std::vector<std::uint16_t>
+            m_blocks;            // Block indexes allocated for this entry for this file.  Always contiguous!!!
+        bool m_modified = false; // Does this need to be "flushed" to the host filesystem on completion?
     };
 
     struct SectorInfo
@@ -158,7 +164,7 @@ namespace zcpm
 
         mutable std::map<Location, SectorInfo> m_sector_cache; // Cache of sectors that we know about
 
-        uint16_t m_next_block = 0x0010;
+        std::uint16_t m_next_block = 0x0010;
 
     public:
         Private()
@@ -188,7 +194,7 @@ namespace zcpm
             return m_entries.size();
         }
 
-        void read(SectorData& buffer, uint16_t track, uint16_t sector) const
+        void read(SectorData& buffer, std::uint16_t track, std::uint16_t sector) const
         {
             // First see if the specific sector is in the sector cache
             const Location location{ track, sector };
@@ -221,7 +227,7 @@ namespace zcpm
             m_sector_cache.emplace(location, sector_info);
         }
 
-        void write(const SectorData& buffer, uint16_t track, uint16_t sector)
+        void write(const SectorData& buffer, std::uint16_t track, std::uint16_t sector)
         {
             // Is it a directory entry or general data?
             if ((track == 0) || (track == 1))
@@ -275,7 +281,7 @@ namespace zcpm
             }
         }
 
-        void create_directory_entries(SectorData& buffer, uint16_t track, uint16_t sector) const
+        void create_directory_entries(SectorData& buffer, std::uint16_t track, std::uint16_t sector) const
         {
             const auto index = (track * SectorSize + sector) * 4;
 
@@ -285,7 +291,7 @@ namespace zcpm
             }
         }
 
-        void read_disk_data(SectorData& buffer, uint16_t track, uint16_t sector) const
+        void read_disk_data(SectorData& buffer, std::uint16_t track, std::uint16_t sector) const
         {
             // TODO: Given that the most common use case is to read sector N+1 of a given file immediately after
             // sector N of that same file, we could optimise this by keeping the file handle open and the file
@@ -327,7 +333,7 @@ namespace zcpm
             BOOST_LOG_TRIVIAL(trace) << "WARNING: Can't find file for this sector";
         }
 
-        void write_disk_data(const SectorData& buffer, uint16_t track, uint16_t sector)
+        void write_disk_data(const SectorData& buffer, std::uint16_t track, std::uint16_t sector)
         {
             // Do we have a cache entry for this sector?
             const auto location(Location{ track, sector });
@@ -351,7 +357,7 @@ namespace zcpm
         // location. Allows out of range values of 'n' which get mapped to E5 (inactive) file entries.  Note that this
         // may actually cause more than one entry to be created, in the case where a file requires multiple
         // entries/extents.
-        void format_directory_entry(uint8_t* base, uint16_t n) const
+        void format_directory_entry(std::uint8_t* base, std::uint16_t n) const
         {
             if (n >= m_entries.size())
             {
@@ -375,7 +381,7 @@ namespace zcpm
                 base[i] = 0x00;
             }
 
-            const uint8_t user = 0x00; // ZCPM only uses user 0 at this stage
+            const std::uint8_t user = 0x00; // ZCPM only uses user 0 at this stage
             const bool exists = f.m_exists;
 
             // Byte 0: user code.  E5 means inactive (or deleted), 00..0F is a user code.
@@ -512,7 +518,8 @@ namespace zcpm
                             auto sectors_remaining = e.m_sectors;
                             for (const auto& b : e.m_blocks)
                             {
-                                const auto sectors_this_block = std::min<uint16_t>(SectorsPerBlock, sectors_remaining);
+                                const auto sectors_this_block =
+                                    std::min<std::uint16_t>(SectorsPerBlock, sectors_remaining);
                                 BOOST_LOG_TRIVIAL(trace)
                                     << "Writing " << sectors_this_block << " sector from block #" << b;
                                 for (auto i = 0; i < sectors_this_block; i++)
@@ -615,7 +622,7 @@ namespace zcpm
             }
         }
 
-        void flush_changed_file(const SectorInfo& value, uint16_t block, uint8_t offset, const Entry& f) const
+        void flush_changed_file(const SectorInfo& value, std::uint16_t block, std::uint8_t offset, const Entry& f) const
         {
             const auto byte_offset = (((block - f.m_first_block) << BSH) + offset) * SectorSize;
 
@@ -656,12 +663,12 @@ namespace zcpm
         return m_private->size();
     }
 
-    void Disk::read(SectorData& buffer, uint16_t track, uint16_t sector) const
+    void Disk::read(SectorData& buffer, std::uint16_t track, std::uint16_t sector) const
     {
         m_private->read(buffer, track, sector);
     }
 
-    void Disk::write(const SectorData& buffer, uint16_t track, uint16_t sector)
+    void Disk::write(const SectorData& buffer, std::uint16_t track, std::uint16_t sector)
     {
         m_private->write(buffer, track, sector);
     }

@@ -15,7 +15,7 @@ namespace zcpm
     constexpr auto FACILITY = "DEBUG";
 
     std::unique_ptr<DebugAction> DebugAction::create(Type type,
-                                                     uint16_t address,
+                                                     std::uint16_t address,
                                                      std::string_view location,
                                                      const std::string& count)
     {
@@ -33,11 +33,12 @@ namespace zcpm
         }
     }
 
-    DebugAction::DebugAction(uint16_t address, std::string_view location) : m_location(location), m_address(address)
+    DebugAction::DebugAction(std::uint16_t address, std::string_view location)
+        : m_location(location), m_address(address)
     {
     }
 
-    uint16_t DebugAction::get_address() const
+    std::uint16_t DebugAction::get_address() const
     {
         return m_address;
     }
@@ -48,11 +49,11 @@ namespace zcpm
         return os;
     }
 
-    Breakpoint::Breakpoint(uint16_t address, std::string_view location) : DebugAction(address, location)
+    Breakpoint::Breakpoint(std::uint16_t address, std::string_view location) : DebugAction(address, location)
     {
     }
 
-    bool Breakpoint::evaluate(uint16_t address) const
+    bool Breakpoint::evaluate(std::uint16_t address) const
     {
         if (m_address == address)
         {
@@ -68,11 +69,11 @@ namespace zcpm
         return fmt::format("Breakpoint at {:04X} (entered as '{}')", m_address, m_location);
     }
 
-    Watchpoint::Watchpoint(uint16_t address, std::string_view location) : DebugAction(address, location)
+    Watchpoint::Watchpoint(std::uint16_t address, std::string_view location) : DebugAction(address, location)
     {
     }
 
-    bool Watchpoint::evaluate(uint16_t address) const
+    bool Watchpoint::evaluate(std::uint16_t address) const
     {
         if (m_address == address)
         {
@@ -88,12 +89,12 @@ namespace zcpm
         return fmt::format("Watchpoint at {:04X} (entered as '{}')", m_address, m_location);
     }
 
-    PassPoint::PassPoint(uint16_t address, std::string_view location, uint16_t initial)
+    PassPoint::PassPoint(std::uint16_t address, std::string_view location, std::uint16_t initial)
         : DebugAction(address, location), m_remaining(initial)
     {
     }
 
-    bool PassPoint::evaluate(uint16_t address) const
+    bool PassPoint::evaluate(std::uint16_t address) const
     {
         if (m_address == address)
         {

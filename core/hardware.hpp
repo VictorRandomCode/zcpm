@@ -41,7 +41,7 @@ namespace zcpm
         void set_output_handler(const OutputHandler& h);
 
         // Configure where FBASE and WBOOT are (to help the system recognise BDOS & BIOS accesses)
-        void set_fbase_and_wboot(uint16_t fbase, uint16_t wboot);
+        void set_fbase_and_wboot(std::uint16_t fbase, std::uint16_t wboot);
 
         // Call the BIOS 'BOOT' & 'WBOOT' functions, in order to initialise BIOS data structures for subsequent BIOS
         // operations
@@ -56,36 +56,36 @@ namespace zcpm
 
         void set_finished(bool finished) override;
         bool running() const override;
-        bool check_and_handle_bdos_and_bios(uint16_t address) const override;
+        bool check_and_handle_bdos_and_bios(std::uint16_t address) const override;
 
         //
 
         // TODO: Add more methods to set/query/remove memory watch points
-        void add_watch_read(uint16_t base, uint16_t count = 1);
-        void add_watch_write(uint16_t base, uint16_t count = 1);
+        void add_watch_read(std::uint16_t base, std::uint16_t count = 1);
+        void add_watch_write(std::uint16_t base, std::uint16_t count = 1);
 
         // Directly add a one-off entry to the symbol table, which can be helpful for analysing run logs
-        void add_symbol(uint16_t a, std::string_view label);
+        void add_symbol(std::uint16_t a, std::string_view label);
 
         // Implements IMemory
 
-        uint8_t read_byte(uint16_t address) const override;
-        uint8_t read_byte(uint16_t address, size_t& elapsed_cycles) const override;
-        uint16_t read_word(uint16_t address) const override;
-        uint16_t read_word(uint16_t address, size_t& elapsed_cycles) const override;
-        void write_byte(uint16_t address, uint8_t x) override;
-        void write_byte(uint16_t address, uint8_t x, size_t& elapsed_cycles) override;
-        void write_word(uint16_t address, uint16_t x) override;
-        void write_word(uint16_t address, uint16_t x, size_t& elapsed_cycles) override;
-        uint8_t read_byte_step(uint16_t& address, size_t& elapsed_cycles) const override;
-        uint16_t read_word_step(uint16_t& address, size_t& elapsed_cycles) const override;
-        void push(uint16_t x, size_t& elapsed_cycles) override;
-        uint16_t pop(size_t& elapsed_cycles) override;
-        uint8_t input_byte(int port) override;
-        void output_byte(int port, uint8_t x) override;
-        void copy_to_ram(const uint8_t* buffer, size_t count, uint16_t base) override;
-        void copy_from_ram(uint8_t* buffer, size_t count, uint16_t base) const override;
-        void dump(uint16_t base, size_t count) const override;
+        std::uint8_t read_byte(std::uint16_t address) const override;
+        std::uint8_t read_byte(std::uint16_t address, size_t& elapsed_cycles) const override;
+        std::uint16_t read_word(std::uint16_t address) const override;
+        std::uint16_t read_word(std::uint16_t address, size_t& elapsed_cycles) const override;
+        void write_byte(std::uint16_t address, std::uint8_t x) override;
+        void write_byte(std::uint16_t address, std::uint8_t x, size_t& elapsed_cycles) override;
+        void write_word(std::uint16_t address, std::uint16_t x) override;
+        void write_word(std::uint16_t address, std::uint16_t x, size_t& elapsed_cycles) override;
+        std::uint8_t read_byte_step(std::uint16_t& address, size_t& elapsed_cycles) const override;
+        std::uint16_t read_word_step(std::uint16_t& address, size_t& elapsed_cycles) const override;
+        void push(std::uint16_t x, size_t& elapsed_cycles) override;
+        std::uint16_t pop(size_t& elapsed_cycles) override;
+        std::uint8_t input_byte(int port) override;
+        void output_byte(int port, std::uint8_t x) override;
+        void copy_to_ram(const std::uint8_t* buffer, size_t count, std::uint16_t base) override;
+        void copy_from_ram(std::uint8_t* buffer, size_t count, std::uint16_t base) const override;
+        void dump(std::uint16_t base, size_t count) const override;
         void check_memory_accesses(bool protect) override;
 
         //
@@ -97,7 +97,7 @@ namespace zcpm
 
         // Try to evaluate an expression such as 'foo1' where 'foo1' is a known label or perhaps 'foo2+23'.  Note that
         // all values are hexadecimal.  Returns a (success,value) pair, success=false means an evaluation failure.
-        std::tuple<bool, uint16_t> evaluate_address_expression(std::string_view s) const;
+        std::tuple<bool, std::uint16_t> evaluate_address_expression(std::string_view s) const;
 
         IDebuggable* get_idebuggable() const;
 
@@ -112,13 +112,13 @@ namespace zcpm
             WRITE
         };
 
-        void check_watched_memory_byte(uint16_t address, Access mode, uint8_t value) const;
-        void check_watched_memory_word(uint16_t address, Access mode, uint16_t value) const;
+        void check_watched_memory_byte(std::uint16_t address, Access mode, std::uint8_t value) const;
+        void check_watched_memory_word(std::uint16_t address, Access mode, std::uint16_t value) const;
 
-        std::string describe_address(uint16_t a) const;
+        std::string describe_address(std::uint16_t a) const;
 
         // Returns true if an attempted write to the specified address should be fatal for ZCPM
-        bool is_fatal_write(uint16_t address) const;
+        bool is_fatal_write(std::uint16_t address) const;
 
         // Runtime options from commandline switches
         const Config m_config;
@@ -131,7 +131,7 @@ namespace zcpm
 
         std::unique_ptr<terminal::Terminal> m_pterminal;
 
-        std::array<uint8_t, 0x10000> m_memory{};
+        std::array<std::uint8_t, 0x10000> m_memory{};
 
         bool m_finished{ false };
 
@@ -141,13 +141,13 @@ namespace zcpm
 
         // Addresses that we are watching; for now we just log their access, but longer-term we'll invoke a
         // user-supplied handler
-        std::unordered_set<uint16_t> m_watch_read;
+        std::unordered_set<std::uint16_t> m_watch_read;
 
         // Addresses that we are watching; for now we just log their access, but longer-term we'll invoke a
         // user-supplied handler
-        std::unordered_set<uint16_t> m_watch_write;
+        std::unordered_set<std::uint16_t> m_watch_write;
 
-        uint16_t m_fbase{ 0 };
+        std::uint16_t m_fbase{ 0 };
 
         // Table of known symbols.
         SymbolTable m_symbols;

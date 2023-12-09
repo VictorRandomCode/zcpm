@@ -47,7 +47,7 @@ namespace zcpm
         }
     }
 
-    void SymbolTable::add(std::string_view prefix, uint16_t a, std::string_view label)
+    void SymbolTable::add(std::string_view prefix, std::uint16_t a, std::string_view label)
     {
         m_symbols.insert({ a, { std::string(prefix), std::string(label) } });
     }
@@ -57,7 +57,7 @@ namespace zcpm
         return m_symbols.empty();
     }
 
-    std::string SymbolTable::describe(uint16_t a) const
+    std::string SymbolTable::describe(std::uint16_t a) const
     {
         // We rely on the map being keyed by address of each symbol, and the keys are in ascending order.
         // So search backwards until we reach the address of interest (or the closest one just before),
@@ -75,7 +75,7 @@ namespace zcpm
         return "?";
     }
 
-    std::tuple<bool, uint16_t> SymbolTable::evaluate_address_expression(std::string_view s) const
+    std::tuple<bool, std::uint16_t> SymbolTable::evaluate_address_expression(std::string_view s) const
     {
         // The supplied string could be something like "foo1+17a" where 'foo1' is in the symbol table
         // and 17a is a hex offset from that symbol. Or it could be "foo2" where we use the unmodified
@@ -156,7 +156,7 @@ namespace zcpm
         }
     }
 
-    std::tuple<bool, uint16_t> SymbolTable::evaluate_symbol(const std::string& s) const
+    std::tuple<bool, std::uint16_t> SymbolTable::evaluate_symbol(const std::string& s) const
     {
         // First see if it is a known symbol.  This involves a brute-force map search, yuk.
         const auto us = boost::to_upper_copy(s);
