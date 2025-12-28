@@ -4,11 +4,10 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <format>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-#include <fmt/core.h>
 
 namespace
 {
@@ -182,7 +181,7 @@ std::string Fcb::describe(bool show_both_filenames) const
         }
     }
 
-    auto numbers = fmt::format("EX={:d} RC={:d} CR={:d} R={:d}/{:d}/{:d}",
+    auto numbers = std::format("EX={:d} RC={:d} CR={:d} R={:d}/{:d}/{:d}",
                                m_u.m_fields.m_ex,
                                m_u.m_fields.m_rc,
                                m_u.m_fields.m_cr,
@@ -191,11 +190,11 @@ std::string Fcb::describe(bool show_both_filenames) const
                                m_u.m_fields.m_r[2]);
     if (show_both_filenames)
     {
-        return fmt::format(R"("{}","{}" {})", name1, name2, numbers);
+        return std::format(R"("{}","{}" {})", name1, name2, numbers);
     }
     else
     {
-        return fmt::format(R"("{}" {})", name1, numbers);
+        return std::format(R"("{}" {})", name1, numbers);
     }
 }
 

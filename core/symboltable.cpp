@@ -4,13 +4,12 @@
 #include <boost/log/trivial.hpp>
 
 #include <cstdlib>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <regex>
 #include <stdexcept>
 #include <string>
-
-#include <fmt/core.h>
 
 namespace zcpm
 {
@@ -69,7 +68,7 @@ std::string SymbolTable::describe(std::uint16_t a) const
         if (it->first <= a)
         {
             const auto offset = a - it->first;
-            return fmt::format("{}:{}+{:04X}", std::get<0>(it->second), std::get<1>(it->second), offset);
+            return std::format("{}:{}+{:04X}", std::get<0>(it->second), std::get<1>(it->second), offset);
         }
     }
 
@@ -153,7 +152,7 @@ void SymbolTable::dump() const
     for (const auto& [key, value] : m_symbols)
     {
         const auto& [ns, name] = value;
-        std::cout << fmt::format("  {:04X} {}:{}", key, ns, name) << std::endl;
+        std::cout << std::format("  {:04X} {}:{}", key, ns, name) << std::endl;
     }
 }
 

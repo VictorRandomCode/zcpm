@@ -2,13 +2,12 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <format>
 #include <iostream>
 #include <ncurses.h>
 #include <optional>
 #include <regex>
 #include <string>
-
-#include <fmt/core.h>
 
 namespace
 {
@@ -86,7 +85,7 @@ void ansi_cub()
 // Move cursor to screen location v,h
 void ansi_cup(int v, int h)
 {
-    BOOST_LOG_TRIVIAL(trace) << fmt::format("CURSES cup (v={:d} h={:d})", v, h);
+    BOOST_LOG_TRIVIAL(trace) << std::format("CURSES cup (v={:d} h={:d})", v, h);
     ::move(v - 1, h - 1);
 }
 

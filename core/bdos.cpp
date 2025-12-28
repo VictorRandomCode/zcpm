@@ -4,7 +4,7 @@
 #include "imemory.hpp"
 #include "registers.hpp"
 
-#include <fmt/core.h>
+#include <format>
 
 namespace zcpm::bdos
 {
@@ -32,7 +32,7 @@ namespace
             }
             else
             {
-                result += fmt::format("<{:02X}>", ch);
+                result += std::format("<{:02X}>", ch);
             }
         }
 
@@ -43,7 +43,7 @@ namespace
     std::string describe_fcb(const IMemory& memory, std::uint16_t address, bool both = false)
     {
         const Fcb fcb(memory, address);
-        return fmt::format("FCB at {:04X}: {}", address, fcb.describe(both));
+        return std::format("FCB at {:04X}: {}", address, fcb.describe(both));
     }
 
 } // namespace
@@ -53,7 +53,7 @@ std::tuple<std::string, std::string> describe_call(const Registers& registers, c
     // Register C indicates *which* BDOS call is being made
     const auto c = Registers::low_byte_of(registers.BC);
 
-    const auto prefix = fmt::format("fn#{:d} ", c);
+    const auto prefix = std::format("fn#{:d} ", c);
 
     // TODO: make the 'description' field be smarter; show actual filenames or register values etc.
     switch (c)
@@ -63,7 +63,7 @@ std::tuple<std::string, std::string> describe_call(const Registers& registers, c
     case 2:
     {
         auto ch = static_cast<char>(Registers::low_byte_of(registers.DE));
-        auto description = fmt::format("Console output '{:c}' (ASCII 0x{:02X})", (std::isprint(ch) ? ch : '?'), ch);
+        auto description = std::format("Console output '{:c}' (ASCII 0x{:02X})", (std::isprint(ch) ? ch : '?'), ch);
         return { prefix + "C_WRITE", description };
     }
     case 6: return { prefix + "C_RAWIO", "Direct console I/O" };
@@ -77,7 +77,7 @@ std::tuple<std::string, std::string> describe_call(const Registers& registers, c
     {
         auto& buffer = registers.DE;
         auto max = memory.read_byte(buffer);
-        auto description = fmt::format("Read console buffer (buffer at {:04X}, {:d} bytes max)", buffer, max);
+        auto description = std::format("Read console buffer (buffer at {:04X}, {:d} bytes max)", buffer, max);
         return { prefix + "C_READSTR", description };
     }
     case 11: return { prefix + "C_STAT", "Get console status" };
@@ -133,7 +133,7 @@ std::tuple<std::string, std::string> describe_call(const Registers& registers, c
     case 25: return { prefix + "DRV_GET", "Return current disk" };
     case 26:
     {
-        auto description = fmt::format("Set DMA address to {:04X}", registers.DE);
+        auto description = std::format("Set DMA address to {:04X}", registers.DE);
         return { prefix + "F_DMAOFF", description };
     }
     case 27: return { prefix + "DRV_ALLOCVEC", "Get addr(alloc)" };
@@ -147,7 +147,7 @@ std::tuple<std::string, std::string> describe_call(const Registers& registers, c
     case 32:
     {
         auto e = Registers::low_byte_of(registers.DE);
-        auto description = fmt::format("(E={:02X} means '{}')", e, ((e == 0xFF) ? "get" : "set"));
+        auto description = std::format("(E={:02X} means '{}')", e, ((e == 0xFF) ? "get" : "set"));
         return { prefix + "F_USERNUM", "Set/get user code " + description };
     }
     case 33:

@@ -1,18 +1,20 @@
-project(builder)
+set(LIBNAME builder)
 
-SetupCompiler("-g;-Wno-unused-parameter")
+find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS program_options REQUIRED)
 
-# Find Boost (Refer https://cmake.org/cmake/help/latest/module/FindBoost.html for details)
-set(Boost_USE_STATIC_LIBS ON)
-# Temporarily disable Boost's CMake, see https://stackoverflow.com/a/58085634
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost ${BOOST_VERSION} COMPONENTS program_options REQUIRED)
+add_library(${LIBNAME}
+  builder.hpp
+  builder.cpp
+)
 
-add_library(${PROJECT_NAME} builder.hpp builder.cpp)
-
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(${LIBNAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
 # Export the headers of this library so that users of this library see them
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/..)
+target_include_directories(${LIBNAME} PUBLIC ${CMAKE_SOURCE_DIR}/..)
 
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} terminal core)
+target_link_libraries(${LIBNAME}
+  PRIVATE
+  ${Boost_LIBRARIES}
+  terminal
+  core
+)

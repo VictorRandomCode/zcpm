@@ -4,11 +4,9 @@ zcpm
 What The?
 ---------
 
-Ever wanted to use a CP/M binary of [WordStar](https://en.wikipedia.org/wiki/WordStar) to edit your
-resume on your Mac? Or felt the need to use a CP/M binary
-of [pip](https://en.wikipedia.org/wiki/Peripheral_Interchange_Program)
-to rename files on your Debian system? That's ok, no-one else has either. But should you feel the
-need, that's where `zcpm` might be useful.
+Ever wanted to use a CP/M binary of [WordStar](https://en.wikipedia.org/wiki/WordStar) to edit your résumé on your Mac? Or felt the
+need to use a CP/M binary of [pip](https://en.wikipedia.org/wiki/Peripheral_Interchange_Program) to rename files on your Debian system? That's ok, no-one
+else has either. But should you feel the need, that's where `zcpm` might be useful.
 
 `zcpm` is a program that runs CP/M binaries (8080/Z80) on a unix-like system, interacting with the
 host filesystem and display. As opposed to a full system emulator which is a long-running self-contained
@@ -25,9 +23,9 @@ was a C++11 implementation. Both of these tried to replace the BDOS with native 
 Z80 core. This is technically feasible but over-ambitious; there's way too many tricky corner cases
 to be practical.
 
-So `zcpm` is another fresh start (C++17 this time), but this time I'm using an existing binary
-BDOS and a native C++ BIOS with an "off-the-shelf" Z80 core which I've heavily modified. Since starting
-this version, this now requires C++20.
+So `zcpm` is another fresh start, but this time I'm using an existing binary BDOS and a native C++
+BIOS with an "off-the-shelf" Z80 core which is heavily modified. Since starting this version,
+this now requires C++23.
 
 Approach
 --------
@@ -43,7 +41,7 @@ API of the host filesystem, screen, and keyboard etc.
 
 The Z80 core is based on https://github.com/anotherlin/z80emu  That core is _"This code is free,
 do whatever you want with it."_. I've since rewritten it as C++ and it is now hugely different to
-work with, but the same concepts remain. Over time I'm gradually converting it to modern C++.
+work with, but the same concepts remain.
 
 As for the BDOS (and CCP), `zcpm` loads a binary into `zcpm`'s memory map. This binary is assembled
 from reconstructed Z80 source code of BDOS. See the `bdos` directory for this, eventually this
@@ -85,8 +83,7 @@ Note that the VT100 emulation is more complete than the Televideo one; both of t
 gradually improved as time allows, but if you have the option, use binaries that target VT100
 (aka "ANSI") in preference to Televideo ones. Both emulations are a long way from being complete!
 
-The `debugger` makes use of the [replxx](https://github.com/AmokHuginnsson/replxx) library
-to make the debugger interface more usable.
+The `debugger` makes use of the [replxx](https://github.com/AmokHuginnsson/replxx) library to make the debugger interface more usable.
 
 Status
 ------
@@ -98,7 +95,7 @@ accesses at run time, this is reasonably expensive and could be optimised. And t
 sensible.
 
 Not all BDOS and BIOS functions are implemented, I'm gradually improving this but trying to focus
-just on those which are commonly used first.
+just on those functions that are commonly used first.
 
 `zcpm` implements CP/M 2.2. `zcpm` did initially target CP/M 3.x, but that was considerably more
 work, and very little CP/M software needs CP/M 3 anyway.
@@ -123,9 +120,8 @@ For Debian-based systems, install these packages:
 
     sudo apt install build-essential clang libc++-dev libc++abi-dev cmake libboost-all-dev clang-tidy
 
-Note that [replxx](https://github.com/AmokHuginnsson/replxx) needs to be built from source. This is
-automatically downloaded & built as part of the CMake configuration. Similarly,
-[fmtlib](https://github.com/fmtlib/fmt) is also used, and is automatically built via CMake.
+Note that [replxx](https://github.com/AmokHuginnsson/replxx) needs to be built from source. This is automatically
+downloaded and built as part of the CMake configuration.
 
 Once that's all set up:
 
@@ -134,18 +130,18 @@ Once that's all set up:
 
 Or if a particular non-default compiler is needed (note that the version numbers are merely examples):
 
-    cmake -DCMAKE_C_COMPILER=/opt/homebrew/Cellar/llvm/16.0.3/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/Cellar/llvm/16.0.3/bin/clang++ 
+    cmake -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ 
 ../zcpm
 
 or:
 
-    cmake -DCMAKE_C_COMPILER=/opt/homebrew/bin/gcc-13 -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-13 ../zcpm
+    cmake -DCMAKE_C_COMPILER=/opt/homebrew/bin/gcc-15 -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-15 ../zcpm
 
 Running
 -------
 
 First make sure `~/zcpm/` has been created containing both `bdos.bin` and `bdos.lab` copied from the
-source directory. Or, if preferred the locations of those files can be manually specified via command
+source directory. Or, if preferred, the locations of those files can be manually specified via command
 line options.
 
 Running the Debugger. Assuming that some CP/M test binaries are in `~/xcpm`
@@ -228,14 +224,6 @@ grepping the resultant log file for all BDOS calls (with some detail on each):
 grepping the resultant log file to see a summary of what BDOS & BIOS calls were made:
 
     grep -E 'BIOS fn|BDOS: fn' zcpm.log
-
-Build with static analysis (via `clang-tidy`) enabled:
-
-    cmake -DCMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ -DUSE_TIDY=1 ../zcpm/
-
-or:
-
-    cmake -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DUSE_TIDY=1 -DCLANG_TIDY_EXE=/opt/homebrew/Cellar/llvm/15.0.1/bin/clang-tidy ../zcpm
 
 Target Platforms:
 ----------------

@@ -1,21 +1,17 @@
-project(runner)
+set(EXENAME runner)
 
-SetupCompiler("-g;-Wno-unused-parameter")
+find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS log REQUIRED)
 
-# Find Boost (Refer https://cmake.org/cmake/help/latest/module/FindBoost.html for details)
-set(Boost_USE_STATIC_LIBS ON)
-# Temporarily disable Boost's CMake, see https://stackoverflow.com/a/58085634
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost ${BOOST_VERSION} COMPONENTS log REQUIRED)
-
-set(CLISOURCE
+add_executable(${EXENAME}
   main.cpp
-  )
+)
 
-set(CLIHEADER
-  )
+target_include_directories(${EXENAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME} ${CLISOURCE} ${CLIHEADER})
-
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} builder terminal core ${Boost_LIBRARIES})
+target_link_libraries(${EXENAME}
+  PRIVATE
+  builder
+  terminal
+  core
+  ${Boost_LIBRARIES}
+)

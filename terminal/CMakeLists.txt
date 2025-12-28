@@ -1,12 +1,6 @@
-project(terminal)
+set(LIBNAME terminal)
 
-SetupCompiler("-g;-Wno-unused-parameter")
-
-# Find Boost (Refer https://cmake.org/cmake/help/latest/module/FindBoost.html for details)
-set(Boost_USE_STATIC_LIBS ON)
-# Temporarily disable Boost's CMake, see https://stackoverflow.com/a/58085634
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost ${BOOST_VERSION} COMPONENTS log REQUIRED)
+find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS log REQUIRED)
 
 # Needs pthread to support boost::log
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -17,30 +11,30 @@ find_package(Threads REQUIRED)
 set(CURSES_NEED_NCURSES TRUE)
 find_package(Curses)
 
-set(LIBSOURCE
+add_library(${LIBNAME}
   keymap.cpp
-  plain.cpp
-  televideo.cpp
-  terminal.cpp
-  type.cpp
-  vt100.cpp
-  )
-
-set(LIBHEADER
   keymap.hpp
+  plain.cpp
   plain.hpp
+  televideo.cpp
   televideo.hpp
+  terminal.cpp
   terminal.hpp
+  type.cpp
   type.hpp
+  vt100.cpp
   vt100.hpp
-  )
-
-add_library(${PROJECT_NAME} ${LIBSOURCE} ${LIBHEADER})
+)
 
 # Make sure Boost doesn't try to use the (removed) std::unary_function in boost::hash via boost/algorithm/string.hpp
-target_compile_definitions(${PROJECT_NAME} PUBLIC BOOST_NO_CXX98_FUNCTION_BASE)
+target_compile_definitions(${LIBNAME} PUBLIC BOOST_NO_CXX98_FUNCTION_BASE)
 
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/..)
+target_include_directories(${LIBNAME} SYSTEM PRIVATE ${Boost_INCLUDE_DIRS})
+target_include_directories(${LIBNAME} PUBLIC ${CMAKE_SOURCE_DIR}/..)
 
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ncurses fmt)
+target_link_libraries(${LIBNAME}
+  PUBLIC
+  ${Boost_LIBRARIES}
+  PRIVATE
+  ncurses
+)

@@ -9,12 +9,12 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <format>
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <fmt/core.h>
 #include <zcpm/terminal/terminal.hpp>
 
 namespace zcpm
@@ -61,7 +61,7 @@ bool System::load_binary(std::uint16_t base, std::string_view filename)
     const auto filesize = std::ftell(fp);
     std::fseek(fp, 0, SEEK_SET);
 
-    BOOST_LOG_TRIVIAL(trace) << fmt::format("Reading {:d} bytes into memory at {:04X} from {}", filesize, base, filename);
+    BOOST_LOG_TRIVIAL(trace) << std::format("Reading {:d} bytes into memory at {:04X} from {}", filesize, base, filename);
 
     // Ideally we'd fread() directly into the memory buffer, but to do that means having more coupling
     // than is safe, so instead a temporary buffer is used here, which increases the peak RAM of this

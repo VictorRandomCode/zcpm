@@ -8,13 +8,13 @@
 #include <boost/log/trivial.hpp>
 
 #include <cstring>
+#include <format>
 #include <iostream>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
-#include <fmt/core.h>
 #include <zcpm/terminal/terminal.hpp>
 
 namespace zcpm
@@ -314,13 +314,13 @@ void Hardware::dump(std::uint16_t base, size_t count) const
     {
         if (bytes_this_line == 0)
         {
-            buf_address = fmt::format("{:04X}", base + i);
+            buf_address = std::format("{:04X}", base + i);
             buf_hex.clear();
             buf_ascii.clear();
         }
 
         const auto byte = m_memory[base + i];
-        buf_hex += fmt::format(" {:02X}", byte);
+        buf_hex += std::format(" {:02X}", byte);
         const auto ch = ((byte >= ' ') && (byte <= 0x7E)) ? static_cast<char>(byte) : '.';
         buf_ascii += ch;
 
@@ -425,12 +425,12 @@ void Hardware::check_watched_memory_byte(std::uint16_t address, Access mode, std
 
     if ((mode == Access::READ) && (m_watch_read.count(address)))
     {
-        BOOST_LOG_TRIVIAL(trace) << fmt::format(
+        BOOST_LOG_TRIVIAL(trace) << std::format(
             "    {:02X} <- {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
     }
     if ((mode == Access::WRITE) && (m_watch_write.count(address)))
     {
-        BOOST_LOG_TRIVIAL(trace) << fmt::format(
+        BOOST_LOG_TRIVIAL(trace) << std::format(
             "    {:02X} -> {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
         if (is_fatal_write(address))
         {
@@ -456,12 +456,12 @@ void Hardware::check_watched_memory_word(std::uint16_t address, Access mode, std
 
     if ((mode == Access::READ) && (m_watch_read.count(address + 0) || m_watch_read.count(address + 1)))
     {
-        BOOST_LOG_TRIVIAL(trace) << fmt::format(
+        BOOST_LOG_TRIVIAL(trace) << std::format(
             "  {:04X} <- {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
     }
     if ((mode == Access::WRITE) && (m_watch_write.count(address) || m_watch_write.count(address + 1)))
     {
-        BOOST_LOG_TRIVIAL(trace) << fmt::format(
+        BOOST_LOG_TRIVIAL(trace) << std::format(
             "  {:04X} -> {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
         if (is_fatal_write(address))
         {
@@ -478,7 +478,7 @@ void Hardware::check_watched_memory_word(std::uint16_t address, Access mode, std
 
 std::string Hardware::describe_address(std::uint16_t a) const
 {
-    auto result = fmt::format("{:04X}", a);
+    auto result = std::format("{:04X}", a);
 
     if (!m_symbols.empty())
     {

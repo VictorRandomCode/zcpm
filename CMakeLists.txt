@@ -1,23 +1,24 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.30)
+
+project(zcpm_project VERSION 0.1 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include(FetchContent)
 include(CheckIPOSupported)
 
-option(USE_TIDY "Enable clang's static analyser" OFF)
 option(USE_SANITISERS "Enable ASAN and UBSAN" OFF)
 option(USE_PROFILE "Enable profiling" OFF)
 
 # Typical invocations:
-#   cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=clang -D CMAKE_CXX_COMPILER=clang++ ../zcpm
-# or for gcc via brew on macOS:
-#   cmake -DCMAKE_PREFIX_PATH=~/local -D CMAKE_C_COMPILER=gcc-13 -D CMAKE_CXX_COMPILER=g++-13 ../zcpm
-# If needed, append e.g. -DUSE_SANITISERS=OFF or -DUSE_TIDY=ON or -DUSE_PROFILE=ON
+#   cmake -DCMAKE_PREFIX_PATH=~/local ../zcpm
+# or (for example) gcc via brew on macOS:
+#   cmake -DCMAKE_PREFIX_PATH=~/local -DCMAKE_C_COMPILER=gcc-15 -DCMAKE_CXX_COMPILER=g++-15 ../zcpm
+# If needed, append e.g. -DUSE_SANITISERS=OFF or -DUSE_PROFILE=ON
 
-project(zcpm_project CXX)
-
-set(CMAKE_CXX_STANDARD 20)
 set(Boost_NO_WARN_NEW_VERSIONS 1)
-set(BOOST_VERSION 1.83.0)
+set(BOOST_VERSION 1.88.0)
 
 # Generate a build commands json file to help some external tools
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -35,59 +36,7 @@ else()
   message(STATUS "IPO/LTO not supported")
 endif()
 
-# Optional: enable clang-tidy; can be slow and noisy.  This is done globally, not per-project
-if (USE_TIDY)
-  find_program(CLANG_TIDY_EXE NAMES "clang-tidy" DOC "path to clang-tidy executable")
-  if (CLANG_TIDY_EXE)
-    message("clang tidy is configured using ${CLANG_TIDY_EXE}; be patient when building!")
-    # Refer to .clang-tidy for selected options (and possibly in subdirectories)
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE}")
-  else()
-    message("*** Note: clang-tidy was requested but no clang-tidy binary was found")
-  endif()
-else()
-  message("Static analysis is not enabled")
-endif()
-
-function(SetupCompiler OPTIONS)
-
-  # Enable sanitisers of interest.
-  if (USE_SANITISERS)
-    message("Sanitisers are enabled for '${PROJECT_NAME}'")
-    # Note that enabling these does slow down both compilation and execution.  But according
-    # to the docco for these, we should usually keep these enabled in most cases, it's worth it.
-    # However, they can clash with some tools e.g. valgrind, gdb, etc.
-    add_compile_options(-fsanitize=address -fsanitize=undefined)
-    add_link_options(-fsanitize=address -fsanitize=undefined)
-  else()
-    message("Sanitisers are not enabled for '${PROJECT_NAME}'")
-  endif()
-
-  # Enable profiling, which is supported only on GCC.
-  if (USE_PROFILE)
-    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-      message("Profiling is being enabled for '${PROJECT_NAME}'")
-      add_compile_options(-pg)
-      add_link_options(-pg)
-    else()
-      message("Profiling is only supported for GCC, not ${CMAKE_CXX_COMPILER_ID}")
-    endif()
-  else()
-    message("Profiling is not enabled for '${PROJECT_NAME}'")
-  endif()
-
-  # Set up a common minimal set of compilation options plus whatever the caller has asked for
-  # (The caller-supplied options might actually be turning off something that we turn on here!)
-  add_compile_options(-Wall -Wextra -Wshadow -Wnon-virtual-dtor -Wold-style-cast -Woverloaded-virtual -Wmisleading-indentation -pedantic -Werror ${OPTIONS})
-
-endfunction()
-
-# ZCPM makes use of fmtlib until std::format is more widely available
-FetchContent_Declare(fmt
-  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG 10.1.1
-)
-FetchContent_MakeAvailable(fmt)
+include(functions.cmake)
 
 add_subdirectory(builder)
 add_subdirectory(terminal)

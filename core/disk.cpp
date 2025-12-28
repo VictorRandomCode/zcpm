@@ -8,12 +8,11 @@
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <format>
 #include <iostream>
 #include <map>
 #include <string>
 #include <system_error>
-
-#include <fmt/core.h>
 
 namespace
 {
@@ -510,7 +509,7 @@ public:
                             for (auto i = 0; i < sectors_this_block; i++)
                             {
                                 const auto [track, sector] = find_location_within_block(b, i);
-                                BOOST_LOG_TRIVIAL(trace) << fmt::format("  Using data from TRACK:{:04X} SECTOR:{:04X}", track, sector);
+                                BOOST_LOG_TRIVIAL(trace) << std::format("  Using data from TRACK:{:04X} SECTOR:{:04X}", track, sector);
                                 const auto it = m_sector_cache.find({ track, sector });
                                 if (it != m_sector_cache.end())
                                 {
@@ -578,7 +577,7 @@ public:
                             {
                                 if (f.m_blocks[i] == block)
                                 {
-                                    BOOST_LOG_TRIVIAL(trace) << fmt::format("Sector {:02X}:{:02X} is block {:d} offset {:d} within file {}",
+                                    BOOST_LOG_TRIVIAL(trace) << std::format("Sector {:02X}:{:02X} is block {:d} offset {:d} within file {}",
                                                                             track,
                                                                             sector,
                                                                             block,

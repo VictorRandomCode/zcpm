@@ -2,11 +2,10 @@
 
 #include <boost/log/trivial.hpp>
 
+#include <format>
 #include <iostream>
 #include <ncurses.h>
 #include <string>
-
-#include <fmt/core.h>
 
 namespace
 {
@@ -178,7 +177,7 @@ void Televideo::outch(char ch)
     {
         if ((ch < ' ') || (ch > '~'))
         {
-            BOOST_LOG_TRIVIAL(trace) << fmt::format("Warning: unhandled CURSES {:02X}", ch);
+            BOOST_LOG_TRIVIAL(trace) << std::format("Warning: unhandled CURSES {:02X}", ch);
         }
 
         // Make sure that a 7F is displayed as a space, for compatibility with our reference system
@@ -261,7 +260,7 @@ void Televideo::process_pending()
         auto col = static_cast<int>(m_pending[3]);
         BOOST_ASSERT(row > 31);
         BOOST_ASSERT(col > 31);
-        BOOST_LOG_TRIVIAL(trace) << fmt::format("CURSES address (row={:d} col={:d})", row - 31, col - 31);
+        BOOST_LOG_TRIVIAL(trace) << std::format("CURSES address (row={:d} col={:d})", row - 31, col - 31);
         ::move(row - 32, col - 32);
         m_pending.erase();
         return;
