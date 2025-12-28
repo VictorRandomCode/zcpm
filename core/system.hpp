@@ -10,55 +10,55 @@
 
 namespace zcpm
 {
-    struct Config;
+struct Config;
 
-    namespace terminal
-    {
-        class Terminal;
-    }
+namespace terminal
+{
+    class Terminal;
+}
 
-    class System final
-    {
-    public:
-        System(std::unique_ptr<terminal::Terminal> p_terminal, const Config& behaviour);
+class System final
+{
+public:
+    System(std::unique_ptr<terminal::Terminal> p_terminal, const Config& behaviour);
 
-        System(const System&) = delete;
-        System& operator=(const System&) = delete;
-        System(System&&) = delete;
-        System& operator=(System&&) = delete;
+    System(const System&) = delete;
+    System& operator=(const System&) = delete;
+    System(System&&) = delete;
+    System& operator=(System&&) = delete;
 
-        ~System();
+    ~System();
 
-        // Configure FBASE and WBOOT (to help the system recognise BDOS & BIOS accesses), and
-        // then invoke the BIOS initialisation code
-        void setup_bios(std::uint16_t fbase, std::uint16_t wboot);
+    // Configure FBASE and WBOOT (to help the system recognise BDOS & BIOS accesses), and
+    // then invoke the BIOS initialisation code
+    void setup_bios(std::uint16_t fbase, std::uint16_t wboot);
 
-        // Perform necessary BDOS initialisation
-        void setup_bdos();
+    // Perform necessary BDOS initialisation
+    void setup_bdos();
 
-        // Load a binary file into memory at the specified base address, not worrying about cmdline args
-        bool load_binary(std::uint16_t base, std::string_view filename);
+    // Load a binary file into memory at the specified base address, not worrying about cmdline args
+    bool load_binary(std::uint16_t base, std::string_view filename);
 
-        // Set up the FCB in page zero based on the specified command line arguments
-        bool load_fcb(const std::vector<std::string>& args);
+    // Set up the FCB in page zero based on the specified command line arguments
+    bool load_fcb(const std::vector<std::string>& args);
 
-        // Set PC to 0x0100 in readiness for running
-        void reset();
+    // Set PC to 0x0100 in readiness for running
+    void reset();
 
-        // Execute the system for instruction_count instructions
-        void step(size_t instruction_count = 1);
+    // Execute the system for instruction_count instructions
+    void step(size_t instruction_count = 1);
 
-        // Run the system until termination or a breakpoint
-        void run();
+    // Run the system until termination or a breakpoint
+    void run();
 
-        void set_input_handler(const InputHandler& handler);
-        void set_output_handler(const OutputHandler& handler);
+    void set_input_handler(const InputHandler& handler);
+    void set_output_handler(const OutputHandler& handler);
 
-        // This is public.  Normally "implementation details" such as this would be hidden,
-        // but in the system being modelling the various items are deeply coupled anyway.
-        // TODO: more thought needed on this issue.
+    // This is public.  Normally "implementation details" such as this would be hidden,
+    // but in the system being modelling the various items are deeply coupled anyway.
+    // TODO: more thought needed on this issue.
 
-        Hardware m_hardware;
-    };
+    Hardware m_hardware;
+};
 
 } // namespace zcpm

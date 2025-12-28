@@ -1,9 +1,6 @@
 project(core)
 
-# Normally we need to optimise this library for speed, unless we're trying
-# to use the debugger to find some specific issue.
-SetupCompiler("-Ofast;-Wno-unused-parameter")
-#SetupCompiler("-g;-Wno-unused-parameter")
+SetupCompiler("-Wno-unused-parameter")
 
 # Find Boost (Refer https://cmake.org/cmake/help/latest/module/FindBoost.html for details)
 set(Boost_USE_STATIC_LIBS ON)

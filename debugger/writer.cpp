@@ -1,10 +1,6 @@
 #include "writer.hpp"
 
-#include <zcpm/core/processor.hpp>
-#include <zcpm/core/registers.hpp>
-
 #include <boost/assert.hpp>
-#include <fmt/core.h>
 
 #include <array>
 #include <cstdint>
@@ -12,594 +8,595 @@
 #include <string>
 #include <vector>
 
+#include <fmt/core.h>
+#include <zcpm/core/processor.hpp>
+#include <zcpm/core/registers.hpp>
+
 namespace
 {
 
-    const std::array<const char*, 8> ByteRegMask{ "B", "C", "D", "E", "H", "L", "(HL)", "A" };
-    const std::array<const char*, 4> WordRegMask{ "BC", "DE", "HL", "SP" };
-    const std::array<const char*, 4> WordRegMaskQq{ "BC", "DE", "HL", "AF" };
-    const std::array<const char*, 8> CondMask{ "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
-    const std::array<const char*, 8> DDByteRegMask{ "B", "C", "D", "E", "IXH", "IXL", "(HL)", "A" };
-    const std::array<const char*, 8> FDByteRegMask{ "B", "C", "D", "E", "IYH", "IYL", "(HL)", "A" };
-    const std::map<std::uint8_t, const char*> DdFdCbLogicals = {
-        { 0x06, "RLC" }, { 0x0E, "RRC" }, { 0x16, "RL" },  { 0x1E, "RR" },
-        { 0x26, "SLA" }, { 0x2E, "SRA" }, { 0x36, "SLL" }, { 0x3E, "SRL" },
-    };
+const std::array<const char*, 8> ByteRegMask{ "B", "C", "D", "E", "H", "L", "(HL)", "A" };
+const std::array<const char*, 4> WordRegMask{ "BC", "DE", "HL", "SP" };
+const std::array<const char*, 4> WordRegMaskQq{ "BC", "DE", "HL", "AF" };
+const std::array<const char*, 8> CondMask{ "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
+const std::array<const char*, 8> DDByteRegMask{ "B", "C", "D", "E", "IXH", "IXL", "(HL)", "A" };
+const std::array<const char*, 8> FDByteRegMask{ "B", "C", "D", "E", "IYH", "IYL", "(HL)", "A" };
+const std::map<std::uint8_t, const char*> DdFdCbLogicals = {
+    { 0x06, "RLC" }, { 0x0E, "RRC" }, { 0x16, "RL" }, { 0x1E, "RR" }, { 0x26, "SLA" }, { 0x2E, "SRA" }, { 0x36, "SLL" }, { 0x3E, "SRL" },
+};
 
-    // A 8-bit literal as a 2 digit hex string
-    auto byte(std::uint8_t x)
-    {
-        return fmt::format("{:02X}", x);
-    }
+// A 8-bit literal as a 2 digit hex string
+auto byte(std::uint8_t x)
+{
+    return fmt::format("{:02X}", x);
+}
 
-    // A 16-bit literal as a 4 digit hex string
-    auto word(std::uint8_t low, std::uint8_t high)
-    {
-        return fmt::format("{:04X}", high << 8 | low);
-    }
+// A 16-bit literal as a 4 digit hex string
+auto word(std::uint8_t low, std::uint8_t high)
+{
+    return fmt::format("{:04X}", high << 8 | low);
+}
 
-    std::string byte_array_to_string(const std::vector<std::uint8_t>& bytes)
+std::string byte_array_to_string(const std::vector<std::uint8_t>& bytes)
+{
+    std::string result;
+    for (const auto& b : bytes)
     {
-        std::string result;
-        for (const auto& b : bytes)
+        if (!result.empty())
         {
-            if (!result.empty())
-            {
-                result += " ";
-            }
-            result += byte(b);
+            result += " ";
         }
-        return "[" + result + "]";
+        result += byte(b);
+    }
+    return "[" + result + "]";
+}
+
+// Dereference NN from (string)
+auto nn_string(std::uint8_t low, std::uint8_t high, const std::string& s)
+{
+    return fmt::format("({:04X}),{}", high << 8 | low, s);
+}
+
+// Dereference (string) from NN
+auto string_nn(std::uint8_t low, std::uint8_t high, const std::string& s)
+{
+    return fmt::format("{},({:04X})", s, high << 8 | low);
+}
+
+// Dereference N from (string)
+auto n_string(std::uint8_t n, const std::string& s)
+{
+    return fmt::format("({:02X}),{}", n, s);
+}
+
+// Dereference (string) from N
+// auto string_n(std::uint8_t n, const std::string& s)
+//{
+//  return fmt::format("{},({:02X})", s, n);
+//}
+
+auto hl_ss(std::uint8_t ss)
+{
+    return fmt::format("HL,{}", WordRegMask[ss]);
+}
+
+auto byte_register(std::uint8_t r)
+{
+    return ByteRegMask[r];
+}
+
+auto qq_word_register(std::uint8_t qq)
+{
+    return WordRegMaskQq[qq];
+}
+
+// r,n where r is a byte register and n is a 8-bit literal
+auto r_n(std::uint8_t r, std::uint8_t n)
+{
+    return fmt::format("{},{:02X}", ByteRegMask[r], n);
+}
+
+// r,r where r1 and r2 are both byte registers
+auto r_r(std::uint8_t r1, std::uint8_t r2)
+{
+    return fmt::format("{},{}", ByteRegMask[r1], ByteRegMask[r2]);
+}
+
+// dd,nn where dd is a word register and nn is a 16-bit literal
+auto dd_nn(std::uint8_t dd, std::uint8_t nn_low, std::uint8_t nn_high)
+{
+    const std::uint16_t nn = (nn_high << 8) | nn_low;
+    return fmt::format("{},{:04X}", WordRegMask[dd], nn);
+}
+
+// (nn),dd where dd is a word register and nn is a 16-bit literal
+auto inn_dd(std::uint8_t dd, std::uint8_t nn_low, std::uint8_t nn_high)
+{
+    const std::uint16_t nn = (nn_high << 8) | nn_low;
+    return fmt::format("({:04X}),{}", nn, WordRegMask[dd]);
+}
+
+// dd,(nn) where dd is a word register and nn is a 16-bit literal
+auto dd_inn(std::uint8_t dd, std::uint8_t nn_low, std::uint8_t nn_high)
+{
+    const std::uint16_t nn = (nn_high << 8) | nn_low;
+    return fmt::format("{},({:04X})", WordRegMask[dd], nn);
+}
+
+// cc,pq where cc is a 3-bit condition and pq is a 16-bit literal
+auto cc_pq(std::uint8_t cc, std::uint8_t pq_low, std::uint8_t pq_high)
+{
+    const std::uint16_t pq = (pq_high << 8) | pq_low;
+    return fmt::format("{},{:04X}", CondMask[cc], pq);
+}
+
+// Relative target as a 4 digit hex value (PC+e)
+auto offset(std::uint16_t pc, std::uint8_t e)
+{
+    const int8_t ee = e;
+    const std::uint16_t dest = pc + 2 + ee;
+    return fmt::format("{:04X}", dest);
+}
+
+// cc,e where cc is a 2-bit condition and e is a relative jump, which
+// we combine with pc for display purposes for compatibility with DebugZ
+auto cc_offset(std::uint8_t cc, std::uint8_t e, std::uint16_t pc)
+{
+    const int8_t ee = e;
+    const std::uint16_t dest = pc + 2 + ee;
+    return fmt::format("{},{:04X}", CondMask[cc], dest);
+}
+
+// "r,(reg+d)"  where r is a 8-bit register index and reg is an index register name and d is an offset
+auto r_ind_offset(std::uint8_t r, const std::string& reg, std::uint8_t offset)
+{
+    const int8_t o = offset;
+    return fmt::format("{},({}+{:02X})", ByteRegMask[r], reg, o);
+}
+
+// "(reg+d),r"  where r is a 8-bit register index and reg is an index register name and d is an offset
+auto ind_offset_r(std::uint8_t r, const std::string& reg, std::uint8_t offset)
+{
+    const int8_t o = offset;
+    return fmt::format("({}+{:02X}),{}", reg, o, ByteRegMask[r]);
+}
+
+// TODO: Collate string constants
+
+std::tuple<size_t, std::string, std::string> disassemble_cb(std::uint8_t op2, std::uint8_t /*op3*/, std::uint8_t /*op4*/)
+{
+    // First check for specific opcodes
+    switch (op2)
+    {
+    // TODO: none handled here yet
+    default:
+        // Fall through to bytefield checks below
+        break;
     }
 
-    // Dereference NN from (string)
-    auto nn_string(std::uint8_t low, std::uint8_t high, const std::string& s)
+    // Now check for bytefields
+    if ((op2 & 0xC0) == 0x40)
     {
-        return fmt::format("({:04X}),{}", high << 8 | low, s);
+        const std::uint16_t b = (op2 >> 3) & 0x07;
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "BIT", fmt::format("{:d},", b) + ByteRegMask[r] };
+    }
+    if ((op2 & 0xC0) == 0x80)
+    {
+        const std::uint16_t b = (op2 >> 3) & 0x07;
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "RES", fmt::format("{:d},", b) + ByteRegMask[r] };
+    }
+    if ((op2 & 0xC0) == 0xC0)
+    {
+        const std::uint16_t b = (op2 >> 3) & 0x07;
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "SET", fmt::format("{:d},", b) + ByteRegMask[r] };
+    }
+    if ((op2 & 0xC7) == 0x46)
+    {
+        const std::uint16_t b = (op2 >> 3) & 0x07;
+        return { 2, "BIT", fmt::format("{:d},(HL)", b) };
+    }
+    if ((op2 & 0xF8) == 0x00)
+    {
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "RLC", ByteRegMask[r] };
+    }
+    if ((op2 & 0xF8) == 0x08)
+    {
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "RRC", ByteRegMask[r] };
+    }
+    if ((op2 & 0xF8) == 0x10)
+    {
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "RL", ByteRegMask[r] };
+    }
+    if ((op2 & 0xF8) == 0x18)
+    {
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "RR", ByteRegMask[r] };
+    }
+    if ((op2 & 0xF8) == 0x20)
+    {
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "SLA", ByteRegMask[r] };
+    }
+    if ((op2 & 0xF8) == 0x28)
+    {
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "SRA", ByteRegMask[r] };
+    }
+    if ((op2 & 0xF8) == 0x30)
+    {
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "SLL", ByteRegMask[r] };
+    }
+    if ((op2 & 0xF8) == 0x38)
+    {
+        const std::uint8_t r = op2 & 0x07;
+        return { 2, "SRL", ByteRegMask[r] };
     }
 
-    // Dereference (string) from NN
-    auto string_nn(std::uint8_t low, std::uint8_t high, const std::string& s)
+    // No match
+    return { 0, fmt::format("?? CB {:02X}", op2), "" };
+}
+
+std::tuple<size_t, std::string, std::string> disassemble_ddfd(const std::string& xy,
+                                                              std::uint8_t op1,
+                                                              std::uint8_t op2,
+                                                              std::uint8_t op3,
+                                                              std::uint8_t op4)
+{
+    // First check for specific opcodes
+    switch (op2)
     {
-        return fmt::format("{},({:04X})", s, high << 8 | low);
-    }
-
-    // Dereference N from (string)
-    auto n_string(std::uint8_t n, const std::string& s)
+    case 0x09: return { 2, "ADD", xy + ",BC" };
+    case 0x19: return { 2, "ADD", xy + ",DE" };
+    case 0x21: return { 4, "LD", fmt::format("{},{:04X}", xy, (op4 << 8) | op3) };
+    case 0x22: return { 4, "LD", fmt::format("({:04X}),{}", (op4 << 8) | op3, xy) };
+    case 0x23: return { 2, "INC", xy };
+    case 0x24: return { 2, "INC", xy + "H" };
+    case 0x25: return { 2, "DEC", xy + "H" };
+    case 0x26: return { 3, "LD", fmt::format("{}H,{:02X}", xy, op3) };
+    case 0x29: return { 2, "ADD", xy + "," + xy };
+    case 0x2A: return { 4, "LD", fmt::format("{},({:04X})", xy, (op4 << 8) | op3) };
+    case 0x2B: return { 2, "DEC", xy };
+    case 0x2C: return { 2, "INC", xy + "L" };
+    case 0x2D: return { 2, "DEC", xy + "L" };
+    case 0x2E: return { 3, "LD", fmt::format("{}L,{:02X}", xy, op3) };
+    case 0x34: return { 3, "INC", fmt::format("({}+{:02X})", xy, op3) };
+    case 0x35: return { 3, "DEC", fmt::format("({}+{:02X})", xy, op3) };
+    case 0x36: return { 4, "LD", fmt::format("({}+{:02X}),{:02X}", xy, op3, op4) };
+    case 0x39: return { 2, "ADD", xy + ",SP" };
+    case 0x86: return { 3, "ADD", fmt::format("A,({}+{:02X})", xy, op3) };
+    case 0x8E: return { 3, "ADC", fmt::format("A,({}+{:02X})", xy, op3) };
+    case 0x94: return { 2, "SUB", xy + "H" };
+    case 0x95: return { 2, "SUB", xy + "L" };
+    case 0x96: return { 3, "SUB", fmt::format("A,({}+{:02X})", xy, op3) };
+    case 0x9E: return { 3, "SBC", fmt::format("A,({}+{:02X})", xy, op3) };
+    case 0xA6: return { 3, "AND", fmt::format("A,({}+{:02X})", xy, op3) };
+    case 0xAE: return { 3, "XOR", fmt::format("A,({}+{:02X})", xy, op3) };
+    case 0xB6: return { 3, "OR", fmt::format("A,({}+{:02X})", xy, op3) };
+    case 0xBE: return { 3, "CP", fmt::format("A,({}+{:02X})", xy, op3) };
+    case 0xCB:
     {
-        return fmt::format("({:02X}),{}", n, s);
-    }
-
-    // Dereference (string) from N
-    // auto string_n(std::uint8_t n, const std::string& s)
-    //{
-    //  return fmt::format("{},({:02X})", s, n);
-    //}
-
-    auto hl_ss(std::uint8_t ss)
-    {
-        return fmt::format("HL,{}", WordRegMask[ss]);
-    }
-
-    auto byte_register(std::uint8_t r)
-    {
-        return ByteRegMask[r];
-    }
-
-    auto qq_word_register(std::uint8_t qq)
-    {
-        return WordRegMaskQq[qq];
-    }
-
-    // r,n where r is a byte register and n is a 8-bit literal
-    auto r_n(std::uint8_t r, std::uint8_t n)
-    {
-        return fmt::format("{},{:02X}", ByteRegMask[r], n);
-    }
-
-    // r,r where r1 and r2 are both byte registers
-    auto r_r(std::uint8_t r1, std::uint8_t r2)
-    {
-        return fmt::format("{},{}", ByteRegMask[r1], ByteRegMask[r2]);
-    }
-
-    // dd,nn where dd is a word register and nn is a 16-bit literal
-    auto dd_nn(std::uint8_t dd, std::uint8_t nn_low, std::uint8_t nn_high)
-    {
-        const std::uint16_t nn = (nn_high << 8) | nn_low;
-        return fmt::format("{},{:04X}", WordRegMask[dd], nn);
-    }
-
-    // (nn),dd where dd is a word register and nn is a 16-bit literal
-    auto inn_dd(std::uint8_t dd, std::uint8_t nn_low, std::uint8_t nn_high)
-    {
-        const std::uint16_t nn = (nn_high << 8) | nn_low;
-        return fmt::format("({:04X}),{}", nn, WordRegMask[dd]);
-    }
-
-    // dd,(nn) where dd is a word register and nn is a 16-bit literal
-    auto dd_inn(std::uint8_t dd, std::uint8_t nn_low, std::uint8_t nn_high)
-    {
-        const std::uint16_t nn = (nn_high << 8) | nn_low;
-        return fmt::format("{},({:04X})", WordRegMask[dd], nn);
-    }
-
-    // cc,pq where cc is a 3-bit condition and pq is a 16-bit literal
-    auto cc_pq(std::uint8_t cc, std::uint8_t pq_low, std::uint8_t pq_high)
-    {
-        const std::uint16_t pq = (pq_high << 8) | pq_low;
-        return fmt::format("{},{:04X}", CondMask[cc], pq);
-    }
-
-    // Relative target as a 4 digit hex value (PC+e)
-    auto offset(std::uint16_t pc, std::uint8_t e)
-    {
-        const int8_t ee = e;
-        const std::uint16_t dest = pc + 2 + ee;
-        return fmt::format("{:04X}", dest);
-    }
-
-    // cc,e where cc is a 2-bit condition and e is a relative jump, which
-    // we combine with pc for display purposes for compatibility with DebugZ
-    auto cc_offset(std::uint8_t cc, std::uint8_t e, std::uint16_t pc)
-    {
-        const int8_t ee = e;
-        const std::uint16_t dest = pc + 2 + ee;
-        return fmt::format("{},{:04X}", CondMask[cc], dest);
-    }
-
-    // "r,(reg+d)"  where r is a 8-bit register index and reg is an index register name and d is an offset
-    auto r_ind_offset(std::uint8_t r, const std::string& reg, std::uint8_t offset)
-    {
-        const int8_t o = offset;
-        return fmt::format("{},({}+{:02X})", ByteRegMask[r], reg, o);
-    }
-
-    // "(reg+d),r"  where r is a 8-bit register index and reg is an index register name and d is an offset
-    auto ind_offset_r(std::uint8_t r, const std::string& reg, std::uint8_t offset)
-    {
-        const int8_t o = offset;
-        return fmt::format("({}+{:02X}),{}", reg, o, ByteRegMask[r]);
-    }
-
-    // TODO: Collate string constants
-
-    std::tuple<size_t, std::string, std::string> disassemble_cb(std::uint8_t op2,
-                                                                std::uint8_t /*op3*/,
-                                                                std::uint8_t /*op4*/)
-    {
-        // First check for specific opcodes
-        switch (op2)
+        // TODO: move to a new method of its own? We'll see how well this scales...
+        if (DdFdCbLogicals.contains(op4))
         {
-        // TODO: none handled here yet
-        default:
-            // Fall through to bytefield checks below
-            break;
+            return { 4, DdFdCbLogicals.at(op4), fmt::format("({}+{:02X})", xy, op3) };
         }
-
-        // Now check for bytefields
-        if ((op2 & 0xC0) == 0x40)
-        {
-            const std::uint16_t b = (op2 >> 3) & 0x07;
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "BIT", fmt::format("{:d},", b) + ByteRegMask[r] };
-        }
-        if ((op2 & 0xC0) == 0x80)
-        {
-            const std::uint16_t b = (op2 >> 3) & 0x07;
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "RES", fmt::format("{:d},", b) + ByteRegMask[r] };
-        }
-        if ((op2 & 0xC0) == 0xC0)
-        {
-            const std::uint16_t b = (op2 >> 3) & 0x07;
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "SET", fmt::format("{:d},", b) + ByteRegMask[r] };
-        }
-        if ((op2 & 0xC7) == 0x46)
-        {
-            const std::uint16_t b = (op2 >> 3) & 0x07;
-            return { 2, "BIT", fmt::format("{:d},(HL)", b) };
-        }
-        if ((op2 & 0xF8) == 0x00)
-        {
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "RLC", ByteRegMask[r] };
-        }
-        if ((op2 & 0xF8) == 0x08)
-        {
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "RRC", ByteRegMask[r] };
-        }
-        if ((op2 & 0xF8) == 0x10)
-        {
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "RL", ByteRegMask[r] };
-        }
-        if ((op2 & 0xF8) == 0x18)
-        {
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "RR", ByteRegMask[r] };
-        }
-        if ((op2 & 0xF8) == 0x20)
-        {
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "SLA", ByteRegMask[r] };
-        }
-        if ((op2 & 0xF8) == 0x28)
-        {
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "SRA", ByteRegMask[r] };
-        }
-        if ((op2 & 0xF8) == 0x30)
-        {
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "SLL", ByteRegMask[r] };
-        }
-        if ((op2 & 0xF8) == 0x38)
-        {
-            const std::uint8_t r = op2 & 0x07;
-            return { 2, "SRL", ByteRegMask[r] };
-        }
-
-        // No match
-        return { 0, fmt::format("?? CB {:02X}", op2), "" };
-    }
-
-    std::tuple<size_t, std::string, std::string> disassemble_ddfd(const std::string& xy,
-                                                                  std::uint8_t op1,
-                                                                  std::uint8_t op2,
-                                                                  std::uint8_t op3,
-                                                                  std::uint8_t op4)
-    {
-        // First check for specific opcodes
-        switch (op2)
-        {
-        case 0x09: return { 2, "ADD", xy + ",BC" };
-        case 0x19: return { 2, "ADD", xy + ",DE" };
-        case 0x21: return { 4, "LD", fmt::format("{},{:04X}", xy, (op4 << 8) | op3) };
-        case 0x22: return { 4, "LD", fmt::format("({:04X}),{}", (op4 << 8) | op3, xy) };
-        case 0x23: return { 2, "INC", xy };
-        case 0x24: return { 2, "INC", xy + "H" };
-        case 0x25: return { 2, "DEC", xy + "H" };
-        case 0x26: return { 3, "LD", fmt::format("{}H,{:02X}", xy, op3) };
-        case 0x29: return { 2, "ADD", xy + "," + xy };
-        case 0x2A: return { 4, "LD", fmt::format("{},({:04X})", xy, (op4 << 8) | op3) };
-        case 0x2B: return { 2, "DEC", xy };
-        case 0x2C: return { 2, "INC", xy + "L" };
-        case 0x2D: return { 2, "DEC", xy + "L" };
-        case 0x2E: return { 3, "LD", fmt::format("{}L,{:02X}", xy, op3) };
-        case 0x34: return { 3, "INC", fmt::format("({}+{:02X})", xy, op3) };
-        case 0x35: return { 3, "DEC", fmt::format("({}+{:02X})", xy, op3) };
-        case 0x36: return { 4, "LD", fmt::format("({}+{:02X}),{:02X}", xy, op3, op4) };
-        case 0x39: return { 2, "ADD", xy + ",SP" };
-        case 0x86: return { 3, "ADD", fmt::format("A,({}+{:02X})", xy, op3) };
-        case 0x8E: return { 3, "ADC", fmt::format("A,({}+{:02X})", xy, op3) };
-        case 0x94: return { 2, "SUB", xy + "H" };
-        case 0x95: return { 2, "SUB", xy + "L" };
-        case 0x96: return { 3, "SUB", fmt::format("A,({}+{:02X})", xy, op3) };
-        case 0x9E: return { 3, "SBC", fmt::format("A,({}+{:02X})", xy, op3) };
-        case 0xA6: return { 3, "AND", fmt::format("A,({}+{:02X})", xy, op3) };
-        case 0xAE: return { 3, "XOR", fmt::format("A,({}+{:02X})", xy, op3) };
-        case 0xB6: return { 3, "OR", fmt::format("A,({}+{:02X})", xy, op3) };
-        case 0xBE: return { 3, "CP", fmt::format("A,({}+{:02X})", xy, op3) };
-        case 0xCB:
-        {
-            // TODO: move to a new method of its own? We'll see how well this scales...
-            if (DdFdCbLogicals.contains(op4))
-            {
-                return { 4, DdFdCbLogicals.at(op4), fmt::format("({}+{:02X})", xy, op3) };
-            }
-            else if ((op4 & 0xC0) == 0x80)
-            {
-                const auto b = (op4 >> 3) & 0x07;
-                return { 4, "RES", fmt::format("{:d},({}+{:02X})", b, xy, op3) };
-            }
-            else if ((op4 & 0xC0) == 0x40)
-            {
-                const auto b = (op4 >> 3) & 0x07;
-                return { 4, "BIT", fmt::format("{:d},({}+{:02X})", b, xy, op3) };
-            }
-            else if ((op4 & 0xC0) == 0xC0)
-            {
-                const auto b = (op4 >> 3) & 0x07;
-                return { 4, "SET", fmt::format("{:d},({}+{:02X})", b, xy, op3) };
-            }
-            else
-            {
-                // Unimplemented sequence
-                const auto message = fmt::format("Unimplemented {:02X} {:02X} {:02X} {:02X}", op1, op2, op3, op4);
-                throw std::logic_error(message);
-            }
-        }
-        case 0xE1: return { 2, "POP", xy };
-        case 0xE5: return { 2, "PUSH", xy };
-        default:
-            // Fall through to bytefield checks below
-            break;
-        }
-
-        // Now check for bytefields
-        if ((op2 & 0xC0) == 0x40)
-        {
-            // Refer 'Undocumented Z80', page 24
-            const auto p1 = (op2 >> 3) & 0x07;
-            const auto p2 = op2 & 0x07;
-            const auto table = (op1 == 0xDD) ? DDByteRegMask : FDByteRegMask;
-            if (p1 == 0x06)
-            {
-                const auto lhs = fmt::format("({}+{:02X})", xy, op3);
-                return { 3, "LD", lhs + "," + std::string(ByteRegMask[p2]) };
-            }
-            else if (p2 == 0x06)
-            {
-                const auto rhs = fmt::format("({}+{:02X})", xy, op3);
-                return { 3, "LD", std::string(ByteRegMask[p1]) + "," + rhs };
-            }
-            else
-            {
-                return { 2, "LD", std::string(table[p1]) + "," + std::string(table[p2]) };
-            }
-        }
-        if ((op4 & 0xC0) == 0x40)
+        else if ((op4 & 0xC0) == 0x80)
         {
             const auto b = (op4 >> 3) & 0x07;
-            return { 4, "BIT", fmt::format("{:X},({}+{:02X})", b, xy, op3) };
+            return { 4, "RES", fmt::format("{:d},({}+{:02X})", b, xy, op3) };
         }
-        if ((op2 & 0xC7) == 0x46)
+        else if ((op4 & 0xC0) == 0x40)
         {
-            const std::uint8_t r = (op2 >> 3) & 0x07;
-            return { 3, "LD", r_ind_offset(r, xy, op3) };
+            const auto b = (op4 >> 3) & 0x07;
+            return { 4, "BIT", fmt::format("{:d},({}+{:02X})", b, xy, op3) };
         }
-        if ((op2 & 0xF8) == 0x70)
+        else if ((op4 & 0xC0) == 0xC0)
         {
-            const std::uint8_t r = op2 & 0x07;
-            return { 3, "LD", ind_offset_r(r, xy, op3) };
+            const auto b = (op4 >> 3) & 0x07;
+            return { 4, "SET", fmt::format("{:d},({}+{:02X})", b, xy, op3) };
         }
-
-        // Unimplemented sequence
-        const auto message = fmt::format("Unimplemented {:02X} {:02X} {:02X} {:02X}", op1, op2, op3, op4);
-        throw std::logic_error(message);
+        else
+        {
+            // Unimplemented sequence
+            const auto message = fmt::format("Unimplemented {:02X} {:02X} {:02X} {:02X}", op1, op2, op3, op4);
+            throw std::logic_error(message);
+        }
+    }
+    case 0xE1: return { 2, "POP", xy };
+    case 0xE5: return { 2, "PUSH", xy };
+    default:
+        // Fall through to bytefield checks below
+        break;
     }
 
-    std::tuple<size_t, std::string, std::string> disassemble_ed(std::uint8_t op2, std::uint8_t op3, std::uint8_t op4)
+    // Now check for bytefields
+    if ((op2 & 0xC0) == 0x40)
     {
-        // First check for specific opcodes
-        switch (op2)
+        // Refer 'Undocumented Z80', page 24
+        const auto p1 = (op2 >> 3) & 0x07;
+        const auto p2 = op2 & 0x07;
+        const auto table = (op1 == 0xDD) ? DDByteRegMask : FDByteRegMask;
+        if (p1 == 0x06)
         {
-        case 0x44: return { 2, "NEG", "" };
-        case 0x67: return { 2, "RRD", "" };
-        case 0x6F: return { 2, "RLD", "" };
-        case 0xA0: return { 2, "LDI", "" };
-        case 0xA1: return { 2, "CPI", "" };
-        case 0xA8: return { 2, "LDD", "" };
-        case 0xA9: return { 2, "CPD", "" };
-        case 0xB0: return { 2, "LDIR", "" };
-        case 0xB1: return { 2, "CPIR", "" };
-        case 0xB8: return { 2, "LDDR", "" };
-        case 0xB9: return { 2, "CPDR", "" };
-        default:
-            // Fall through to bytefield checks below
-            break;
+            const auto lhs = fmt::format("({}+{:02X})", xy, op3);
+            return { 3, "LD", lhs + "," + std::string(ByteRegMask[p2]) };
         }
-
-        // Now check for bytefields
-        if ((op2 & 0xCF) == 0x42)
+        else if (p2 == 0x06)
         {
-            const std::uint8_t ss = (op2 >> 4) & 0x03;
-            return { 2, "SBC", "HL," + std::string(WordRegMask[ss]) };
+            const auto rhs = fmt::format("({}+{:02X})", xy, op3);
+            return { 3, "LD", std::string(ByteRegMask[p1]) + "," + rhs };
         }
-        if ((op2 & 0xCF) == 0x43)
+        else
         {
-            const std::uint8_t dd = (op2 >> 4) & 0x03;
-            return { 4, "LD", inn_dd(dd, op3, op4) };
+            return { 2, "LD", std::string(table[p1]) + "," + std::string(table[p2]) };
         }
-        if ((op2 & 0xCF) == 0x4A)
-        {
-            const std::uint8_t ss = (op2 >> 4) & 0x03;
-            return { 2, "ADC", "HL," + std::string(WordRegMask[ss]) };
-        }
-        if ((op2 & 0xCF) == 0x4B)
-        {
-            const std::uint8_t dd = (op2 >> 4) & 0x03;
-            return { 4, "LD", dd_inn(dd, op3, op4) };
-        }
-
-        // No match
-        return { 0, fmt::format("?? ED {:02X}", op2), "" };
     }
-
-    // Given 4 bytes at the current PC (plus the PC), returns two human-readable "words" of disassembly,
-    // plus the count of bytes actually used (as each disassembled instruction can be 1-4 bytes)
-    std::tuple<size_t, std::string, std::string> disassemble(std::uint8_t op1,
-                                                             std::uint8_t op2,
-                                                             std::uint8_t op3,
-                                                             std::uint8_t op4,
-                                                             std::uint16_t pc)
+    if ((op4 & 0xC0) == 0x40)
     {
-        // First check for specific opcodes
-        switch (op1)
-        {
-        case 0x00: return { 1, "NOP", "" };
-        case 0x02: return { 1, "LD", "(BC),A" }; // Special case, can't use the usual lookups
-        case 0x07: return { 1, "RLCA", "" };
-        case 0x0A: return { 1, "LD", "A,(BC)" }; // Special case, can't use the usual lookups
-        case 0x0E:
-        {
-            const std::uint8_t r = (op1 >> 3) & 0x07;
-            const std::uint8_t n = op2;
-            return { 2, "LD", r_n(r, n) };
-        }
-        case 0x0F: return { 1, "RRCA", "" };
-        case 0x10: return { 2, "DJNZ", offset(pc, op2) };
-        case 0x12: return { 1, "LD", "(DE),A" }; // Special case, can't use the usual lookups
-        case 0x17: return { 1, "RLA", "" };
-        case 0x18: return { 2, "JR", offset(pc, op2) };
-        case 0x1A: return { 1, "LD", "A,(DE)" }; // Special case, can't use the usual lookups
-        case 0x1F: return { 1, "RRA", "" };
-        case 0x22: return { 3, "LD", nn_string(op2, op3, "HL") };
-        case 0x27: return { 1, "DAA", "" };
-        case 0x2A: return { 3, "LD", string_nn(op2, op3, "HL") };
-        case 0x2F: return { 1, "CPL", "" };
-        case 0x32: return { 3, "LD", nn_string(op2, op3, "A") };
-        case 0x37: return { 1, "SCF", "" };
-        case 0x3A: return { 3, "LD", string_nn(op2, op3, "A") };
-        case 0x3F: return { 1, "CCF", "" };
-        case 0xC3: return { 3, "JP", word(op2, op3) };
-        case 0xC6: return { 2, "ADD", "A," + byte(op2) };
-        case 0x08: return { 1, "EX", "AF,AF'" };
-        case 0xC9: return { 1, "RET", "" };
-        case 0xCB: return disassemble_cb(op2, op3, op4);
-        case 0xCD: return { 3, "CALL", word(op2, op3) };
-        case 0xCE: return { 2, "ADC", "A," + byte(op2) };
-        case 0xD3: return { 2, "OUT", n_string(op2, "A") };
-        case 0xDD: return disassemble_ddfd("IX", op1, op2, op3, op4);
-        case 0xD6: return { 2, "SUB", byte(op2) };
-        case 0xD9: return { 1, "EXX", "" };
-        case 0xDE: return { 2, "SBC", "A," + byte(op2) };
-        case 0xE3: return { 1, "EX", "(SP),HL" };
-        case 0xE6: return { 2, "AND", byte(op2) };
-        case 0xEE: return { 2, "XOR", byte(op2) };
-        case 0xF3: return { 1, "DI", "" };
-        case 0xF6: return { 2, "OR", byte(op2) };
-        case 0xFB: return { 1, "EI", "" };
-        case 0xE9: return { 1, "JP", "(HL)" };
-        case 0xEB: return { 1, "EX", "DE,HL" };
-        case 0xED: return disassemble_ed(op2, op3, op4);
-        case 0xF9: return { 1, "LD", "SP,HL" };
-        case 0xFD: return disassemble_ddfd("IY", op1, op2, op3, op4);
-        case 0xFE: return { 2, "CP", byte(op2) };
-        default:
-            // Fall through to bytefield checks below
-            break;
-        }
-
-        // Byte field checks
-
-        if ((op1 & 0xC0) == 0x40)
-        {
-            const std::uint8_t r1 = (op1 >> 3) & 0x07;
-            const std::uint8_t r2 = op1 & 0x07;
-            return { 1, "LD", r_r(r1, r2) };
-        }
-
-        if ((op1 & 0xC7) == 0x04)
-        {
-            const std::uint8_t r = (op1 >> 3) & 0x07;
-            return { 1, "INC", ByteRegMask[r] };
-        }
-        if ((op1 & 0xC7) == 0x05)
-        {
-            const std::uint8_t r = (op1 >> 3) & 0x07;
-            return { 1, "DEC", ByteRegMask[r] };
-        }
-        if ((op1 & 0xC7) == 0x06)
-        {
-            const std::uint8_t r = (op1 >> 3) & 0x07;
-            return { 2, "LD", r_n(r, op2) };
-        }
-        if ((op1 & 0xC7) == 0xC0)
-        {
-            const std::uint8_t cc = (op1 >> 3) & 0x07;
-            return { 1, "RET", CondMask[cc] };
-        }
-        if ((op1 & 0xC7) == 0xC2)
-        {
-            const std::uint8_t cc = (op1 >> 3) & 0x07;
-            return { 3, "JP", cc_pq(cc, op2, op3) };
-        }
-        if ((op1 & 0xC7) == 0xC4)
-        {
-            const std::uint8_t cc = (op1 >> 3) & 0x07;
-            return { 3, "CALL", cc_pq(cc, op2, op3) };
-        }
-        if ((op1 & 0xC7) == 0xC7)
-        {
-            const std::uint8_t p = (op1 >> 3) & 0x07;
-            return { 1, "RST", byte(p << 3) };
-        }
-
-        if ((op1 & 0xCF) == 0x01)
-        {
-            const std::uint8_t dd = (op1 >> 4) & 0x03;
-            return { 3, "LD", dd_nn(dd, op2, op3) };
-        }
-        if ((op1 & 0xCF) == 0x03)
-        {
-            const std::uint8_t rr = (op1 >> 4) & 0x03;
-            return { 1, "INC", WordRegMask[rr] };
-        }
-        if ((op1 & 0xCF) == 0x09)
-        {
-            const std::uint8_t ss = (op1 >> 4) & 0x03;
-            return { 1, "ADD", hl_ss(ss) };
-        }
-        if ((op1 & 0xCF) == 0x0B)
-        {
-            const std::uint8_t rr = (op1 >> 4) & 0x03;
-            return { 1, "DEC", WordRegMask[rr] };
-        }
-        if ((op1 & 0xCF) == 0xC1)
-        {
-            const std::uint8_t qq = (op1 >> 4) & 0x03;
-            return { 1, "POP", qq_word_register(qq) };
-        }
-        if ((op1 & 0xCF) == 0xC5)
-        {
-            const std::uint8_t qq = (op1 >> 4) & 0x03;
-            return { 1, "PUSH", qq_word_register(qq) };
-        }
-
-        if ((op1 & 0xE7) == 0x20)
-        {
-            const std::uint8_t cc = (op1 >> 3) & 0x03;
-            return { 2, "JR", cc_offset(cc, op2, pc) };
-        }
-
-        if ((op1 & 0xF8) == 0x80)
-        {
-            const std::uint8_t r = op1 & 0x07;
-            return { 1, "ADD", "A," + std::string(ByteRegMask[r]) };
-        }
-        if ((op1 & 0xF8) == 0x88)
-        {
-            const std::uint8_t r = op1 & 0x07;
-            return { 1, "ADC", ByteRegMask[r] };
-        }
-        if ((op1 & 0xF8) == 0x90)
-        {
-            const std::uint8_t r = op1 & 0x07;
-            return { 1, "SUB", ByteRegMask[r] };
-        }
-        if ((op1 & 0xF8) == 0x98)
-        {
-            const std::uint8_t r = op1 & 0x07;
-            return { 1, "SBC", ByteRegMask[r] };
-        }
-        if ((op1 & 0xF8) == 0xA0)
-        {
-            const std::uint8_t r = op1 & 0x07;
-            return { 1, "AND", ByteRegMask[r] };
-        }
-        if ((op1 & 0xF8) == 0xA8)
-        {
-            const std::uint8_t r = op1 & 0x07;
-            return { 1, "XOR", byte_register(r) };
-        }
-        if ((op1 & 0xF8) == 0xB0)
-        {
-            const std::uint8_t r = op1 & 0x07;
-            return { 1, "OR", byte_register(r) };
-        }
-        if ((op1 & 0xF8) == 0xB8)
-        {
-            const std::uint8_t r = op1 & 0x07;
-            return { 1, "CP", ByteRegMask[r] };
-        }
-
-        // Unhandled instruction
-        return { 0, fmt::format("?TODO({:02X},{:02X},{:02X})", op1, op2, op3), "" };
+        const auto b = (op4 >> 3) & 0x07;
+        return { 4, "BIT", fmt::format("{:X},({}+{:02X})", b, xy, op3) };
     }
+    if ((op2 & 0xC7) == 0x46)
+    {
+        const std::uint8_t r = (op2 >> 3) & 0x07;
+        return { 3, "LD", r_ind_offset(r, xy, op3) };
+    }
+    if ((op2 & 0xF8) == 0x70)
+    {
+        const std::uint8_t r = op2 & 0x07;
+        return { 3, "LD", ind_offset_r(r, xy, op3) };
+    }
+
+    // Unimplemented sequence
+    const auto message = fmt::format("Unimplemented {:02X} {:02X} {:02X} {:02X}", op1, op2, op3, op4);
+    throw std::logic_error(message);
+}
+
+std::tuple<size_t, std::string, std::string> disassemble_ed(std::uint8_t op2, std::uint8_t op3, std::uint8_t op4)
+{
+    // First check for specific opcodes
+    switch (op2)
+    {
+    case 0x44: return { 2, "NEG", "" };
+    case 0x67: return { 2, "RRD", "" };
+    case 0x6F: return { 2, "RLD", "" };
+    case 0xA0: return { 2, "LDI", "" };
+    case 0xA1: return { 2, "CPI", "" };
+    case 0xA8: return { 2, "LDD", "" };
+    case 0xA9: return { 2, "CPD", "" };
+    case 0xB0: return { 2, "LDIR", "" };
+    case 0xB1: return { 2, "CPIR", "" };
+    case 0xB8: return { 2, "LDDR", "" };
+    case 0xB9: return { 2, "CPDR", "" };
+    default:
+        // Fall through to bytefield checks below
+        break;
+    }
+
+    // Now check for bytefields
+    if ((op2 & 0xCF) == 0x42)
+    {
+        const std::uint8_t ss = (op2 >> 4) & 0x03;
+        return { 2, "SBC", "HL," + std::string(WordRegMask[ss]) };
+    }
+    if ((op2 & 0xCF) == 0x43)
+    {
+        const std::uint8_t dd = (op2 >> 4) & 0x03;
+        return { 4, "LD", inn_dd(dd, op3, op4) };
+    }
+    if ((op2 & 0xCF) == 0x4A)
+    {
+        const std::uint8_t ss = (op2 >> 4) & 0x03;
+        return { 2, "ADC", "HL," + std::string(WordRegMask[ss]) };
+    }
+    if ((op2 & 0xCF) == 0x4B)
+    {
+        const std::uint8_t dd = (op2 >> 4) & 0x03;
+        return { 4, "LD", dd_inn(dd, op3, op4) };
+    }
+
+    // No match
+    return { 0, fmt::format("?? ED {:02X}", op2), "" };
+}
+
+// Given 4 bytes at the current PC (plus the PC), returns two human-readable "words" of disassembly,
+// plus the count of bytes actually used (as each disassembled instruction can be 1-4 bytes)
+std::tuple<size_t, std::string, std::string> disassemble(std::uint8_t op1,
+                                                         std::uint8_t op2,
+                                                         std::uint8_t op3,
+                                                         std::uint8_t op4,
+                                                         std::uint16_t pc)
+{
+    // First check for specific opcodes
+    switch (op1)
+    {
+    case 0x00: return { 1, "NOP", "" };
+    case 0x02: return { 1, "LD", "(BC),A" }; // Special case, can't use the usual lookups
+    case 0x07: return { 1, "RLCA", "" };
+    case 0x0A: return { 1, "LD", "A,(BC)" }; // Special case, can't use the usual lookups
+    case 0x0E:
+    {
+        const std::uint8_t r = (op1 >> 3) & 0x07;
+        const std::uint8_t n = op2;
+        return { 2, "LD", r_n(r, n) };
+    }
+    case 0x0F: return { 1, "RRCA", "" };
+    case 0x10: return { 2, "DJNZ", offset(pc, op2) };
+    case 0x12: return { 1, "LD", "(DE),A" }; // Special case, can't use the usual lookups
+    case 0x17: return { 1, "RLA", "" };
+    case 0x18: return { 2, "JR", offset(pc, op2) };
+    case 0x1A: return { 1, "LD", "A,(DE)" }; // Special case, can't use the usual lookups
+    case 0x1F: return { 1, "RRA", "" };
+    case 0x22: return { 3, "LD", nn_string(op2, op3, "HL") };
+    case 0x27: return { 1, "DAA", "" };
+    case 0x2A: return { 3, "LD", string_nn(op2, op3, "HL") };
+    case 0x2F: return { 1, "CPL", "" };
+    case 0x32: return { 3, "LD", nn_string(op2, op3, "A") };
+    case 0x37: return { 1, "SCF", "" };
+    case 0x3A: return { 3, "LD", string_nn(op2, op3, "A") };
+    case 0x3F: return { 1, "CCF", "" };
+    case 0xC3: return { 3, "JP", word(op2, op3) };
+    case 0xC6: return { 2, "ADD", "A," + byte(op2) };
+    case 0x08: return { 1, "EX", "AF,AF'" };
+    case 0xC9: return { 1, "RET", "" };
+    case 0xCB: return disassemble_cb(op2, op3, op4);
+    case 0xCD: return { 3, "CALL", word(op2, op3) };
+    case 0xCE: return { 2, "ADC", "A," + byte(op2) };
+    case 0xD3: return { 2, "OUT", n_string(op2, "A") };
+    case 0xDD: return disassemble_ddfd("IX", op1, op2, op3, op4);
+    case 0xD6: return { 2, "SUB", byte(op2) };
+    case 0xD9: return { 1, "EXX", "" };
+    case 0xDE: return { 2, "SBC", "A," + byte(op2) };
+    case 0xE3: return { 1, "EX", "(SP),HL" };
+    case 0xE6: return { 2, "AND", byte(op2) };
+    case 0xEE: return { 2, "XOR", byte(op2) };
+    case 0xF3: return { 1, "DI", "" };
+    case 0xF6: return { 2, "OR", byte(op2) };
+    case 0xFB: return { 1, "EI", "" };
+    case 0xE9: return { 1, "JP", "(HL)" };
+    case 0xEB: return { 1, "EX", "DE,HL" };
+    case 0xED: return disassemble_ed(op2, op3, op4);
+    case 0xF9: return { 1, "LD", "SP,HL" };
+    case 0xFD: return disassemble_ddfd("IY", op1, op2, op3, op4);
+    case 0xFE: return { 2, "CP", byte(op2) };
+    default:
+        // Fall through to bytefield checks below
+        break;
+    }
+
+    // Byte field checks
+
+    if ((op1 & 0xC0) == 0x40)
+    {
+        const std::uint8_t r1 = (op1 >> 3) & 0x07;
+        const std::uint8_t r2 = op1 & 0x07;
+        return { 1, "LD", r_r(r1, r2) };
+    }
+
+    if ((op1 & 0xC7) == 0x04)
+    {
+        const std::uint8_t r = (op1 >> 3) & 0x07;
+        return { 1, "INC", ByteRegMask[r] };
+    }
+    if ((op1 & 0xC7) == 0x05)
+    {
+        const std::uint8_t r = (op1 >> 3) & 0x07;
+        return { 1, "DEC", ByteRegMask[r] };
+    }
+    if ((op1 & 0xC7) == 0x06)
+    {
+        const std::uint8_t r = (op1 >> 3) & 0x07;
+        return { 2, "LD", r_n(r, op2) };
+    }
+    if ((op1 & 0xC7) == 0xC0)
+    {
+        const std::uint8_t cc = (op1 >> 3) & 0x07;
+        return { 1, "RET", CondMask[cc] };
+    }
+    if ((op1 & 0xC7) == 0xC2)
+    {
+        const std::uint8_t cc = (op1 >> 3) & 0x07;
+        return { 3, "JP", cc_pq(cc, op2, op3) };
+    }
+    if ((op1 & 0xC7) == 0xC4)
+    {
+        const std::uint8_t cc = (op1 >> 3) & 0x07;
+        return { 3, "CALL", cc_pq(cc, op2, op3) };
+    }
+    if ((op1 & 0xC7) == 0xC7)
+    {
+        const std::uint8_t p = (op1 >> 3) & 0x07;
+        return { 1, "RST", byte(p << 3) };
+    }
+
+    if ((op1 & 0xCF) == 0x01)
+    {
+        const std::uint8_t dd = (op1 >> 4) & 0x03;
+        return { 3, "LD", dd_nn(dd, op2, op3) };
+    }
+    if ((op1 & 0xCF) == 0x03)
+    {
+        const std::uint8_t rr = (op1 >> 4) & 0x03;
+        return { 1, "INC", WordRegMask[rr] };
+    }
+    if ((op1 & 0xCF) == 0x09)
+    {
+        const std::uint8_t ss = (op1 >> 4) & 0x03;
+        return { 1, "ADD", hl_ss(ss) };
+    }
+    if ((op1 & 0xCF) == 0x0B)
+    {
+        const std::uint8_t rr = (op1 >> 4) & 0x03;
+        return { 1, "DEC", WordRegMask[rr] };
+    }
+    if ((op1 & 0xCF) == 0xC1)
+    {
+        const std::uint8_t qq = (op1 >> 4) & 0x03;
+        return { 1, "POP", qq_word_register(qq) };
+    }
+    if ((op1 & 0xCF) == 0xC5)
+    {
+        const std::uint8_t qq = (op1 >> 4) & 0x03;
+        return { 1, "PUSH", qq_word_register(qq) };
+    }
+
+    if ((op1 & 0xE7) == 0x20)
+    {
+        const std::uint8_t cc = (op1 >> 3) & 0x03;
+        return { 2, "JR", cc_offset(cc, op2, pc) };
+    }
+
+    if ((op1 & 0xF8) == 0x80)
+    {
+        const std::uint8_t r = op1 & 0x07;
+        return { 1, "ADD", "A," + std::string(ByteRegMask[r]) };
+    }
+    if ((op1 & 0xF8) == 0x88)
+    {
+        const std::uint8_t r = op1 & 0x07;
+        return { 1, "ADC", ByteRegMask[r] };
+    }
+    if ((op1 & 0xF8) == 0x90)
+    {
+        const std::uint8_t r = op1 & 0x07;
+        return { 1, "SUB", ByteRegMask[r] };
+    }
+    if ((op1 & 0xF8) == 0x98)
+    {
+        const std::uint8_t r = op1 & 0x07;
+        return { 1, "SBC", ByteRegMask[r] };
+    }
+    if ((op1 & 0xF8) == 0xA0)
+    {
+        const std::uint8_t r = op1 & 0x07;
+        return { 1, "AND", ByteRegMask[r] };
+    }
+    if ((op1 & 0xF8) == 0xA8)
+    {
+        const std::uint8_t r = op1 & 0x07;
+        return { 1, "XOR", byte_register(r) };
+    }
+    if ((op1 & 0xF8) == 0xB0)
+    {
+        const std::uint8_t r = op1 & 0x07;
+        return { 1, "OR", byte_register(r) };
+    }
+    if ((op1 & 0xF8) == 0xB8)
+    {
+        const std::uint8_t r = op1 & 0x07;
+        return { 1, "CP", ByteRegMask[r] };
+    }
+
+    // Unhandled instruction
+    return { 0, fmt::format("?TODO({:02X},{:02X},{:02X})", op1, op2, op3), "" };
+}
 } // namespace
 
 Writer::Writer(const zcpm::IDebuggable* p_debuggable, zcpm::IMemory& memory, std::ostream& os)
@@ -698,10 +695,7 @@ void Writer::display(std::uint16_t address, std::string_view s1, std::string_vie
     m_os << fmt::format("{:04X}     {:<5}{}", address, s1, s2) << std::endl;
 }
 
-void Writer::display(const zcpm::Registers& registers,
-                     std::string_view s1,
-                     std::string_view s2,
-                     const std::uint16_t offset) const
+void Writer::display(const zcpm::Registers& registers, std::string_view s1, std::string_view s2, const std::uint16_t offset) const
 {
     m_os << fmt::format("{} A={:02X} B={:04X} D={:04X} H={:04X} S={:04X} P={:04X}  {:<5}{}",
                         flags_to_string(registers.AF & 0xFF),

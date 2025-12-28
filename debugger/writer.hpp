@@ -7,10 +7,10 @@
 
 namespace zcpm
 {
-    class IDebuggable;
-    class IMemory;
-    class Registers;
-    class System;
+class IDebuggable;
+class IMemory;
+class Registers;
+class System;
 } // namespace zcpm
 
 // A class which encapsulates the knowledge of how to display information for our machine, without having that
@@ -41,10 +41,7 @@ private:
     void display(std::uint16_t address, std::string_view s1, std::string_view s2) const;
 
     // For displaying a line in an 'examine' output
-    void display(const zcpm::Registers& registers,
-                 std::string_view s1,
-                 std::string_view s2,
-                 const std::uint16_t offset = 0) const;
+    void display(const zcpm::Registers& registers, std::string_view s1, std::string_view s2, const std::uint16_t offset = 0) const;
 
     std::string flags_to_string(std::uint8_t f) const;
 

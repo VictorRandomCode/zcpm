@@ -1,14 +1,14 @@
 // A program to allow us to run an arbitrary CP/M binary.  Very unfinished!
 
-#include <zcpm/builder/builder.hpp>
-#include <zcpm/core/system.hpp>
-
 #include <boost/log/trivial.hpp>
 
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+
+#include <zcpm/builder/builder.hpp>
+#include <zcpm/core/system.hpp>
 
 int main(int argc, char* argv[])
 {

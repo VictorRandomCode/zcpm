@@ -3,202 +3,202 @@
 namespace zcpm
 {
 
-    enum Instruction : std::uint8_t
-    {
+enum Instruction : std::uint8_t
+{
 
-        /* 8-bit load group. */
+    /* 8-bit load group. */
 
-        LD_R_R,
-        LD_R_N,
+    LD_R_R,
+    LD_R_N,
 
-        LD_R_INDIRECT_HL,
-        LD_INDIRECT_HL_R,
-        LD_INDIRECT_HL_N,
+    LD_R_INDIRECT_HL,
+    LD_INDIRECT_HL_R,
+    LD_INDIRECT_HL_N,
 
-        LD_A_INDIRECT_BC,
-        LD_A_INDIRECT_DE,
-        LD_A_INDIRECT_NN,
-        LD_INDIRECT_BC_A,
-        LD_INDIRECT_DE_A,
-        LD_INDIRECT_NN_A,
+    LD_A_INDIRECT_BC,
+    LD_A_INDIRECT_DE,
+    LD_A_INDIRECT_NN,
+    LD_INDIRECT_BC_A,
+    LD_INDIRECT_DE_A,
+    LD_INDIRECT_NN_A,
 
-        LD_A_I_LD_A_R, /* Handle "LD A, I" and "LD A, R". */
-        LD_I_A_LD_R_A, /* Handle "LD I, A" and "LD I, A". */
+    LD_A_I_LD_A_R, /* Handle "LD A, I" and "LD A, R". */
+    LD_I_A_LD_R_A, /* Handle "LD I, A" and "LD I, A". */
 
-        /* 16-bit load group. */
+    /* 16-bit load group. */
 
-        LD_RR_NN,
+    LD_RR_NN,
 
-        LD_HL_INDIRECT_NN,
-        LD_RR_INDIRECT_NN,
-        LD_INDIRECT_NN_HL,
-        LD_INDIRECT_NN_RR,
+    LD_HL_INDIRECT_NN,
+    LD_RR_INDIRECT_NN,
+    LD_INDIRECT_NN_HL,
+    LD_INDIRECT_NN_RR,
 
-        LD_SP_HL,
+    LD_SP_HL,
 
-        PUSH_SS,
-        POP_SS,
+    PUSH_SS,
+    POP_SS,
 
-        /* Exchange, block transfer, and search group. */
+    /* Exchange, block transfer, and search group. */
 
-        EX_DE_HL,
-        EX_AF_AF_PRIME,
-        EXX,
-        EX_INDIRECT_SP_HL,
+    EX_DE_HL,
+    EX_AF_AF_PRIME,
+    EXX,
+    EX_INDIRECT_SP_HL,
 
-        LDI_LDD,   /* Handle "LDI" and "LDD". */
-        LDIR_LDDR, /* Handle "LDIR" and "LDDR". */
+    LDI_LDD,   /* Handle "LDI" and "LDD". */
+    LDIR_LDDR, /* Handle "LDIR" and "LDDR". */
 
-        CPI_CPD,   /* Handle "CPI" and "CPD". */
-        CPIR_CPDR, /* Handle "CPIR" and "CPDR". */
+    CPI_CPD,   /* Handle "CPI" and "CPD". */
+    CPIR_CPDR, /* Handle "CPIR" and "CPDR". */
 
-        /* 8-bit arithmetic and logical group. */
+    /* 8-bit arithmetic and logical group. */
 
-        ADD_R,
-        ADD_N,
-        ADD_INDIRECT_HL,
+    ADD_R,
+    ADD_N,
+    ADD_INDIRECT_HL,
 
-        ADC_R,
-        ADC_N,
-        ADC_INDIRECT_HL,
+    ADC_R,
+    ADC_N,
+    ADC_INDIRECT_HL,
 
-        SUB_R,
-        SUB_N,
-        SUB_INDIRECT_HL,
+    SUB_R,
+    SUB_N,
+    SUB_INDIRECT_HL,
 
-        SBC_R,
-        SBC_N,
-        SBC_INDIRECT_HL,
+    SBC_R,
+    SBC_N,
+    SBC_INDIRECT_HL,
 
-        AND_R,
-        AND_N,
-        AND_INDIRECT_HL,
+    AND_R,
+    AND_N,
+    AND_INDIRECT_HL,
 
-        XOR_R,
-        XOR_N,
-        XOR_INDIRECT_HL,
+    XOR_R,
+    XOR_N,
+    XOR_INDIRECT_HL,
 
-        OR_R,
-        OR_N,
-        OR_INDIRECT_HL,
+    OR_R,
+    OR_N,
+    OR_INDIRECT_HL,
 
-        CP_R,
-        CP_N,
-        CP_INDIRECT_HL,
+    CP_R,
+    CP_N,
+    CP_INDIRECT_HL,
 
-        INC_R,
-        INC_INDIRECT_HL,
-        DEC_R,
-        DEC_INDIRECT_HL,
+    INC_R,
+    INC_INDIRECT_HL,
+    DEC_R,
+    DEC_INDIRECT_HL,
 
-        /* 16-bit arithmetic group. */
+    /* 16-bit arithmetic group. */
 
-        ADD_HL_RR,
+    ADD_HL_RR,
 
-        ADC_HL_RR,
-        SBC_HL_RR,
+    ADC_HL_RR,
+    SBC_HL_RR,
 
-        INC_RR,
-        DEC_RR,
+    INC_RR,
+    DEC_RR,
 
-        /* General-purpose arithmetic and CPU control group. */
+    /* General-purpose arithmetic and CPU control group. */
 
-        DAA,
+    DAA,
 
-        CPL,
-        NEG,
+    CPL,
+    NEG,
 
-        CCF,
-        SCF,
+    CCF,
+    SCF,
 
-        NOP,
-        HALT,
+    NOP,
+    HALT,
 
-        DI,
-        EI,
+    DI,
+    EI,
 
-        IM_N,
+    IM_N,
 
-        /* Rotate and shift group. */
+    /* Rotate and shift group. */
 
-        RLCA,
-        RLA,
-        RRCA,
-        RRA,
+    RLCA,
+    RLA,
+    RRCA,
+    RRA,
 
-        RLC_R,
-        RLC_INDIRECT_HL,
-        RL_R,
-        RL_INDIRECT_HL,
-        RRC_R,
-        RRC_INDIRECT_HL,
-        RR_R,
-        RR_INDIRECT_HL,
-        SLA_R,
-        SLA_INDIRECT_HL,
-        SLL_R,
-        SLL_INDIRECT_HL,
-        SRA_R,
-        SRA_INDIRECT_HL,
-        SRL_R,
-        SRL_INDIRECT_HL,
+    RLC_R,
+    RLC_INDIRECT_HL,
+    RL_R,
+    RL_INDIRECT_HL,
+    RRC_R,
+    RRC_INDIRECT_HL,
+    RR_R,
+    RR_INDIRECT_HL,
+    SLA_R,
+    SLA_INDIRECT_HL,
+    SLL_R,
+    SLL_INDIRECT_HL,
+    SRA_R,
+    SRA_INDIRECT_HL,
+    SRL_R,
+    SRL_INDIRECT_HL,
 
-        RLD_RRD, /* Handle "RLD" and "RRD". */
+    RLD_RRD, /* Handle "RLD" and "RRD". */
 
-        /* Bit set, reset, and test group. */
+    /* Bit set, reset, and test group. */
 
-        BIT_B_R,
-        BIT_B_INDIRECT_HL,
-        SET_B_R,
-        SET_B_INDIRECT_HL,
-        RES_B_R,
-        RES_B_INDIRECT_HL,
+    BIT_B_R,
+    BIT_B_INDIRECT_HL,
+    SET_B_R,
+    SET_B_INDIRECT_HL,
+    RES_B_R,
+    RES_B_INDIRECT_HL,
 
-        /* Jump group. */
+    /* Jump group. */
 
-        JP_NN,
-        JP_CC_NN,
-        JR_E,
-        JR_DD_E,
-        JP_HL,
-        DJNZ_E,
+    JP_NN,
+    JP_CC_NN,
+    JR_E,
+    JR_DD_E,
+    JP_HL,
+    DJNZ_E,
 
-        /* Call and return group. */
+    /* Call and return group. */
 
-        CALL_NN,
-        CALL_CC_NN,
-        RET,
-        RET_CC,
+    CALL_NN,
+    CALL_CC_NN,
+    RET,
+    RET_CC,
 
-        RETI_RETN, /* Handle "RETI" and "RETN". */
+    RETI_RETN, /* Handle "RETI" and "RETN". */
 
-        RST_P,
+    RST_P,
 
-        /* Input and output group. */
+    /* Input and output group. */
 
-        IN_A_N,
-        IN_R_C, /* Correctly handle undocumented "IN F, (C)" instruction. */
+    IN_A_N,
+    IN_R_C, /* Correctly handle undocumented "IN F, (C)" instruction. */
 
-        INI_IND,   /* Handle "INI" and "IND". */
-        INIR_INDR, /* Handle "INIR" and "INDR". */
+    INI_IND,   /* Handle "INI" and "IND". */
+    INIR_INDR, /* Handle "INIR" and "INDR". */
 
-        OUT_N_A,
-        OUT_C_R, /* Correctly handle undocumented "OUT (C), 0" instruction. */
+    OUT_N_A,
+    OUT_C_R, /* Correctly handle undocumented "OUT (C), 0" instruction. */
 
-        OUTI_OUTD, /* Handle "OUTI" and "OUTD".*/
-        OTIR_OTDR, /* Handle "OTIR" and "OTDR". */
+    OUTI_OUTD, /* Handle "OUTI" and "OUTD".*/
+    OTIR_OTDR, /* Handle "OTIR" and "OTDR". */
 
-        /* Prefix group. */
+    /* Prefix group. */
 
-        CB_PREFIX,
-        DD_PREFIX,
-        FD_PREFIX,
-        ED_PREFIX,
+    CB_PREFIX,
+    DD_PREFIX,
+    FD_PREFIX,
+    ED_PREFIX,
 
-        /* Special instruction group. */
+    /* Special instruction group. */
 
-        ED_UNDEFINED /* ED_UNDEFINED is used to catch undefined ED prefixed opcodes. */
+    ED_UNDEFINED /* ED_UNDEFINED is used to catch undefined ED prefixed opcodes. */
 
-    };
+};
 
 } // namespace zcpm
