@@ -100,7 +100,7 @@ std::list<char> Keymap::translate(int key) const
     if (key >= KEY_MIN)
     {
         // The key is one that should be mapped but isn't.
-        spdlog::info("Warning: unmapped curses key #{}", key);
+        spdlog::warn("unmapped curses key #{}", key);
     }
 
     // Return just the key, so it is in effect an unmapped sequence

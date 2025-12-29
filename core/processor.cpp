@@ -7,14 +7,10 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
-#include <format>
-#include <iostream>
+#include <ranges>
 #include <set>
 
 #include <spdlog/spdlog.h>
-
-// Uncomment this to allow very chatty logging of calls/returns
-// #define TRACING
 
 namespace
 {
@@ -499,11 +495,11 @@ void Processor::add_action(std::unique_ptr<DebugAction> p_action)
 
 void Processor::show_actions(std::ostream& os) const
 {
-    os << m_debug_actions.size() << " action(s) are defined." << std::endl;
+    std::println(os, "{} action(s) are defined.", m_debug_actions.size());
     int count = 0;
-    for (const auto& a : m_debug_actions)
+    for (const auto& val : m_debug_actions | std::views::values)
     {
-        os << ++count << ": " << *(a.second) << std::endl;
+        std::println(os, "{}: {}", ++count, val->describe());
     }
 }
 
@@ -2097,9 +2093,7 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
         {
             const auto nn = m_memory.read_word_step(pc, elapsed_cycles);
             m_memory.push(pc, elapsed_cycles);
-#ifdef TRACING
-            spdlog::info("TRACE: Calling {:04X} from PC={:04X}", nn, pc - 3);
-#endif
+            spdlog::trace("TRACE: Calling {:04X} from PC={:04X}", nn, pc - 3);
             pc = nn;
 
             elapsed_cycles++;
@@ -2113,9 +2107,7 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
             {
                 const auto nn = m_memory.read_word_step(pc, elapsed_cycles);
                 m_memory.push(pc, elapsed_cycles);
-#ifdef TRACING
-                spdlog::info("TRACE: Calling {:04X} from PC={:04X} (cond)", nn, pc - 3);
-#endif
+                spdlog::trace("TRACE: Calling {:04X} from PC={:04X} (cond)", nn, pc - 3);
                 pc = nn;
 
                 elapsed_cycles++;
@@ -2132,13 +2124,9 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
 
         case RET:
         {
-#ifdef TRACING
-            spdlog::info("TRACE: Returning from PC={:04X}", pc - 1);
-#endif
+            spdlog::trace("TRACE: Returning from PC={:04X}", pc - 1);
             pc = m_memory.pop(elapsed_cycles);
-#ifdef TRACING
-            spdlog::info("TRACE: Returning to PC={:04X}", pc);
-#endif
+            spdlog::trace("TRACE: Returning to PC={:04X}", pc);
 
             break;
         }
@@ -2147,13 +2135,9 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
         {
             if (test_cc(Y(opcode)))
             {
-#ifdef TRACING
-                spdlog::info("TRACE: Returning from PC={:04X} (cond)", pc - 1);
-#endif
+                spdlog::trace("TRACE: Returning from PC={:04X} (cond)", pc - 1);
                 pc = m_memory.pop(elapsed_cycles);
-#ifdef TRACING
-                spdlog::info("TRACE: Returning to PC={:04X}", pc);
-#endif
+                spdlog::trace("TRACE: Returning to PC={:04X}", pc);
             }
             elapsed_cycles++;
 

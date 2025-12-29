@@ -1,7 +1,6 @@
 // A program to allow us to run an arbitrary CP/M binary.  Very unfinished!
 
 #include <cstdlib>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -18,7 +17,6 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
         spdlog::error("Exception: {}", e.what());
     }
 
@@ -35,12 +33,10 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
         spdlog::error("Exception: {}", e.what());
     }
     catch (...)
     {
-        std::cerr << "Exception." << std::endl;
         spdlog::error("Exception.");
     }
 

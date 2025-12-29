@@ -3,7 +3,6 @@
 #include <cassert>
 #include <cstdlib>
 #include <format>
-#include <iostream>
 #include <memory>
 #include <ostream>
 #include <utility>
@@ -74,7 +73,7 @@ bool Watchpoint::evaluate(std::uint16_t address) const
     {
         const auto message = std::format("{}: Watchpoint at {:04X}", FACILITY, address);
         spdlog::info("{}", message);
-        std::cout << message << std::endl;
+        std::println("{}", message);
     }
     return true; // Allow the debugger to keep running
 }
@@ -98,7 +97,7 @@ bool PassPoint::evaluate(std::uint16_t address) const
         {
             const auto message = std::format("{}: Passpoint at {:04X} expired, stopping", FACILITY, address);
             spdlog::info("{}", message);
-            std::cout << message << std::endl;
+            std::println("{}", message);
             return false;
         }
         spdlog::info("{}: Passpoint at {:04X} not yet expired", FACILITY, address);

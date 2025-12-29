@@ -7,11 +7,11 @@
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
-#include <iostream>
 #include <map>
 #include <string>
 #include <system_error>
 
+#include <spdlog/fmt/ranges.h>
 #include <spdlog/spdlog.h>
 
 namespace
@@ -104,11 +104,6 @@ public:
 
     void show() const
     {
-        std::stringstream blocks;
-        for (const auto& b : m_blocks)
-        {
-            blocks << ' ' << b;
-        }
         spdlog::info(" '{}' '{}' Size={} Sectors={} Extent={} FirstBlock={} [{}] Exists:{}",
                      m_raw_name,
                      m_name,
@@ -116,7 +111,7 @@ public:
                      m_sectors,
                      m_extent,
                      m_first_block,
-                     blocks.str(),
+                     fmt::join(m_blocks, ","),
                      m_exists ? 'Y' : 'N');
     }
 
@@ -183,7 +178,7 @@ public:
         }
         catch (const std::exception& e)
         {
-            std::cerr << "Exception during flush: " << e.what() << std::endl;
+            spdlog::error("Exception during flush: {}", e.what());
         }
     }
 

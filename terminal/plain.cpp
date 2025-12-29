@@ -3,7 +3,6 @@
 #include <iostream>
 #include <poll.h>
 #include <termios.h>
-#include <vector>
 
 namespace zcpm::terminal
 {
@@ -15,12 +14,12 @@ Plain::Plain(int rows, int columns) : Terminal(rows, columns)
 Plain::~Plain()
 {
     // Make sure we don't leave an unfinished output line
-    std::cout << std::endl;
+    std::println();
 }
 
 void Plain::print(char ch)
 {
-    std::cout << ch;
+    std::putchar(ch);
     std::cout.flush();
 }
 

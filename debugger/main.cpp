@@ -84,8 +84,8 @@ std::unique_ptr<zcpm::DebugAction> parse_and_create_debug_action(zcpm::System* p
     std::smatch command_match;
     if (!std::regex_search(payload, command_match, command_regex))
     {
-        std::cout << "Failed to parse breakpoint command" << std::endl;
-        std::cout << "Expected it in the form (e.g.) 'b0100' or 'bfoo1+17' or 'bblah-2,1a'" << std::endl;
+        std::println("Failed to parse breakpoint command");
+        std::println("Expected it in the form (e.g.) 'b0100' or 'bfoo1+17' or 'bblah-2,1a'");
         return {};
     }
 
@@ -97,7 +97,7 @@ std::unique_ptr<zcpm::DebugAction> parse_and_create_debug_action(zcpm::System* p
     const auto [ok, a] = p_machine->m_hardware.evaluate_address_expression(location_string);
     if (!ok)
     {
-        std::cout << "Couldn't evaluate address expression" << std::endl;
+        std::println("Couldn't evaluate address expression");
         return {};
     }
 
@@ -111,14 +111,14 @@ std::unique_ptr<zcpm::DebugAction> parse_and_create_debug_action(zcpm::System* p
         }
         else
         {
-            std::cout << "Too many values for a breakpoint" << std::endl;
+            std::println("Too many values for a breakpoint");
         }
     }
     else if (type == "passpoint")
     {
         if (count_string.empty())
         {
-            std::cout << "Passpoint requires a count" << std::endl;
+            std::println("Passpoint requires a count");
         }
         else
         {
@@ -133,12 +133,12 @@ std::unique_ptr<zcpm::DebugAction> parse_and_create_debug_action(zcpm::System* p
         }
         else
         {
-            std::cout << "Too many values for a watchpoint" << std::endl;
+            std::println("Too many values for a watchpoint");
         }
     }
     else
     {
-        std::cout << "Unknown debug action type" << std::endl;
+        std::println("Unknown debug action type");
     }
 
     return result;
@@ -226,26 +226,25 @@ bool find_and_handle_command(const std::vector<Command>& commands, const std::st
                     }
                     catch (const std::exception& e)
                     {
-                        std::cerr << "Exception: " << e.what() << std::endl;
+                        std::println(stderr, "Exception: {}", e.what());
                     }
 
                     return true; // Indicate that all is well and we should keep running
                 }
 
-                std::cout << "Wrong parameter count for '" << verb << "'; found " << words.size() - 1 << " but need "
-                          << command.m_min_word_count;
+                std::print("Wrong parameter count for '{}'; found {} but need {}", verb, words.size() - 1, command.m_min_word_count);
                 if (command.m_max_word_count > command.m_min_word_count)
                 {
-                    std::cout << ".." << command.m_max_word_count;
+                    std::print("..{}", command.m_max_word_count);
                 }
-                std::cout << std::endl;
+                std::println();
 
                 return true;
             }
         }
     }
 
-    std::cout << "Unknown command '" << verb << "'" << std::endl;
+    std::println("Unknown command '{}'", verb);
     return true;
 }
 
@@ -264,11 +263,11 @@ auto run(Writer& writer, zcpm::System* p_machine, zcpm::IDebuggable* p_debuggabl
                      const auto ok = p_debuggable->remove_action(number);
                      if (ok)
                      {
-                         std::cout << "Removed." << std::endl;
+                         std::println("Removed.");
                      }
                      else
                      {
-                         std::cout << "Not removed, an error occured." << std::endl;
+                         std::println("Not removed, an error occured.");
                      }
                      return false;
                  } },
@@ -407,7 +406,7 @@ auto run(Writer& writer, zcpm::System* p_machine, zcpm::IDebuggable* p_debuggabl
                      }
                      else
                      {
-                         std::cout << "Unknown option" << std::endl;
+                         std::println("Unknown option");
                      }
                      return false;
                  } },
@@ -496,7 +495,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        std::println(stderr, "Exception: {}", e.what());
     }
 
     if (!p_machine)
@@ -518,7 +517,7 @@ int main(int argc, char* argv[])
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        std::println(stderr, "Exception: {}", e.what());
         return EXIT_FAILURE;
     }
 

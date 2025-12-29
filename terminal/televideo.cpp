@@ -1,7 +1,6 @@
 #include "televideo.hpp"
 
 #include <cassert>
-#include <iostream>
 #include <ncurses.h>
 #include <string>
 
@@ -51,7 +50,7 @@ Televideo::~Televideo()
 
     if (!m_pending.empty())
     {
-        std::cerr << "Warning: incomplete escape sequence <ESC>" << m_pending.substr(1) << " at termination" << std::endl;
+        spdlog::warn("incomplete escape sequence <ESC>{} at termination", m_pending.substr(1));
     }
 }
 
@@ -94,7 +93,7 @@ void Televideo::outch(char ch)
         // the maintainer via the log file and drop the unhandled one.
         if (ch == '\033') // ESC
         {
-            spdlog::info("Warning: unimplemented escape sequence '<ESC>{}' ({} chars) dropped", m_pending.substr(1), m_pending.size());
+            spdlog::warn("unimplemented escape sequence '<ESC>{}' ({} chars) dropped", m_pending.substr(1), m_pending.size());
             m_pending.erase();
         }
         else
@@ -176,7 +175,7 @@ void Televideo::outch(char ch)
     {
         if ((ch < ' ') || (ch > '~'))
         {
-            spdlog::info("Warning: unhandled CURSES {:02X}", ch);
+            spdlog::warn("unhandled CURSES {:02X}", ch);
         }
 
         // Make sure that a 7F is displayed as a space, for compatibility with our reference system

@@ -1,7 +1,5 @@
 #include "vt100.hpp"
 
-#include <format>
-#include <iostream>
 #include <ncurses.h>
 #include <optional>
 #include <regex>
@@ -49,7 +47,7 @@ std::optional<ParsedSequence> parse_sequence(const std::string& s)
     // Is all the intervening content digits or semicolons only?
     if (s.find_first_not_of("0123456789;", 3) != len - 1)
     {
-        spdlog::info("Warning: not just a numeric sequence in '{}'", s);
+        spdlog::warn("not just a numeric sequence in '{}'", s);
         return std::nullopt;
     }
 
@@ -199,7 +197,7 @@ Vt100::~Vt100()
 
     if (!m_pending.empty())
     {
-        std::cerr << "Warning: incomplete escape sequence <ESC>" << m_pending.substr(1) << " at termination" << std::endl;
+        spdlog::warn("incomplete escape sequence <ESC>{} at termination", m_pending.substr(1));
     }
 }
 
@@ -242,7 +240,7 @@ void Vt100::outch(char ch)
         // the maintainer via the log file and drop the unhandled one.
         if (ch == '\033') // ESC
         {
-            spdlog::info("Warning: unimplemented escape sequence <ESC>{} dropped", m_pending.substr(1));
+            spdlog::warn("unimplemented escape sequence <ESC>{} dropped", m_pending.substr(1));
             m_pending.erase();
         }
         else
@@ -336,7 +334,7 @@ void Vt100::process_pending()
             }
             else
             {
-                spdlog::info("Warning: 'H' has {}", values.size());
+                spdlog::warn("'H' has {}", values.size());
             }
         }
         break;
@@ -351,13 +349,13 @@ void Vt100::process_pending()
             {
                 if (values.size() > 1)
                 {
-                    spdlog::info("Warning: Unexpected value count");
+                    spdlog::warn("Unexpected value count");
                 }
                 switch (values[0])
                 {
                 case 0: ansi_ed0(); break;
                 case 2: ansi_ed2(); break;
-                default: spdlog::info("Warning: n={} unhandled for EDn", values[0]);
+                default: spdlog::warn("n={} unhandled for EDn", values[0]);
                 }
             }
         }
@@ -373,13 +371,13 @@ void Vt100::process_pending()
             {
                 if (values.size() > 1)
                 {
-                    spdlog::info("Warning: Unexpected value count");
+                    spdlog::warn("Unexpected value count");
                 }
                 switch (values[0])
                 {
                 case 0: ansi_el0(); break;
                 case 2: ansi_el2(); break;
-                default: spdlog::info("Warning: n={} unhandled for ELn", values[0]);
+                default: spdlog::warn("n={} unhandled for ELn", values[0]);
                 }
             }
         }
@@ -416,7 +414,7 @@ void Vt100::process_pending()
                     case 1: ansi_sgr1(); break;
                     case 5: ansi_sgr5(); break;
                     case 7: ansi_sgr7(); break;
-                    default: spdlog::info("Warning: n={} unhandled for SGRn", value);
+                    default: spdlog::warn("n={} unhandled for SGRn", value);
                     }
                 }
             }
@@ -428,7 +426,7 @@ void Vt100::process_pending()
             // TODO (Set top and bottom lines of a window)
             break;
 
-        default: spdlog::info("Warning: Unimplemented escape sequence, TODO!"); break;
+        default: spdlog::warn("Unimplemented escape sequence, TODO!"); break;
         }
         m_pending.erase(0, num_parsed);
     }

@@ -8,6 +8,7 @@
 #include <vector>
 
 #include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <zcpm/core/config.hpp>
 #include <zcpm/core/system.hpp>
@@ -30,6 +31,7 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
 {
     // Command line parameters and their defaults
     std::string logfile = "zcpm.log";
+    bool tracing = false;
     std::string bdos_file_name;                      // The file that provides a binary BDOS (and CCP etc)
     std::uint16_t bdos_file_base = 0xDC00;           // Where to load that binary image
     std::uint16_t wboot = 0xF203;                    // Address of WBOOT in loaded binary BDOS
@@ -47,13 +49,6 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
     std::string binary; // The CP/M binary that we try to load and execute
     std::vector<std::string> arguments;
 
-    // Configure spdlog to use a single file sink, with no annotations
-    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("zcpm.log", true);
-    file_sink->set_level(spdlog::level::trace);
-    file_sink->set_pattern("%v");
-    auto logger = std::make_shared<spdlog::logger>("zcpm", spdlog::sinks_init_list{ file_sink });
-    spdlog::set_default_logger(logger);
-
     try
     {
         namespace po = boost::program_options;
@@ -70,7 +65,7 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
             "memcheck", po::value<bool>(), "Enable memory access checks?")("logbdos", po::value<bool>(), "Enable logging of BDOS calls?")(
             "protectwarm", po::value<bool>(), "Protect warm start vector from modification?")(
             "protectbdosjump", po::value<bool>(), "Protect BDOS jump vector from modification?")(
-            "logfile", po::value<std::string>(), "Name of logfile")(
+            "logfile", po::value<std::string>(), "Name of logfile")("trace", po::value<bool>(), "Detailed (very verbose) logging?")(
             "binary", po::value<std::string>(), "CP/M binary input file to execute")(
             "args", po::value<std::vector<std::string>>(), "Parameters for binary");
         po::positional_options_description p;
@@ -84,7 +79,8 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
 
         if (vm.count("help"))
         {
-            std::cout << "ZCPM v0.1" << std::endl << std::endl;
+            std::println("ZCPM v0.1");
+            std::println();
             std::cout << desc << std::endl;
             return nullptr;
         }
@@ -123,6 +119,10 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
         {
             config.log_bdos = vm["logbdos"].as<bool>();
         }
+        if (vm.count("trace"))
+        {
+            tracing = vm["trace"].as<bool>();
+        }
         if (vm.count("protectwarm"))
         {
             config.protect_warm_start_vector = vm["protectwarm"].as<bool>();
@@ -157,9 +157,21 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
     }
     catch (const std::exception& e)
     {
-        std::cerr << "Exception: " << e.what() << std::endl;
+        std::println(stderr, "Exception: {}", e.what());
         return nullptr;
     }
+
+    // File sink for general logging (optionally with 'trace' messages included)
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logfile, true);
+    file_sink->set_level(tracing ? spdlog::level::trace : spdlog::level::info);
+    file_sink->set_pattern("[%H:%M:%S.%e %l] %v");
+    // stderr sink for warnings and above
+    auto err_sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
+    err_sink->set_level(spdlog::level::warn);
+    err_sink->set_pattern("[%^%l%$] %v");
+    // Combine sinks
+    auto logger = std::make_shared<spdlog::logger>("zcpm", spdlog::sinks_init_list{ file_sink, err_sink });
+    spdlog::set_default_logger(logger);
 
     // Create the terminal emulation of choice
     std::unique_ptr<terminal::Terminal> p_terminal;
@@ -178,12 +190,11 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
     if (!p_machine->load_binary(bdos_file_base, bdos_file_name))
     {
         p_machine.reset();
-        std::cerr << "Failed to load base memory image" << std::endl;
+        spdlog::error("Failed to load base memory image");
         return nullptr;
     }
 
-    // Based on the current binary image, work out where the BIOS appears to start and set vectors and initialise
-    // data structures.
+    // Based on the current binary image, work out where the BIOS appears to start and set vectors and initialise data structures.
     try
     {
         p_machine->setup_bios(fbase, wboot);
@@ -191,14 +202,14 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
     catch (const std::exception& e)
     {
         p_machine.reset();
-        std::cerr << "Exception: " << e.what() << std::endl;
+        spdlog::error("Exception: {}", e.what());
         return nullptr;
     }
 
     if (!p_machine->load_binary(0x0100, binary)) // CP/M binaries are ALWAYS loaded at 0x0100
     {
         p_machine.reset();
-        std::cerr << "Failed to load binary" << std::endl;
+        spdlog::error("Failed to load binary");
         return nullptr;
     }
 
@@ -206,8 +217,7 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
 
     p_machine->reset();
 
-    // Call the BDOS initialisation code so that it can set up its data structures before things are started for
-    // real.
+    // Call the BDOS initialisation code so that it can set up its data structures before things are started for real.
     p_machine->setup_bdos();
 
     p_machine->reset();

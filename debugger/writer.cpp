@@ -669,14 +669,14 @@ void Writer::dump(int start, size_t bytes) const
     {
         if ((offset % 16) == 0)
         {
-            m_os << std::format("{:04X}:", base + offset);
+            std::print(m_os, "{:04X}:", base + offset);
         }
         const auto b = m_memory.read_byte(base + offset);
         hex_bytes += std::format(" {:02X}", b);
         ascii_bytes += std::string(1, ((b < 0x20) || (b > 0x7f)) ? '.' : b);
         if (((offset + 1) % 16) == 0)
         {
-            m_os << hex_bytes << ' ' << ascii_bytes << std::endl;
+            std::println(m_os, "{} {}", hex_bytes, ascii_bytes);
             hex_bytes.clear();
             ascii_bytes.clear();
         }
@@ -685,38 +685,39 @@ void Writer::dump(int start, size_t bytes) const
     {
         const auto nbytes = ascii_bytes.length();
         const auto padding = std::string((16 - nbytes) * 3, ' ');
-        m_os << hex_bytes << padding << ' ' << ascii_bytes << std::endl;
+        std::println(m_os, "{}{} {}", hex_bytes, padding, ascii_bytes);
     }
 }
 
 void Writer::display(std::uint16_t address, std::string_view s1, std::string_view s2) const
 {
-    m_os << std::format("{:04X}     {:<5}{}", address, s1, s2) << std::endl;
+    std::println(m_os, "{:04X}     {:<5}{}", address, s1, s2);
 }
 
 void Writer::display(const zcpm::Registers& registers, std::string_view s1, std::string_view s2, const std::uint16_t offset) const
 {
-    m_os << std::format("{} A={:02X} B={:04X} D={:04X} H={:04X} S={:04X} P={:04X}  {:<5}{}",
-                        flags_to_string(registers.AF & 0xFF),
-                        registers.AF >> 8,
-                        registers.BC,
-                        registers.DE,
-                        registers.HL,
-                        registers.SP,
-                        (registers.PC + offset) & 0xFFFF,
-                        s1,
-                        s2);
+    std::println(m_os,
+                 "{} A={:02X} B={:04X} D={:04X} H={:04X} S={:04X} P={:04X}  {:<5}{}",
+                 flags_to_string(registers.AF & 0xFF),
+                 registers.AF >> 8,
+                 registers.BC,
+                 registers.DE,
+                 registers.HL,
+                 registers.SP,
+                 (registers.PC + offset) & 0xFFFF,
+                 s1,
+                 s2);
 
-    m_os << std::endl;
-    m_os << std::format("{} '={:02X} '={:04X} '={:04X} '={:04X} X={:04X} Y={:04X}",
-                        flags_to_string(registers.altAF & 0xFF),
-                        registers.altAF >> 8,
-                        registers.altBC,
-                        registers.altDE,
-                        registers.altHL,
-                        registers.IX,
-                        registers.IY)
-         << std::endl;
+    std::println(m_os);
+    std::println(m_os,
+                 "{} '={:02X} '={:04X} '={:04X} '={:04X} X={:04X} Y={:04X}",
+                 flags_to_string(registers.altAF & 0xFF),
+                 registers.altAF >> 8,
+                 registers.altBC,
+                 registers.altDE,
+                 registers.altHL,
+                 registers.IX,
+                 registers.IY);
 }
 
 std::string Writer::flags_to_string(std::uint8_t f) const

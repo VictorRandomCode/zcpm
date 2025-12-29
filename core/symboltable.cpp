@@ -149,11 +149,11 @@ std::tuple<bool, std::uint16_t> SymbolTable::evaluate_address_expression(std::st
 
 void SymbolTable::dump() const
 {
-    std::cout << m_symbols.size() << " entries in symbol table:" << std::endl;
+    std::println("{} entries in symbol table:", m_symbols.size());
     for (const auto& [key, value] : m_symbols)
     {
         const auto& [ns, name] = value;
-        std::cout << std::format("  {:04X} {}:{}", key, ns, name) << std::endl;
+        std::println("  {:04X} {}:{}", key, ns, name);
     }
 }
 

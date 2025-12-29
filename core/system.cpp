@@ -8,8 +8,6 @@
 
 #include <cstdint>
 #include <cstdio>
-#include <format>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -53,7 +51,7 @@ bool System::load_binary(std::uint16_t base, std::string_view filename)
     std::FILE* fp = std::fopen(filename.data(), "r");
     if (!fp)
     {
-        std::cerr << "Can't open '" << filename << "'" << std::endl;
+        spdlog::error("Can't open '{}'", filename);
         return false;
     }
 
