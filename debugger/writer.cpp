@@ -1,8 +1,7 @@
 #include "writer.hpp"
 
-#include <boost/assert.hpp>
-
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <format>
 #include <ostream>
@@ -602,7 +601,7 @@ std::tuple<size_t, std::string, std::string> disassemble(std::uint8_t op1,
 Writer::Writer(const zcpm::IDebuggable* p_debuggable, zcpm::IMemory& memory, std::ostream& os)
     : m_pdebuggable(p_debuggable), m_memory(memory), m_os(os)
 {
-    BOOST_ASSERT(p_debuggable);
+    assert(p_debuggable);
 }
 
 void Writer::examine() const

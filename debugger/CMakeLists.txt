@@ -23,4 +23,5 @@ target_link_libraries(${LIBNAME}
   terminal
   core
   replxx
+  spdlog::spdlog
 )

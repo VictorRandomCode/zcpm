@@ -2,7 +2,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/log/utility/setup.hpp>
 
 #include <cerrno>
 #include <cstdlib>
@@ -79,7 +78,7 @@ std::unique_ptr<zcpm::DebugAction> parse_and_create_debug_action(zcpm::System* p
                                                                  const std::string& type,
                                                                  const std::string& payload)
 {
-    BOOST_ASSERT(p_machine);
+    assert(p_machine);
 
     const std::regex command_regex("([A-Za-z0-9+-]+)(?:,([0-9A-Fa-f]+))?", std::regex_constants::ECMAScript);
     std::smatch command_match;
@@ -92,7 +91,7 @@ std::unique_ptr<zcpm::DebugAction> parse_and_create_debug_action(zcpm::System* p
 
     // In which case location_string is now "foo1+17a" and count_string is now "32b"
     // (count_string can be empty if no ",blah" has been specified)
-    BOOST_ASSERT(command_match.size() >= 3);
+    assert(command_match.size() >= 3);
     const auto location_string(command_match[1].str());
     const auto count_string(command_match[2].str());
     const auto [ok, a] = p_machine->m_hardware.evaluate_address_expression(location_string);
@@ -168,7 +167,7 @@ replxx::Replxx::completions_t hook_completion(const std::string& input, int& con
         // then use the completed verb as the context for completion of this parameter.
 
         const auto words(parse_words(input));
-        BOOST_ASSERT(words.size() > 1);
+        assert(words.size() > 1);
 
         const auto& verb(words.front());
         const auto& partial(words.back());
@@ -206,7 +205,7 @@ replxx::Replxx::completions_t hook_completion(const std::string& input, int& con
 bool find_and_handle_command(const std::vector<Command>& commands, const std::string& input)
 {
     const auto words = parse_words(input);
-    BOOST_ASSERT(!words.empty());
+    assert(!words.empty());
     const auto& verb = words.front();
 
     for (const auto& command : commands)
@@ -374,7 +373,7 @@ auto run(Writer& writer, zcpm::System* p_machine, zcpm::IDebuggable* p_debuggabl
                  replxx::Replxx::Color::DEFAULT,
                  [&p_debuggable, &p_machine](const TokenVector& input)
                  {
-                     BOOST_ASSERT(input.size() == 3);
+                     assert(input.size() == 3);
                      // Create the breakpoint/passpoint/watchpoint
                      auto action = parse_and_create_debug_action(p_machine, input[1], input[2]);
                      // And remember it if successful
@@ -392,7 +391,7 @@ auto run(Writer& writer, zcpm::System* p_machine, zcpm::IDebuggable* p_debuggabl
                  replxx::Replxx::Color::GREEN,
                  [&p_debuggable, &p_machine, &writer](const TokenVector& input)
                  {
-                     BOOST_ASSERT(input.size() > 1);
+                     assert(input.size() > 1);
                      const auto& noun = input[1];
                      if (noun == "symbols")
                      {

@@ -15,6 +15,7 @@ target_include_directories(${LIBNAME} PUBLIC ${CMAKE_SOURCE_DIR}/..)
 target_link_libraries(${LIBNAME}
   PRIVATE
   ${Boost_LIBRARIES}
-  terminal
   core
+  spdlog::spdlog
+  terminal
 )

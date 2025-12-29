@@ -1,13 +1,13 @@
 #include "vt100.hpp"
 
-#include <boost/log/trivial.hpp>
-
 #include <format>
 #include <iostream>
 #include <ncurses.h>
 #include <optional>
 #include <regex>
 #include <string>
+
+#include <spdlog/spdlog.h>
 
 namespace
 {
@@ -49,7 +49,7 @@ std::optional<ParsedSequence> parse_sequence(const std::string& s)
     // Is all the intervening content digits or semicolons only?
     if (s.find_first_not_of("0123456789;", 3) != len - 1)
     {
-        BOOST_LOG_TRIVIAL(trace) << "Warning: not just a numeric sequence in '" << s << "'";
+        spdlog::info("Warning: not just a numeric sequence in '{}'", s);
         return std::nullopt;
     }
 
@@ -76,7 +76,7 @@ std::optional<ParsedSequence> parse_sequence(const std::string& s)
 // Move cursor left n lines
 void ansi_cub()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES CUB";
+    spdlog::info("CURSES CUB");
     auto x = 0, y = 0;
     getsyx(y, x);
     ::move(y, x - 1);
@@ -85,21 +85,21 @@ void ansi_cub()
 // Move cursor to screen location v,h
 void ansi_cup(int v, int h)
 {
-    BOOST_LOG_TRIVIAL(trace) << std::format("CURSES cup (v={:d} h={:d})", v, h);
+    spdlog::info("CURSES cup (v={:d} h={:d})", v, h);
     ::move(v - 1, h - 1);
 }
 
 // Clear screen from cursor down
 void ansi_ed0()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES ED0";
+    spdlog::info("CURSES ED0");
     ::clrtobot();
 }
 
 // Clear entire screen
 void ansi_ed2()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES ED2";
+    spdlog::info("CURSES ED2");
     // Note that ncurses ::clear() seems to home the cursor which is NOT what we want, so we need to manually work
     // around that
     auto x = 0, y = 0;
@@ -111,14 +111,14 @@ void ansi_ed2()
 // Clear line from cursor right
 void ansi_el0()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES EL0";
+    spdlog::info("CURSES EL0");
     ::clrtoeol();
 }
 
 // Clear entire line
 void ansi_el2()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES EL2";
+    spdlog::info("CURSES EL2");
     // There is no direct ncurses equivalent, so we need to do this in a few steps
     auto x = 0, y = 0;
     getsyx(y, x);
@@ -130,42 +130,42 @@ void ansi_el2()
 // Turn off character attributes
 void ansi_sgr0()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR0";
+    spdlog::info("CURSES SGR0");
     ::attrset(A_NORMAL);
 }
 
 // Turn bold mode on
 void ansi_sgr1()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR1";
+    spdlog::info("CURSES SGR1");
     ::attron(A_BOLD);
 }
 
 // Turn blinking mode on
 void ansi_sgr5()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR5";
+    spdlog::info("CURSES SGR5");
     ::attron(A_BLINK);
 }
 
 // Turn reverse video on
 void ansi_sgr7()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES SGR7";
+    spdlog::info("CURSES SGR7");
     ::attron(A_REVERSE);
 }
 
 // Set alternate keypad mode
 void ansi_deckpam()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES DECKPAM";
+    spdlog::info("CURSES DECKPAM");
     // Not implemented
 }
 
 // Enter/exit ANSI mode (VT52)
 void ansi_setansi()
 {
-    BOOST_LOG_TRIVIAL(trace) << "CURSES setansi";
+    spdlog::info("CURSES setansi");
     // Not implemented
 }
 
@@ -242,7 +242,7 @@ void Vt100::outch(char ch)
         // the maintainer via the log file and drop the unhandled one.
         if (ch == '\033') // ESC
         {
-            BOOST_LOG_TRIVIAL(trace) << "Warning: unimplemented escape sequence <ESC>" << m_pending.substr(1) << " dropped";
+            spdlog::info("Warning: unimplemented escape sequence <ESC>{} dropped", m_pending.substr(1));
             m_pending.erase();
         }
         else
@@ -331,12 +331,12 @@ void Vt100::process_pending()
             }
             else if (values.empty())
             {
-                BOOST_LOG_TRIVIAL(trace) << "CURSES cursorhome";
+                spdlog::info("CURSES cursorhome");
                 ::move(0, 0);
             }
             else
             {
-                BOOST_LOG_TRIVIAL(trace) << "Warning: 'H' has " << values.size();
+                spdlog::info("Warning: 'H' has {}", values.size());
             }
         }
         break;
@@ -351,13 +351,13 @@ void Vt100::process_pending()
             {
                 if (values.size() > 1)
                 {
-                    BOOST_LOG_TRIVIAL(trace) << "Warning: Unexpected value count";
+                    spdlog::info("Warning: Unexpected value count");
                 }
                 switch (values[0])
                 {
                 case 0: ansi_ed0(); break;
                 case 2: ansi_ed2(); break;
-                default: BOOST_LOG_TRIVIAL(trace) << "Warning: n=" << values[0] << " unhandled for EDn";
+                default: spdlog::info("Warning: n={} unhandled for EDn", values[0]);
                 }
             }
         }
@@ -373,30 +373,30 @@ void Vt100::process_pending()
             {
                 if (values.size() > 1)
                 {
-                    BOOST_LOG_TRIVIAL(trace) << "Warning: Unexpected value count";
+                    spdlog::info("Warning: Unexpected value count");
                 }
                 switch (values[0])
                 {
                 case 0: ansi_el0(); break;
                 case 2: ansi_el2(); break;
-                default: BOOST_LOG_TRIVIAL(trace) << "Warning: n=" << values[0] << " unhandled for ELn";
+                default: spdlog::info("Warning: n={} unhandled for ELn", values[0]);
                 }
             }
         }
         break;
 
         case 'L': // WS.COM uses this; seems to be insert line
-            BOOST_LOG_TRIVIAL(trace) << "CURSES INSERTLINE";
+            spdlog::info("CURSES INSERTLINE");
             ::insertln();
             break;
 
         case 'M': // WS.COM uses this; seems to be delete line
-            BOOST_LOG_TRIVIAL(trace) << "CURSES DELETELINE";
+            spdlog::info("CURSES DELETELINE");
             ::deleteln();
             break;
 
         case 'f':
-            BOOST_LOG_TRIVIAL(trace) << "CURSES TODO2";
+            spdlog::info("CURSES TODO2");
             // TODO (Move cursor to screen location); same as H???
             break;
 
@@ -416,7 +416,7 @@ void Vt100::process_pending()
                     case 1: ansi_sgr1(); break;
                     case 5: ansi_sgr5(); break;
                     case 7: ansi_sgr7(); break;
-                    default: BOOST_LOG_TRIVIAL(trace) << "Warning: n=" << value << " unhandled for SGRn";
+                    default: spdlog::info("Warning: n={} unhandled for SGRn", value);
                     }
                 }
             }
@@ -424,11 +424,11 @@ void Vt100::process_pending()
         break;
 
         case 'r':
-            BOOST_LOG_TRIVIAL(trace) << "CURSES TODO1";
+            spdlog::info("CURSES TODO1");
             // TODO (Set top and bottom lines of a window)
             break;
 
-        default: BOOST_LOG_TRIVIAL(trace) << "Warning: Unimplemented escape sequence, TODO!"; break;
+        default: spdlog::info("Warning: Unimplemented escape sequence, TODO!"); break;
         }
         m_pending.erase(0, num_parsed);
     }

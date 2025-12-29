@@ -1,11 +1,6 @@
 set(LIBNAME core)
 
-find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS log REQUIRED)
-
-# Needs pthread to support boost::log
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
+find_package(Boost ${BOOST_VERSION} CONFIG REQUIRED)
 
 add_library(${LIBNAME}
   bdos.cpp
@@ -44,6 +39,6 @@ target_link_libraries(${LIBNAME}
   PUBLIC
   ${Boost_LIBRARIES}
   PRIVATE
-  Threads::Threads
+  spdlog::spdlog
   terminal
 )

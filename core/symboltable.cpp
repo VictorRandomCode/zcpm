@@ -1,7 +1,6 @@
 #include "symboltable.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
 
 #include <cstdlib>
 #include <format>
@@ -10,6 +9,8 @@
 #include <regex>
 #include <stdexcept>
 #include <string>
+
+#include <spdlog/spdlog.h>
 
 namespace zcpm
 {
@@ -90,7 +91,7 @@ std::tuple<bool, std::uint16_t> SymbolTable::evaluate_address_expression(std::st
     std::string const ss(s);
     if (!std::regex_search(ss, expression_match, expression_regex))
     {
-        BOOST_LOG_TRIVIAL(trace) << "Can't parse '" << s << "' (1)";
+        spdlog::info("Can't parse '{}' (1)", s);
         return { false, 0 };
     }
 
@@ -99,7 +100,7 @@ std::tuple<bool, std::uint16_t> SymbolTable::evaluate_address_expression(std::st
     const auto [base_ok, base] = evaluate_symbol(base_string);
     if (!base_ok)
     {
-        BOOST_LOG_TRIVIAL(trace) << "Can't parse base in '" << s << "'";
+        spdlog::info("Can't parse base in '{}'", s);
         return { false, 0 };
     }
 
@@ -110,7 +111,7 @@ std::tuple<bool, std::uint16_t> SymbolTable::evaluate_address_expression(std::st
     // Do we have an operator & offset? (these are optional)
     if ((opr.empty() && !offset_string.empty()) || (!opr.empty() && offset_string.empty()))
     {
-        BOOST_LOG_TRIVIAL(trace) << "Can't parse '" << s << "' (2)";
+        spdlog::info("Can't parse '{}' (2)", s);
         return { false, 0 };
     }
 
@@ -126,7 +127,7 @@ std::tuple<bool, std::uint16_t> SymbolTable::evaluate_address_expression(std::st
     const auto [offset_ok, offset] = evaluate_symbol(offset_string);
     if (!offset_ok)
     {
-        BOOST_LOG_TRIVIAL(trace) << "Can't parse offset in '" << s << "'";
+        spdlog::info("Can't parse offset in '{}'", s);
         return { false, 0 };
     }
 
@@ -141,7 +142,7 @@ std::tuple<bool, std::uint16_t> SymbolTable::evaluate_address_expression(std::st
     }
     else
     {
-        BOOST_LOG_TRIVIAL(trace) << "Unknown operator in '" << s << "'";
+        spdlog::info("Unknown operator in '{}'", s);
         return { false, 0 };
     }
 }

@@ -5,16 +5,14 @@
 #include "processor.hpp"
 #include "registers.hpp"
 
-#include <boost/log/trivial.hpp>
-
 #include <cstring>
 #include <format>
-#include <iostream>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
+#include <spdlog/spdlog.h>
 #include <zcpm/terminal/terminal.hpp>
 
 namespace zcpm
@@ -120,8 +118,8 @@ bool Hardware::check_and_handle_bdos_and_bios(std::uint16_t address) const
             const auto [bdos_name, description] = bdos::describe_call(registers, *this);
 
             // Log the information
-            BOOST_LOG_TRIVIAL(trace) << "BDOS: " << bdos_name << format_stack_info();
-            BOOST_LOG_TRIVIAL(trace) << "BDOS: " << description;
+            spdlog::info("BDOS: {}{}", bdos_name, format_stack_info());
+            spdlog::info("BDOS: {}", description);
         }
 
         return false; // BIOS was not intercepted
@@ -252,7 +250,7 @@ std::uint8_t Hardware::input_byte(int port)
         }
         catch (const std::exception& e)
         {
-            BOOST_LOG_TRIVIAL(trace) << "Exception in user input handler: " << e.what();
+            spdlog::info("Exception in user input handler: {}", e.what());
             return 0;
         }
     }
@@ -272,7 +270,7 @@ void Hardware::output_byte(int port, std::uint8_t x)
         }
         catch (const std::exception& e)
         {
-            BOOST_LOG_TRIVIAL(trace) << "Exception in user output handler: " << e.what();
+            spdlog::info("Exception in user output handler: {}", e.what());
         }
     }
 }
@@ -328,7 +326,7 @@ void Hardware::dump(std::uint16_t base, size_t count) const
 
         if (bytes_this_line == bytes_per_line)
         {
-            BOOST_LOG_TRIVIAL(trace) << buf_address << buf_hex << ' ' << buf_ascii;
+            spdlog::info("{}{}", buf_address, buf_hex);
             buf_address.clear();
             buf_hex.clear();
             buf_ascii.clear();
@@ -337,7 +335,7 @@ void Hardware::dump(std::uint16_t base, size_t count) const
     }
     if (!buf_address.empty() && !buf_hex.empty())
     {
-        BOOST_LOG_TRIVIAL(trace) << buf_address << buf_hex << ' ' << buf_ascii;
+        spdlog::info("{}{} {}", buf_address, buf_hex, buf_ascii);
     }
 }
 
@@ -345,7 +343,7 @@ void Hardware::check_memory_accesses(bool protect)
 {
     if (m_config.memcheck && (m_check_memory_accesses != protect))
     {
-        BOOST_LOG_TRIVIAL(trace) << (protect ? "Enabling" : "Disabling") << " memory access checks";
+        spdlog::info("{} memory access checks", protect ? "Enabling" : "Disabling");
         m_check_memory_accesses = protect;
     }
 }
@@ -425,13 +423,11 @@ void Hardware::check_watched_memory_byte(std::uint16_t address, Access mode, std
 
     if ((mode == Access::READ) && (m_watch_read.count(address)))
     {
-        BOOST_LOG_TRIVIAL(trace) << std::format(
-            "    {:02X} <- {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
+        spdlog::info("    {:02X} <- {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
     }
     if ((mode == Access::WRITE) && (m_watch_write.count(address)))
     {
-        BOOST_LOG_TRIVIAL(trace) << std::format(
-            "    {:02X} -> {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
+        spdlog::info("    {:02X} -> {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
         if (is_fatal_write(address))
         {
             throw std::runtime_error("Aborting: illegal memory write");
@@ -439,7 +435,7 @@ void Hardware::check_watched_memory_byte(std::uint16_t address, Access mode, std
     }
     if ((mode == Access::WRITE) && m_pbios && (m_pbios->is_bios(address)))
     {
-        BOOST_LOG_TRIVIAL(trace) << "BIOS write to " << describe_address(address) << " at PC=" << describe_address(m_processor->get_pc());
+        spdlog::info("BIOS write to {} at PC={}", describe_address(address), describe_address(m_processor->get_pc()));
         throw std::runtime_error("BIOS tampering!");
     }
 }
@@ -456,13 +452,11 @@ void Hardware::check_watched_memory_word(std::uint16_t address, Access mode, std
 
     if ((mode == Access::READ) && (m_watch_read.count(address + 0) || m_watch_read.count(address + 1)))
     {
-        BOOST_LOG_TRIVIAL(trace) << std::format(
-            "  {:04X} <- {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
+        spdlog::info("  {:04X} <- {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
     }
     if ((mode == Access::WRITE) && (m_watch_write.count(address) || m_watch_write.count(address + 1)))
     {
-        BOOST_LOG_TRIVIAL(trace) << std::format(
-            "  {:04X} -> {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
+        spdlog::info("  {:04X} -> {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
         if (is_fatal_write(address))
         {
             // Detected an attempt to clobber very low addresses.
@@ -471,7 +465,7 @@ void Hardware::check_watched_memory_word(std::uint16_t address, Access mode, std
     }
     if ((mode == Access::WRITE) && m_pbios && (m_pbios->is_bios(address + 0) || m_pbios->is_bios(address + 1)))
     {
-        BOOST_LOG_TRIVIAL(trace) << "BIOS write to " << describe_address(address) << " at PC=" << describe_address(m_processor->get_pc());
+        spdlog::info("BIOS write to {} at PC={}", describe_address(address), describe_address(m_processor->get_pc()));
         throw std::runtime_error("BIOS tampering!");
     }
 }

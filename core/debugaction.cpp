@@ -1,13 +1,14 @@
 #include "debugaction.hpp"
 
-#include <boost/log/trivial.hpp>
-
+#include <cassert>
 #include <cstdlib>
 #include <format>
 #include <iostream>
 #include <memory>
 #include <ostream>
 #include <utility>
+
+#include <spdlog/spdlog.h>
 
 namespace zcpm
 {
@@ -21,9 +22,9 @@ std::unique_ptr<DebugAction> DebugAction::create(Type type, std::uint16_t addres
 
     switch (type)
     {
-    case Type::BREAKPOINT: BOOST_ASSERT(count.empty()); return std::make_unique<Breakpoint>(address, location);
-    case Type::PASSPOINT: BOOST_ASSERT(!count.empty()); return std::make_unique<PassPoint>(address, location, count_value);
-    case Type::WATCHPOINT: BOOST_ASSERT(count.empty()); return std::make_unique<Watchpoint>(address, location);
+    case Type::BREAKPOINT: assert(count.empty()); return std::make_unique<Breakpoint>(address, location);
+    case Type::PASSPOINT: assert(!count.empty()); return std::make_unique<PassPoint>(address, location, count_value);
+    case Type::WATCHPOINT: assert(count.empty()); return std::make_unique<Watchpoint>(address, location);
     default: return nullptr; // To keep gcc happy
     }
 }
@@ -51,8 +52,8 @@ bool Breakpoint::evaluate(std::uint16_t address) const
 {
     if (m_address == address)
     {
-        BOOST_LOG_TRIVIAL(trace) << std::format("{}: Breakpoint at {:04X}", FACILITY, address);
-        std::cout << std::format("{}: Breakpoint at {:04X}", FACILITY, address) << std::endl;
+        spdlog::info("{}: Breakpoint at {:04X}", FACILITY, address);
+        std::println("{}: Breakpoint at {:04X}", FACILITY, address);
         return false;
     }
     return true;
@@ -72,7 +73,7 @@ bool Watchpoint::evaluate(std::uint16_t address) const
     if (m_address == address)
     {
         const auto message = std::format("{}: Watchpoint at {:04X}", FACILITY, address);
-        BOOST_LOG_TRIVIAL(trace) << message;
+        spdlog::info("{}", message);
         std::cout << message << std::endl;
     }
     return true; // Allow the debugger to keep running
@@ -96,11 +97,11 @@ bool PassPoint::evaluate(std::uint16_t address) const
         if ((m_remaining == 0) || (--m_remaining == 0))
         {
             const auto message = std::format("{}: Passpoint at {:04X} expired, stopping", FACILITY, address);
-            BOOST_LOG_TRIVIAL(trace) << message;
+            spdlog::info("{}", message);
             std::cout << message << std::endl;
             return false;
         }
-        BOOST_LOG_TRIVIAL(trace) << std::format("{}: Passpoint at {:04X} not yet expired", FACILITY, address);
+        spdlog::info("{}: Passpoint at {:04X} not yet expired", FACILITY, address);
     }
 
     // Carry on, don't stop the debugger

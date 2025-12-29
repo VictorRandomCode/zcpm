@@ -1,11 +1,11 @@
 #include "televideo.hpp"
 
-#include <boost/log/trivial.hpp>
-
-#include <format>
+#include <cassert>
 #include <iostream>
 #include <ncurses.h>
 #include <string>
+
+#include <spdlog/spdlog.h>
 
 namespace
 {
@@ -94,8 +94,7 @@ void Televideo::outch(char ch)
         // the maintainer via the log file and drop the unhandled one.
         if (ch == '\033') // ESC
         {
-            BOOST_LOG_TRIVIAL(trace) << "Warning: unimplemented escape sequence '<ESC>" << m_pending.substr(1) << "' (" << m_pending.size()
-                                     << " chars) dropped";
+            spdlog::info("Warning: unimplemented escape sequence '<ESC>{}' ({} chars) dropped", m_pending.substr(1), m_pending.size());
             m_pending.erase();
         }
         else
@@ -161,7 +160,7 @@ void Televideo::outch(char ch)
     }
     else if (ch == '\032') // Control-Z
     {
-        BOOST_LOG_TRIVIAL(trace) << "CURSES clear all";
+        spdlog::info("CURSES clear all");
         ::clear();         // Note that this also homes the cursor
         ::attrset(A_BOLD); // Televideo uses half/full intensity, default is full
     }
@@ -177,7 +176,7 @@ void Televideo::outch(char ch)
     {
         if ((ch < ' ') || (ch > '~'))
         {
-            BOOST_LOG_TRIVIAL(trace) << std::format("Warning: unhandled CURSES {:02X}", ch);
+            spdlog::info("Warning: unhandled CURSES {:02X}", ch);
         }
 
         // Make sure that a 7F is displayed as a space, for compatibility with our reference system
@@ -213,8 +212,8 @@ void Televideo::process_pending()
     // commands. Sequences are added only as needed, not all of them upfront.
 
     // Sanity checks
-    BOOST_ASSERT(m_pending.size() > 1);
-    BOOST_ASSERT(m_pending[0] == '\033');
+    assert(m_pending.size() > 1);
+    assert(m_pending[0] == '\033');
 
     const auto& first = m_pending[1]; // First pending character *after* the ESC
 
@@ -222,7 +221,7 @@ void Televideo::process_pending()
     {
         // Refer Televideo doc at 4.9.2.4; zcpm treats all 4 flavours the same, although in theory there should be
         // subtle differences with the way that spaces/nulls/protected fields are handled.
-        BOOST_LOG_TRIVIAL(trace) << "CURSES clear all";
+        spdlog::info("CURSES clear all");
         ::clear();         // Note that this also homes the cursor
         ::attrset(A_BOLD); // Televideo uses half/full intensity, default is full
         m_pending.erase();
@@ -230,14 +229,14 @@ void Televideo::process_pending()
     }
     if (first == 'T')
     {
-        BOOST_LOG_TRIVIAL(trace) << "CURSES erase EOL with spaces";
+        spdlog::info("CURSES erase EOL with spaces");
         ::clrtoeol();
         m_pending.erase();
         return;
     }
     if (first == 'R')
     {
-        BOOST_LOG_TRIVIAL(trace) << "CURSES line delete";
+        spdlog::info("CURSES line delete");
         ::deleteln();
         m_pending.erase();
         return;
@@ -247,7 +246,7 @@ void Televideo::process_pending()
         // According to 4.9.2.3 in the Televideo reference, this "inserts a line consisting of fill characters at
         // the cursor position. This causes the cursor to move to the start of the new line and all following lines
         // to move down one line"
-        BOOST_LOG_TRIVIAL(trace) << "CURSES line insert";
+        spdlog::info("CURSES line insert");
         ::insertln();
         move_to_column(0);
         m_pending.erase();
@@ -258,9 +257,9 @@ void Televideo::process_pending()
         // According to 4.5.1 in the Televideo reference, the row/col pair are offset by +31
         auto row = static_cast<int>(m_pending[2]);
         auto col = static_cast<int>(m_pending[3]);
-        BOOST_ASSERT(row > 31);
-        BOOST_ASSERT(col > 31);
-        BOOST_LOG_TRIVIAL(trace) << std::format("CURSES address (row={:d} col={:d})", row - 31, col - 31);
+        assert(row > 31);
+        assert(col > 31);
+        spdlog::info("CURSES address (row={:d} col={:d})", row - 31, col - 31);
         ::move(row - 32, col - 32);
         m_pending.erase();
         return;
@@ -268,7 +267,7 @@ void Televideo::process_pending()
     if (first == '(')
     {
         // Half intensity off (which zcpm interprets as 'bold on')
-        BOOST_LOG_TRIVIAL(trace) << "CURSES half intensity off";
+        spdlog::info("CURSES half intensity off");
         m_pending.erase();
         ::attron(A_BOLD);
         return;
@@ -276,7 +275,7 @@ void Televideo::process_pending()
     if (first == ')')
     {
         // Half intensity on (which zcpm interprets as 'bold off')
-        BOOST_LOG_TRIVIAL(trace) << "CURSES half intensity on";
+        spdlog::info("CURSES half intensity on");
         m_pending.erase();
         ::attroff(A_BOLD);
         return;
@@ -284,21 +283,21 @@ void Televideo::process_pending()
     if (first == '>')
     {
         // Keyclick on [NOT IMPLEMENTED]
-        BOOST_LOG_TRIVIAL(trace) << "CURSES keyclick on";
+        spdlog::info("CURSES keyclick on");
         m_pending.erase();
         return;
     }
     if (first == '<')
     {
         // Keyclick off [NOT IMPLEMENTED]
-        BOOST_LOG_TRIVIAL(trace) << "CURSES keyclick off";
+        spdlog::info("CURSES keyclick off");
         m_pending.erase();
         return;
     }
     if ((first == 'j') || (m_pending == "\x1BG4"))
     {
         // End of reverse video
-        BOOST_LOG_TRIVIAL(trace) << "CURSES reverse video";
+        spdlog::info("CURSES reverse video");
         m_pending.erase();
         ::attron(A_REVERSE);
         return;
@@ -306,7 +305,7 @@ void Televideo::process_pending()
     if ((first == 'k') || (m_pending == "\x1BG0"))
     {
         // End of reverse video
-        BOOST_LOG_TRIVIAL(trace) << "CURSES reverse video end";
+        spdlog::info("CURSES reverse video end");
         m_pending.erase();
         ::attroff(A_REVERSE);
         return;

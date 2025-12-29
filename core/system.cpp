@@ -5,7 +5,6 @@
 #include "processor.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
 
 #include <cstdint>
 #include <cstdio>
@@ -15,6 +14,7 @@
 #include <string>
 #include <vector>
 
+#include <spdlog/spdlog.h>
 #include <zcpm/terminal/terminal.hpp>
 
 namespace zcpm
@@ -42,7 +42,7 @@ void System::setup_bdos()
 
     // Call BDOS:RSTDSK so that disk data structures are initialised
     const auto rstdsk = 13;
-    BOOST_LOG_TRIVIAL(trace) << "Directly calling BDOS fn#" << rstdsk;
+    spdlog::info("Directly calling BDOS fn#{}", rstdsk);
     m_hardware.call_bdos(rstdsk);
 
     m_hardware.check_memory_accesses(true);
@@ -61,7 +61,7 @@ bool System::load_binary(std::uint16_t base, std::string_view filename)
     const auto filesize = std::ftell(fp);
     std::fseek(fp, 0, SEEK_SET);
 
-    BOOST_LOG_TRIVIAL(trace) << std::format("Reading {:d} bytes into memory at {:04X} from {}", filesize, base, filename);
+    spdlog::info("Reading {:d} bytes into memory at {:04X} from {}", filesize, base, filename);
 
     // Ideally we'd fread() directly into the memory buffer, but to do that means having more coupling
     // than is safe, so instead a temporary buffer is used here, which increases the peak RAM of this
@@ -147,7 +147,7 @@ void System::step(size_t instruction_count)
 void System::run()
 {
     m_hardware.set_finished(false);
-    BOOST_LOG_TRIVIAL(trace) << "Starting execution of user code";
+    spdlog::info("Starting execution of user code");
     m_hardware.m_processor->emulate();
 }
 

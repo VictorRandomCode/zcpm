@@ -1,12 +1,13 @@
 #include "keymap.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
 
 #include <fstream>
 #include <ncurses.h>
 #include <optional>
 #include <string>
+
+#include <spdlog/spdlog.h>
 
 namespace zcpm
 {
@@ -99,7 +100,7 @@ std::list<char> Keymap::translate(int key) const
     if (key >= KEY_MIN)
     {
         // The key is one that should be mapped but isn't.
-        BOOST_LOG_TRIVIAL(trace) << "Warning: unmapped curses key #" << key;
+        spdlog::info("Warning: unmapped curses key #{}", key);
     }
 
     // Return just the key, so it is in effect an unmapped sequence

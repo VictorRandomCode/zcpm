@@ -1,6 +1,6 @@
 set(LIBNAME terminal)
 
-find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS log REQUIRED)
+find_package(Boost ${BOOST_VERSION} CONFIG REQUIRED)
 
 # Needs pthread to support boost::log
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
@@ -37,4 +37,5 @@ target_link_libraries(${LIBNAME}
   ${Boost_LIBRARIES}
   PRIVATE
   ncurses
+  spdlog::spdlog
 )

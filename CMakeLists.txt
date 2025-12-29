@@ -36,6 +36,15 @@ else()
   message(STATUS "IPO/LTO not supported")
 endif()
 
+# spdlog is used for logging
+FetchContent_Declare(spdlog
+  SYSTEM
+  GIT_REPOSITORY https://github.com/gabime/spdlog.git
+  GIT_TAG v1.16.0
+  GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(spdlog)
+
 include(functions.cmake)
 
 add_subdirectory(builder)

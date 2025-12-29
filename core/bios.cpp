@@ -4,13 +4,12 @@
 #include "hardware.hpp"
 #include "processor.hpp"
 
-#include <boost/log/trivial.hpp>
-
 #include <cstdint>
 #include <format>
 #include <stdexcept>
 #include <string>
 
+#include <spdlog/spdlog.h>
 #include <zcpm/terminal/terminal.hpp>
 
 // The constructor sets up various tables in RAM for the BIOS. This is the layout (from low address to high):
@@ -50,7 +49,7 @@ Bios::Bios(Hardware* p_hardware, terminal::Terminal* p_terminal) : m_phardware(p
     // maybe stack should be elsewhere?
     m_stubs_base = base + 0x0100;
 
-    BOOST_LOG_TRIVIAL(trace) << std::format("Rewriting BIOS jump table at {:04X}", base);
+    spdlog::info("Rewriting BIOS jump table at {:04X}", base);
 
     // Write our own jump table over the top of whatever is there currently, making it point to another
     // one ("stubs") higher in memory, and that's the one that is intercepted (which should reduce the
@@ -121,15 +120,15 @@ Bios::Bios(Hardware* p_hardware, terminal::Terminal* p_terminal) : m_phardware(p
         m_phardware->write_byte(i, 0x00);
     }
 
-    BOOST_LOG_TRIVIAL(trace) << std::format("BIOS jump table {:04X}..{:04X}, BIOS stubs {:04X}..{:04X}, DPH etc {:04X}..{:04X}",
-                                            m_discovered_base,
-                                            m_discovered_base + table_size * 3 - 1,
-                                            m_stubs_base,
-                                            m_stubs_top,
-                                            m_dph_base,
-                                            m_dph_top);
+    spdlog::info("BIOS jump table {:04X}..{:04X}, BIOS stubs {:04X}..{:04X}, DPH etc {:04X}..{:04X}",
+                 m_discovered_base,
+                 m_discovered_base + table_size * 3 - 1,
+                 m_stubs_base,
+                 m_stubs_top,
+                 m_dph_base,
+                 m_dph_top);
 
-    BOOST_LOG_TRIVIAL(trace) << std::format("     dirbf={:04X} hdblk={:04X} chkhd1={:04X} allhd1={:04X}", dirbf, hdblk, chkhd1, allhd1);
+    spdlog::info("     dirbf={:04X} hdblk={:04X} chkhd1={:04X} allhd1={:04X}", dirbf, hdblk, chkhd1, allhd1);
 
     // Set up monitoring of the DPH etc stuff
     m_phardware->add_watch_read(m_dph_base, m_dph_top - m_dph_base + 1);
@@ -197,7 +196,7 @@ bool Bios::check_and_handle(std::uint16_t address)
     break;
     case 3:
     {
-        BOOST_LOG_TRIVIAL(trace) << prefix << "CONIN()";
+        spdlog::info("{}CONIN()", prefix);
         // Block until a character is ready, and then return it in A
         m_phardware->m_processor->reg_a() = m_pterminal->get_char();
         const auto ch = m_phardware->m_processor->get_a();
@@ -361,7 +360,7 @@ std::uint8_t Bios::fn_read()
     // See http://www.seasip.info/Cpm/bios.html#read
     // Read the sector at m_track/m_sector into m_dma, return success status (which ends up in register A)
 
-    BOOST_LOG_TRIVIAL(trace) << std::format("Read TRACK:{:04X},SECTOR:{:04X} into {:04X}", m_track, m_sector, m_dma);
+    spdlog::info("Read TRACK:{:04X},SECTOR:{:04X} into {:04X}", m_track, m_sector, m_dma);
 
     // Allocate a sector-size chunk of memory, into which data is read
     Disk::SectorData buffer{};
@@ -378,7 +377,7 @@ std::uint8_t Bios::fn_write(std::uint8_t /*deblocking*/)
     // See http://www.seasip.info/Cpm/bios.html#write
     // Write from m_dma to the sector at m_track/m_sector, return success status (which ends up in register A)
 
-    BOOST_LOG_TRIVIAL(trace) << std::format("Write TRACK:{:04X},SECTOR:{:04X} from {:04X}", m_track, m_sector, m_dma);
+    spdlog::info("Write TRACK:{:04X},SECTOR:{:04X} from {:04X}", m_track, m_sector, m_dma);
 
     // To help with debugging
     m_phardware->dump(m_dma, Disk::SectorSize);
@@ -406,7 +405,7 @@ std::uint16_t Bios::fn_sectran(std::uint16_t logical_sector_number, std::uint16_
 
 void Bios::log_bios_call(std::string_view prefix, std::string_view message) const
 {
-    BOOST_LOG_TRIVIAL(trace) << "  " << prefix << message << m_phardware->format_stack_info();
+    spdlog::info("  {}{}{}", prefix, message, m_phardware->format_stack_info());
 }
 
 } // namespace zcpm

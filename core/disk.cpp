@@ -1,18 +1,18 @@
 #include "disk.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/log/trivial.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <cstdio>
 #include <filesystem>
-#include <format>
 #include <iostream>
 #include <map>
 #include <string>
 #include <system_error>
+
+#include <spdlog/spdlog.h>
 
 namespace
 {
@@ -109,9 +109,15 @@ public:
         {
             blocks << ' ' << b;
         }
-        BOOST_LOG_TRIVIAL(trace) << "  '" << m_raw_name << "' '" << m_name << "' Size=" << m_size << " Sectors=" << m_sectors
-                                 << " Extent=" << m_extent << " FirstBlock=" << m_first_block << " [" << blocks.str()
-                                 << " ] Exists:" << (m_exists ? 'Y' : 'N');
+        spdlog::info(" '{}' '{}' Size={} Sectors={} Extent={} FirstBlock={} [{}] Exists:{}",
+                     m_raw_name,
+                     m_name,
+                     m_size,
+                     m_sectors,
+                     m_extent,
+                     m_first_block,
+                     blocks.str(),
+                     m_exists ? 'Y' : 'N');
     }
 
     std::string m_raw_name;              // e.g. "file.txt"
@@ -265,7 +271,7 @@ public:
             }
         }
 
-        BOOST_LOG_TRIVIAL(trace) << m_entries.size() << " directory entries:";
+        spdlog::info("{} directory entries:", m_entries.size());
         for (const auto& e : m_entries)
         {
             e.show();
@@ -310,7 +316,7 @@ public:
                         std::fseek(fp, chunk * SectorSize, SEEK_SET);
                         std::fread(buffer.data(), 01, buffer.size(), fp);
                         std::fclose(fp);
-                        BOOST_LOG_TRIVIAL(trace) << "Reading chunk #" << chunk << " from " << f.m_raw_name;
+                        spdlog::info("Reading chunk #{} from {}", chunk, f.m_raw_name);
                     }
                     else
                     {
@@ -321,7 +327,7 @@ public:
             }
         }
 
-        BOOST_LOG_TRIVIAL(trace) << "WARNING: Can't find file for this sector";
+        spdlog::warn("Can't find file for this sector");
     }
 
     void write_disk_data(const SectorData& buffer, std::uint16_t track, std::uint16_t sector)
@@ -411,7 +417,7 @@ public:
             Entry pending(buffer.data() + i * EntrySize);
             if (pending.m_exists)
             {
-                BOOST_LOG_TRIVIAL(trace) << "Considering pending entry:";
+                spdlog::info("Considering pending entry:");
                 pending.show();
 
                 // Walk through m_entries to work out what action is required for this item, if any
@@ -420,12 +426,12 @@ public:
                 {
                     if ((e.m_name == pending.m_name) && (e.m_extent == pending.m_extent) && (e.m_blocks == pending.m_blocks))
                     {
-                        BOOST_LOG_TRIVIAL(trace) << "  (no action required)";
+                        spdlog::info("  (no action required)");
                         found = true;
                     }
                     else if ((e.m_name == pending.m_name) && (e.m_extent == pending.m_extent) && (e.m_blocks != pending.m_blocks))
                     {
-                        BOOST_LOG_TRIVIAL(trace) << "  (content modification)";
+                        spdlog::info("  (content modification)");
                         // NOTE: The following is a best-effort, there may be some tweaks needed here
                         e.m_sectors = pending.m_sectors;
                         e.m_blocks = pending.m_blocks;
@@ -437,7 +443,7 @@ public:
                     else if (e.m_exists && (e.m_name != pending.m_name) && (e.m_extent == pending.m_extent) &&
                              (e.m_blocks == pending.m_blocks) && !pending.m_blocks.empty())
                     {
-                        BOOST_LOG_TRIVIAL(trace) << "  (rename of '" << e.m_raw_name << "' to '" << pending.m_raw_name << "')";
+                        spdlog::info("  (rename of '{}' to '{}')", e.m_raw_name, pending.m_raw_name);
                         e.m_name = pending.m_name;
                         e.m_raw_name = pending.m_raw_name;
                         e.m_modified = true;
@@ -451,7 +457,7 @@ public:
 
                 if (!found)
                 {
-                    BOOST_LOG_TRIVIAL(trace) << "  (file creation)";
+                    spdlog::info("  (file creation)");
                     // Add this newly-created entry to our overall collection.
                     m_entries.push_back(pending);
                 }
@@ -466,7 +472,7 @@ public:
                     if ((e.m_name == pending.m_name) && e.m_exists && !pending.m_exists && (e.m_extent == pending.m_extent) &&
                         (e.m_blocks == pending.m_blocks))
                     {
-                        BOOST_LOG_TRIVIAL(trace) << "  (deletion):";
+                        spdlog::info("  (deletion):");
                         pending.show();
                         e.m_exists = false;
                         e.m_modified = true;
@@ -495,7 +501,7 @@ public:
         {
             if (e.m_modified)
             {
-                BOOST_LOG_TRIVIAL(trace) << "Flush '" << e.m_raw_name << "' to host filesystem:";
+                spdlog::info("Flush '{}' to host filesystem:", e.m_raw_name);
                 e.show();
                 if (e.m_exists)
                 {
@@ -505,11 +511,11 @@ public:
                         for (const auto& b : e.m_blocks)
                         {
                             const auto sectors_this_block = std::min<std::uint16_t>(SectorsPerBlock, sectors_remaining);
-                            BOOST_LOG_TRIVIAL(trace) << "Writing " << sectors_this_block << " sector from block #" << b;
+                            spdlog::info("Writing {} sectors from block #{}", sectors_this_block, b);
                             for (auto i = 0; i < sectors_this_block; i++)
                             {
                                 const auto [track, sector] = find_location_within_block(b, i);
-                                BOOST_LOG_TRIVIAL(trace) << std::format("  Using data from TRACK:{:04X} SECTOR:{:04X}", track, sector);
+                                spdlog::info("  Using data from TRACK:{:04X} SECTOR:{:04X}", track, sector);
                                 const auto it = m_sector_cache.find({ track, sector });
                                 if (it != m_sector_cache.end())
                                 {
@@ -517,13 +523,13 @@ public:
                                     it->second.get_data(data);
                                     if (std::fwrite(data.data(), sizeof(SectorData::value_type), data.size(), fp) < data.size())
                                     {
-                                        BOOST_LOG_TRIVIAL(trace) << "TODO: File write error handling";
+                                        spdlog::info("TODO: File write error handling");
                                     }
                                     it->second.m_dirty = false; // No longer 'dirty' in the cache because it has now been flushed
                                 }
                                 else
                                 {
-                                    BOOST_LOG_TRIVIAL(trace) << "TODO: file data not in cache, now what?";
+                                    spdlog::info("TODO: file data not in cache, now what?");
                                 }
                             }
                         }
@@ -544,11 +550,11 @@ public:
 
                     if (has_existing_version)
                     {
-                        BOOST_LOG_TRIVIAL(trace) << "(not erasing because an existing one is still present)";
+                        spdlog::info("(not erasing because an existing one is still present)");
                     }
                     else
                     {
-                        BOOST_LOG_TRIVIAL(trace) << "(erasing it if it still exists)";
+                        spdlog::info("(erasing it if it still exists)");
                         std::error_code ec;
                         std::filesystem::remove(e.m_raw_name, ec); // Ignore any error, doesn't really matter
                     }
@@ -577,19 +583,19 @@ public:
                             {
                                 if (f.m_blocks[i] == block)
                                 {
-                                    BOOST_LOG_TRIVIAL(trace) << std::format("Sector {:02X}:{:02X} is block {:d} offset {:d} within file {}",
-                                                                            track,
-                                                                            sector,
-                                                                            block,
-                                                                            offset,
-                                                                            f.m_raw_name);
+                                    spdlog::info("Sector {:02X}:{:02X} is block {:d} offset {:d} within file {}",
+                                                 track,
+                                                 sector,
+                                                 block,
+                                                 offset,
+                                                 f.m_raw_name);
                                     try
                                     {
                                         flush_changed_file(value, block, offset, f);
                                     }
                                     catch (const std::exception& e)
                                     {
-                                        BOOST_LOG_TRIVIAL(trace) << "Exception during file flush: " << e.what();
+                                        spdlog::info("Exception during file flush: {}", e.what());
                                     }
                                 }
                             }
@@ -616,7 +622,7 @@ public:
             value.get_data(data);
             if (std::fwrite(data.data(), sizeof(SectorData::value_type), data.size(), fp) < SectorSize)
             {
-                BOOST_LOG_TRIVIAL(trace) << "TODO: File write error handling";
+                spdlog::info("TODO: File write error handling");
             }
             std::fclose(fp);
         }

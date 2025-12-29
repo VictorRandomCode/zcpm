@@ -1,7 +1,5 @@
 #include "builder.hpp"
 
-#include <boost/log/trivial.hpp>
-#include <boost/log/utility/setup.hpp>
 #include <boost/program_options.hpp>
 
 #include <cstdlib>
@@ -9,6 +7,8 @@
 #include <memory>
 #include <vector>
 
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/spdlog.h>
 #include <zcpm/core/config.hpp>
 #include <zcpm/core/system.hpp>
 #include <zcpm/terminal/plain.hpp>
@@ -46,6 +46,13 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
                       .user_sym = "" };
     std::string binary; // The CP/M binary that we try to load and execute
     std::vector<std::string> arguments;
+
+    // Configure spdlog to use a single file sink, with no annotations
+    auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("zcpm.log", true);
+    file_sink->set_level(spdlog::level::trace);
+    file_sink->set_pattern("%v");
+    auto logger = std::make_shared<spdlog::logger>("zcpm", spdlog::sinks_init_list{ file_sink });
+    spdlog::set_default_logger(logger);
 
     try
     {
@@ -153,10 +160,6 @@ std::unique_ptr<zcpm::System> build_machine(int argc, char** argv)
         std::cerr << "Exception: " << e.what() << std::endl;
         return nullptr;
     }
-
-    // Set up logging
-    boost::log::add_file_log(boost::log::keywords::file_name = logfile, boost::log::keywords::auto_flush = true);
-    boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
 
     // Create the terminal emulation of choice
     std::unique_ptr<terminal::Terminal> p_terminal;

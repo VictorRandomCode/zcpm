@@ -4,14 +4,14 @@
 #include "processordata.hpp"
 #include "registers.hpp"
 
-#include <boost/log/trivial.hpp>
-
 #include <algorithm>
 #include <array>
 #include <cstring>
 #include <format>
 #include <iostream>
 #include <set>
+
+#include <spdlog/spdlog.h>
 
 // Uncomment this to allow very chatty logging of calls/returns
 // #define TRACING
@@ -598,7 +598,7 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
         // manually treat this as a termination condition.
         if ((m_effective_pc == 0x0008) || !(m_processor_observer.running()))
         {
-            BOOST_LOG_TRIVIAL(trace) << std::format("Stopping execution at PC={:04X}", m_effective_pc);
+            spdlog::info("Stopping execution at PC={:04X}", m_effective_pc);
             m_processor_observer.set_finished(true);
             goto stop_emulation; // NOLINT: imported 3rd-party code
         }
@@ -2098,7 +2098,7 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
             const auto nn = m_memory.read_word_step(pc, elapsed_cycles);
             m_memory.push(pc, elapsed_cycles);
 #ifdef TRACING
-            BOOST_LOG_TRIVIAL(trace) << std::format("TRACE: Calling {:04X} from PC={:04X}", nn, pc - 3);
+            spdlog::info("TRACE: Calling {:04X} from PC={:04X}", nn, pc - 3);
 #endif
             pc = nn;
 
@@ -2114,7 +2114,7 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
                 const auto nn = m_memory.read_word_step(pc, elapsed_cycles);
                 m_memory.push(pc, elapsed_cycles);
 #ifdef TRACING
-                BOOST_LOG_TRIVIAL(trace) << std::format("TRACE: Calling {:04X} from PC={:04X} (cond)", nn, pc - 3);
+                spdlog::info("TRACE: Calling {:04X} from PC={:04X} (cond)", nn, pc - 3);
 #endif
                 pc = nn;
 
@@ -2133,11 +2133,11 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
         case RET:
         {
 #ifdef TRACING
-            BOOST_LOG_TRIVIAL(trace) << std::format("TRACE: Returning from PC={:04X}", pc - 1);
+            spdlog::info("TRACE: Returning from PC={:04X}", pc - 1);
 #endif
             pc = m_memory.pop(elapsed_cycles);
 #ifdef TRACING
-            BOOST_LOG_TRIVIAL(trace) << std::format("TRACE: Returning to PC={:04X}", pc);
+            spdlog::info("TRACE: Returning to PC={:04X}", pc);
 #endif
 
             break;
@@ -2148,11 +2148,11 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
             if (test_cc(Y(opcode)))
             {
 #ifdef TRACING
-                BOOST_LOG_TRIVIAL(trace) << std::format("TRACE: Returning from PC={:04X} (cond)", pc - 1);
+                spdlog::info("TRACE: Returning from PC={:04X} (cond)", pc - 1);
 #endif
                 pc = m_memory.pop(elapsed_cycles);
 #ifdef TRACING
-                BOOST_LOG_TRIVIAL(trace) << std::format("TRACE: Returning to PC={:04X}", pc);
+                spdlog::info("TRACE: Returning to PC={:04X}", pc);
 #endif
             }
             elapsed_cycles++;

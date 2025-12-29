@@ -1,6 +1,6 @@
 set(EXENAME runner)
 
-find_package(Boost ${BOOST_VERSION} CONFIG COMPONENTS log REQUIRED)
+find_package(Boost ${BOOST_VERSION} CONFIG REQUIRED)
 
 add_executable(${EXENAME}
   main.cpp
@@ -14,4 +14,5 @@ target_link_libraries(${EXENAME}
   terminal
   core
   ${Boost_LIBRARIES}
+  spdlog::spdlog
 )

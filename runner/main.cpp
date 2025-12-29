@@ -1,12 +1,11 @@
 // A program to allow us to run an arbitrary CP/M binary.  Very unfinished!
 
-#include <boost/log/trivial.hpp>
-
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 
+#include <spdlog/spdlog.h>
 #include <zcpm/builder/builder.hpp>
 #include <zcpm/core/system.hpp>
 
@@ -20,7 +19,7 @@ int main(int argc, char* argv[])
     catch (const std::exception& e)
     {
         std::cerr << "Exception: " << e.what() << std::endl;
-        BOOST_LOG_TRIVIAL(trace) << "Exception: " << e.what();
+        spdlog::error("Exception: {}", e.what());
     }
 
     if (!p_machine)
@@ -37,12 +36,12 @@ int main(int argc, char* argv[])
     catch (const std::exception& e)
     {
         std::cerr << "Exception: " << e.what() << std::endl;
-        BOOST_LOG_TRIVIAL(trace) << "Exception: " << e.what();
+        spdlog::error("Exception: {}", e.what());
     }
     catch (...)
     {
         std::cerr << "Exception." << std::endl;
-        BOOST_LOG_TRIVIAL(trace) << "Exception.";
+        spdlog::error("Exception.");
     }
 
     return ok ? EXIT_SUCCESS : EXIT_FAILURE;

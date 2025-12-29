@@ -14,4 +14,5 @@ target_link_libraries(${EXENAME}
   ${Boost_LIBRARIES}
   builder
   core
+  spdlog::spdlog
 )
