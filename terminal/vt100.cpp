@@ -1,5 +1,7 @@
 #include "vt100.hpp"
 
+#include "terminal.hpp"
+
 #include <ncurses.h>
 #include <optional>
 #include <regex>
@@ -29,7 +31,7 @@ std::optional<ParsedSequence> parse_sequence(const std::string& s)
     }
 
     const auto last = s[len - 1];
-    const auto terminators = std::string("rHfABCDmJKLM");
+    constexpr auto terminators = std::string("rHfABCDmJKLM");
 
     // Check for a valid sequence with *no* numeric values (common occurrence, so optimise for this path)
     if ((len == 3) && terminators.find(last) != std::string::npos)
@@ -61,7 +63,7 @@ std::optional<ParsedSequence> parse_sequence(const std::string& s)
     std::regex regex("(\\d+)");
     for (auto i = std::sregex_iterator(payload.begin(), payload.end(), regex); i != std::sregex_iterator(); ++i)
     {
-        const auto match = (*i).str();
+        const auto match = i->str();
         const auto value = std::atoi(match.c_str()); // NOLINT(cert-err34-c)
         values.push_back(value);
     }
@@ -77,21 +79,21 @@ void ansi_cub()
     spdlog::info("CURSES CUB");
     auto x = 0, y = 0;
     getsyx(y, x);
-    ::move(y, x - 1);
+    move(y, x - 1);
 }
 
 // Move cursor to screen location v,h
 void ansi_cup(int v, int h)
 {
     spdlog::info("CURSES cup (v={:d} h={:d})", v, h);
-    ::move(v - 1, h - 1);
+    move(v - 1, h - 1);
 }
 
 // Clear screen from cursor down
 void ansi_ed0()
 {
     spdlog::info("CURSES ED0");
-    ::clrtobot();
+    clrtobot();
 }
 
 // Clear entire screen
@@ -102,15 +104,15 @@ void ansi_ed2()
     // around that
     auto x = 0, y = 0;
     getsyx(y, x);
-    ::clear();
-    ::move(y, x);
+    clear();
+    move(y, x);
 }
 
 // Clear line from cursor right
 void ansi_el0()
 {
     spdlog::info("CURSES EL0");
-    ::clrtoeol();
+    clrtoeol();
 }
 
 // Clear entire line
@@ -120,37 +122,37 @@ void ansi_el2()
     // There is no direct ncurses equivalent, so we need to do this in a few steps
     auto x = 0, y = 0;
     getsyx(y, x);
-    ::move(y, 0);
-    ::clrtoeol();
-    ::move(y, x);
+    move(y, 0);
+    clrtoeol();
+    move(y, x);
 }
 
 // Turn off character attributes
 void ansi_sgr0()
 {
     spdlog::info("CURSES SGR0");
-    ::attrset(A_NORMAL);
+    attrset(A_NORMAL);
 }
 
 // Turn bold mode on
 void ansi_sgr1()
 {
     spdlog::info("CURSES SGR1");
-    ::attron(A_BOLD);
+    attron(A_BOLD);
 }
 
 // Turn blinking mode on
 void ansi_sgr5()
 {
     spdlog::info("CURSES SGR5");
-    ::attron(A_BLINK);
+    attron(A_BLINK);
 }
 
 // Turn reverse video on
 void ansi_sgr7()
 {
     spdlog::info("CURSES SGR7");
-    ::attron(A_REVERSE);
+    attron(A_REVERSE);
 }
 
 // Set alternate keypad mode
@@ -174,26 +176,26 @@ namespace zcpm::terminal
 
 Vt100::Vt100(int rows, int columns, const std::string& keymap_filename) : Terminal(rows, columns, keymap_filename)
 {
-    ::initscr();
+    initscr();
 
-    ::raw(); // Make sure that we receive control sequences (e.g. ^C) verbatim
+    raw(); // Make sure that we receive control sequences (e.g. ^C) verbatim
 
-    ::timeout(KeyboardDelayMs); // Enables a 1ms timeout on non-blocking keyboard read
+    timeout(KeyboardDelayMs); // Enables a 1ms timeout on non-blocking keyboard read
 
-    ::noecho(); // We want to display characters ourselves, not have them automatically echoed
+    noecho(); // We want to display characters ourselves, not have them automatically echoed
 
-    ::idlok(stdscr, true);    // Allow insert/delete row
-    ::scrollok(stdscr, true); // Allow scrolling
-    ::keypad(stdscr, true);   // Ask curses to give us e.g. KEY_LEFT instead of <ESC>[D
+    idlok(stdscr, true);    // Allow insert/delete row
+    scrollok(stdscr, true); // Allow scrolling
+    keypad(stdscr, true);   // Ask curses to give us e.g. KEY_LEFT instead of <ESC>[D
 }
 
 Vt100::~Vt100()
 {
     // If there's been no user *input* and we don't block here, the user will
     // not see anything displayed at all, so we need to do this before teardown.
-    ::getch();
+    getch();
 
-    ::endwin();
+    endwin();
 
     if (!m_pending.empty())
     {
@@ -204,7 +206,7 @@ Vt100::~Vt100()
 void Vt100::print(char ch)
 {
     outch(ch);
-    ::refresh();
+    refresh();
 }
 
 bool Vt100::is_character_ready() const
@@ -218,8 +220,8 @@ bool Vt100::is_character_ready() const
     }
     else
     {
-        // Yes.  Make sure we don't lose it, so that :getch() returns it later as needed
-        ::ungetch(ch);
+        // Yes.  Make sure we don't lose it, so that getch() returns it later as needed
+        ungetch(ch);
         return true;
     }
 }
@@ -256,7 +258,7 @@ void Vt100::outch(char ch)
 
     if (ch == '\015') // CR
     {
-        ::move(row, 0);
+        move(row, 0);
     }
     else if (ch == '\012') // LF
     {
@@ -267,12 +269,12 @@ void Vt100::outch(char ch)
         if (row + 1 < m_rows)
         {
             // Not yet at last row, so move down one row
-            ::move(row + 1, col);
+            move(row + 1, col);
         }
         else
         {
             // Already at last row, so force a scroll
-            ::scrl(1);
+            scrl(1);
         }
     }
     else if (ch == '\033') // ESC
@@ -281,7 +283,7 @@ void Vt100::outch(char ch)
     }
     else if (ch == '\007') // Control-G aka Bell
     {
-        ::beep();
+        beep();
     }
     else // Anything else
     {
@@ -291,7 +293,7 @@ void Vt100::outch(char ch)
             ch = ' ';
         }
 
-        ::addch(ch);
+        addch(ch);
 
         // If we were already at the maximum column, force a 'wrap' to the start of the next row so that the next
         // character output is in the right place
@@ -303,7 +305,7 @@ void Vt100::outch(char ch)
                 // TODO: Unsure of correct behaviour here; simply stick with the bottom row, or should we scroll?
                 ++row;
             }
-            ::move(row, col);
+            move(row, col);
         }
     }
 }
@@ -330,7 +332,7 @@ void Vt100::process_pending()
             else if (values.empty())
             {
                 spdlog::info("CURSES cursorhome");
-                ::move(0, 0);
+                move(0, 0);
             }
             else
             {
@@ -385,12 +387,12 @@ void Vt100::process_pending()
 
         case 'L': // WS.COM uses this; seems to be insert line
             spdlog::info("CURSES INSERTLINE");
-            ::insertln();
+            insertln();
             break;
 
         case 'M': // WS.COM uses this; seems to be delete line
             spdlog::info("CURSES DELETELINE");
-            ::deleteln();
+            deleteln();
             break;
 
         case 'f':

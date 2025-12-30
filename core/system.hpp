@@ -3,9 +3,11 @@
 #include "handlers.hpp"
 #include "hardware.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace zcpm
@@ -29,8 +31,7 @@ public:
 
     ~System();
 
-    // Configure FBASE and WBOOT (to help the system recognise BDOS & BIOS accesses), and
-    // then invoke the BIOS initialisation code
+    // Configure FBASE and WBOOT (to help the system recognise BDOS & BIOS accesses), and then invoke the BIOS initialisation code
     void setup_bios(std::uint16_t fbase, std::uint16_t wboot);
 
     // Perform necessary BDOS initialisation
@@ -54,9 +55,8 @@ public:
     void set_input_handler(const InputHandler& handler);
     void set_output_handler(const OutputHandler& handler);
 
-    // This is public.  Normally "implementation details" such as this would be hidden,
-    // but in the system being modelling the various items are deeply coupled anyway.
-    // TODO: more thought needed on this issue.
+    // This is public.  Normally "implementation details" such as this would be hidden, but in the system being modelling the various items
+    // are deeply coupled anyway. TODO: more thought needed on this issue.
 
     Hardware m_hardware;
 };

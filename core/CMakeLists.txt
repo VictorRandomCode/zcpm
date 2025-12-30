@@ -41,4 +41,5 @@ target_link_libraries(${LIBNAME}
   PRIVATE
   spdlog::spdlog
   terminal
+  project_warnings
 )

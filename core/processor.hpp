@@ -2,8 +2,8 @@
 
 #include "debugaction.hpp"
 #include "idebuggable.hpp"
-#include "imemory.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -13,6 +13,7 @@
 namespace zcpm
 {
 
+class IMemory;
 class Registers;
 
 // TODO: Not sure about the best name for this; it's not a true Observer?
@@ -33,9 +34,9 @@ public:
     // Are we still meant to be running? (i.e., stop() hasn't yet been called)
     [[nodiscard]] virtual bool running() const = 0;
 
-    // Check if the specified address is within our custom BIOS implementation (and hence should be intercepted). If
-    // so, works out what the intercepted BIOS call is trying to do and does whatever is needed, and then allows the
-    // caller to return to normal processing. Returns true if BIOS was intercepted.
+    // Check if the specified address is within our custom BIOS implementation (and hence should be intercepted). If so, works out what the
+    // intercepted BIOS call is trying to do and does whatever is needed, and then allows the caller to return to normal processing. Returns
+    // true if BIOS was intercepted.
     virtual bool check_and_handle_bdos_and_bios(std::uint16_t address) const = 0;
 };
 
@@ -54,9 +55,8 @@ public:
     // Initialise processor's state to power-on default
     void reset_state();
 
-    // Trigger an interrupt according to the current interrupt mode and return the number of cycles elapsed to
-    // accept it. If maskable interrupts are disabled, this will return zero. In interrupt mode 0, data_on_bus must
-    // be a single byte opcode
+    // Trigger an interrupt according to the current interrupt mode and return the number of cycles elapsed to accept it. If maskable
+    // interrupts are disabled, this will return zero. In interrupt mode 0, data_on_bus must be a single byte opcode
     size_t interrupt(std::uint8_t data_on_bus);
 
     // Trigger a non-maskable interrupt, then return the number of cycles elapsed to accept it
@@ -86,8 +86,8 @@ public:
     [[nodiscard]] std::uint16_t get_sp() const;
     [[nodiscard]] std::uint16_t get_pc() const; // This returns m_effective_pc, can be a trap
 
-    // These return a writable reference to the current content of the specified register. These need to be public
-    // so that (for example) the BIOS can set registers. Use these with care!
+    // These return a writable reference to the current content of the specified register. These need to be public so that (for example) the
+    // BIOS can set registers. Use these with care!
     std::uint8_t& reg_a();
     std::uint8_t& reg_f();
     std::uint8_t& reg_b();
@@ -105,8 +105,8 @@ public:
 
     // Implementation of IDebuggable
 
-    Registers get_registers() const override;
-    std::tuple<std::uint8_t, std::uint8_t, std::uint8_t, std::uint8_t, std::vector<std::uint8_t>> get_opcodes_at(
+    [[nodiscard]] Registers get_registers() const override;
+    [[nodiscard]] std::tuple<std::uint8_t, std::uint8_t, std::uint8_t, std::uint8_t, std::vector<std::uint8_t>> get_opcodes_at(
         std::uint16_t pc,
         std::uint16_t offset) const override;
     void add_action(std::unique_ptr<DebugAction> p_action) override;
@@ -114,29 +114,29 @@ public:
     bool remove_action(size_t index) override;
 
     // Z80 flag positions in the F register
-    inline static const std::uint8_t S_FLAG_BIT{ 7 };
-    inline static const std::uint8_t Z_FLAG_BIT{ 6 };
-    inline static const std::uint8_t Y_FLAG_BIT{ 5 };
-    inline static const std::uint8_t H_FLAG_BIT{ 4 };
-    inline static const std::uint8_t X_FLAG_BIT{ 3 };
-    inline static const std::uint8_t PV_FLAG_BIT{ 2 };
-    inline static const std::uint8_t N_FLAG_BIT{ 1 };
-    inline static const std::uint8_t C_FLAG_BIT{ 0 };
+    static constexpr std::uint8_t S_FLAG_BIT{ 7 };
+    static constexpr std::uint8_t Z_FLAG_BIT{ 6 };
+    static constexpr std::uint8_t Y_FLAG_BIT{ 5 };
+    static constexpr std::uint8_t H_FLAG_BIT{ 4 };
+    static constexpr std::uint8_t X_FLAG_BIT{ 3 };
+    static constexpr std::uint8_t PV_FLAG_BIT{ 2 };
+    static constexpr std::uint8_t N_FLAG_BIT{ 1 };
+    static constexpr std::uint8_t C_FLAG_BIT{ 0 };
 
     // Bitmasks for testing those flags
-    inline static const std::uint8_t S_FLAG_MASK{ 1 << S_FLAG_BIT };
-    inline static const std::uint8_t Z_FLAG_MASK{ 1 << Z_FLAG_BIT };
-    inline static const std::uint8_t Y_FLAG_MASK{ 1 << Y_FLAG_BIT };
-    inline static const std::uint8_t H_FLAG_MASK{ 1 << H_FLAG_BIT };
-    inline static const std::uint8_t X_FLAG_MASK{ 1 << X_FLAG_BIT };
-    inline static const std::uint8_t PV_FLAG_MASK{ 1 << PV_FLAG_BIT };
-    inline static const std::uint8_t N_FLAG_MASK{ 1 << N_FLAG_BIT };
-    inline static const std::uint8_t C_FLAG_MASK{ 1 << C_FLAG_BIT };
+    static constexpr std::uint8_t S_FLAG_MASK{ 1 << S_FLAG_BIT };
+    static constexpr std::uint8_t Z_FLAG_MASK{ 1 << Z_FLAG_BIT };
+    static constexpr std::uint8_t Y_FLAG_MASK{ 1 << Y_FLAG_BIT };
+    static constexpr std::uint8_t H_FLAG_MASK{ 1 << H_FLAG_BIT };
+    static constexpr std::uint8_t X_FLAG_MASK{ 1 << X_FLAG_BIT };
+    static constexpr std::uint8_t PV_FLAG_MASK{ 1 << PV_FLAG_BIT };
+    static constexpr std::uint8_t N_FLAG_MASK{ 1 << N_FLAG_BIT };
+    static constexpr std::uint8_t C_FLAG_MASK{ 1 << C_FLAG_BIT };
 
 private:
-    // The main registers are stored as a union of arrays named registers. They are referenced using indexes. Words
-    // are stored in the endianness of the host processor. The alternate set of word registers AF', BC', DE', and
-    // HL' is stored in the alternates member, as an array using the same ordering.
+    // The main registers are stored as a union of arrays named registers. They are referenced using indexes. Words are stored in the
+    // endianness of the host processor. The alternate set of word registers AF', BC', DE', and HL' is stored in the alternates member, as
+    // an array using the same ordering.
     union
     {
         std::uint8_t byte[14];
@@ -151,10 +151,9 @@ private:
     std::uint16_t m_iff1{ 0 };
     std::uint16_t m_iff2{ 0 };
 
-    // Internally, the emulation only updates m_pc when it is exiting, it uses 'pc' internally which is updated byte
-    // by byte. Neither is exactly what we want when adding in debug hooks, and changing those two uses to support
-    // debug hooks is difficult. So 'effective' PC is added which is just used as a return value for use by
-    // debuggers.
+    // Internally, the emulation only updates m_pc when it is exiting, it uses 'pc' internally which is updated byte by byte. Neither is
+    // exactly what we want when adding in debug hooks, and changing those two uses to support debug hooks is difficult. So 'effective' PC
+    // is added which is just used as a return value for use by debuggers.
     std::uint16_t m_effective_pc{ 0 };
 
     enum class InterruptMode
@@ -168,13 +167,12 @@ private:
     // Register decoding tables
     void *m_register_table[16]{}, *m_dd_register_table[16]{}, *m_fd_register_table[16]{};
 
-    bool is_default_table() const;
+    [[nodiscard]] bool is_default_table() const;
     void set_default_table();
     void set_dd();
     void set_fd();
 
-    // Access registers via indirection tables. S() is for the special cases "LD H/L, (IX/Y + d)"
-    // and "LD (IX/Y + d), H/L".
+    // Access registers via indirection tables. S() is for the special cases "LD H/L, (IX/Y + d)" and "LD (IX/Y + d), H/L".
     [[nodiscard]] std::uint8_t& R(int r) const;
     [[nodiscard]] std::uint8_t& S(int s) const;
     [[nodiscard]] std::uint16_t& RR(int rr) const;
@@ -186,9 +184,9 @@ private:
     // 'unbounded' means to run continuously until a HALT or similar is encountered.
     size_t emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cycles = 0, size_t max_cycles = 0);
 
-    // Helper methods which were originally macros which accessed global data. As a result some of these have
-    // somewhat ugly signatures & semantics, but that's because they're gradually being changed from macros which
-    // use other macros and globals into something eventually better.
+    // Helper methods which were originally macros which accessed global data. As a result some of these have somewhat ugly signatures &
+    // semantics, but that's because they're gradually being changed from macros which use other macros and globals into something
+    // eventually better.
     bool test_cc(std::uint8_t cc);
     bool test_dd(std::uint8_t dd);
     std::uint8_t read_indirect_hl(std::uint16_t& pc, size_t& elapsed_cycles);
@@ -220,8 +218,8 @@ private:
     IMemory& m_memory;
     IProcessorObserver& m_processor_observer;
 
-    // Use an ordered map to make displaying of actions nicer. Given that we don't expect to have more than a few
-    // actions defined at any one time, the performance improvements of unordered_map aren't an issue here.
+    // An ordered map to make displaying of actions nicer. Given that we don't expect to have more than a few actions defined at any one
+    // time, the performance improvements of unordered_map aren't an issue here.
     std::multimap<std::uint16_t, std::unique_ptr<DebugAction>> m_debug_actions;
 };
 

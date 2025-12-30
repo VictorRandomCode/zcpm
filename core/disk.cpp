@@ -3,8 +3,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <algorithm>
-#include <array>
-#include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <map>
@@ -20,8 +18,8 @@ namespace
 // Convert e.g. 'foo','txt' to 'FOO     TXT'
 std::string convert(const std::string& filename, const std::string& extension)
 {
-    const size_t n_name = 8;
-    const size_t n_extension = 3;
+    constexpr size_t n_name = 8;
+    constexpr size_t n_extension = 3;
     // Make a copy of the filename which is limited to 8 characters and is uppercase
     const auto f(boost::to_upper_copy(filename.substr(0, n_name)));
     // Make a copy of the extension which is limited to 3 characters and is uppercase, taking
@@ -36,14 +34,14 @@ std::string convert(const std::string& filename, const std::string& extension)
     return result;
 }
 
-const inline std::uint16_t EntrySize = 0x0020;
-const inline std::uint16_t BlockSize = 0x0800;
-const inline std::uint16_t SectorsPerBlock = BlockSize / zcpm::Disk::SectorSize;
+constexpr std::uint16_t EntrySize = 0x0020;
+constexpr std::uint16_t BlockSize = 0x0800;
+constexpr std::uint16_t SectorsPerBlock = BlockSize / zcpm::Disk::SectorSize;
 
 using Location = std::tuple<std::uint16_t, std::uint16_t>; // Track/Sector which identify a particular sector on the disk
 
-// Given a block number and a sector offset, works out the actual track/sector. Assumes that sector_offset is
-// strictly within that same block, not overflowing into an adjacent block!
+// Given a block number and a sector offset, works out the actual track/sector. Assumes that sector_offset is strictly within that same
+// block, not overflowing into an adjacent block!
 Location find_location_within_block(std::uint16_t block, std::uint16_t sector_offset)
 {
     const auto s = block * SectorsPerBlock + sector_offset;
@@ -52,8 +50,8 @@ Location find_location_within_block(std::uint16_t block, std::uint16_t sector_of
     return { track_index, sector_index };
 }
 
-// Map a track/sector to a block number and offset, where the offset is the index of the sequence within the block
-// (first sector is zero, second sector is one, etc)
+// Map a track/sector to a block number and offset, where the offset is the index of the sequence within the block (first sector is zero,
+// second sector is one, etc)
 std::tuple<std::uint16_t, std::uint8_t> track_sector_to_block_and_offset(std::uint16_t track, std::uint16_t sector)
 {
     const auto n = track * zcpm::Disk::SectorSize + sector;
@@ -70,7 +68,6 @@ namespace zcpm
 // A directory entry.  Keep in mind that a given file can have more than one entry.
 struct Entry
 {
-public:
     // Construct from a host filesystem file
     Entry(const std::filesystem::directory_entry& e, std::uint8_t extent, std::uint16_t sectors, std::uint16_t first_block)
         : m_raw_name(e.path().filename()),
@@ -152,8 +149,8 @@ struct SectorInfo
 class Disk::Private final
 {
     std::vector<Entry> m_entries;
-    // TODO: To speed up searches for files, consider adding a map of block number to Entry instance,
-    // so that way we don't need to do a linear search on every block query.
+    // TODO: To speed up searches for files, consider adding a map of block number to Entry instance, so that way we don't need to do a
+    // linear search on every block query.
 
     mutable std::map<Location, SectorInfo> m_sector_cache; // Cache of sectors that we know about
 
@@ -203,19 +200,18 @@ public:
         // Is it a directory entry or general data?
         if ((track == 0) || (track == 1))
         {
-            // Construct 4 directory entries in the buffer; the choice of *which* directory
-            // entries is determined by the track/sector values.
+            // Construct 4 directory entries in the buffer; the choice of *which* directory entries is determined by the track/sector
+            // values.
             create_directory_entries(buffer, track, sector);
         }
         else
         {
-            // File data.  We use the directory entries to work out which bit of which file corresponds
-            // to the requested track/sector
+            // File data.  We use the directory entries to work out which bit of which file corresponds to the requested track/sector
             read_disk_data(buffer, track, sector);
         }
 
-        // Add the sector we've read (or synthesised) into the sector cache.  Fortunately CP/M disks
-        // are not large, so we can comfortably have this in memory.
+        // Add the sector we've read (or synthesised) into the sector cache.  Fortunately CP/M disks are not large, so we can comfortably
+        // have this in memory.
         SectorInfo sector_info(buffer);
         m_sector_cache.emplace(location, sector_info);
     }
@@ -225,8 +221,7 @@ public:
         // Is it a directory entry or general data?
         if ((track == 0) || (track == 1))
         {
-            // BDOS is modifying directory entries.
-            // Work out what has changed and then update m_entries accordingly
+            // BDOS is modifying directory entries. Work out what has changed and then update m_entries accordingly
             check_for_directory_changes(buffer);
         }
 
@@ -236,11 +231,10 @@ public:
 
     void build_directory(const std::string& dir = ".")
     {
-        const auto extent_size = 0x0080 * 0x0080; // 16KB
+        constexpr auto extent_size = 0x0080 * 0x0080; // 16KB
 
-        // Iterate through cwd and store file info (not directories) into m_entries; there can be
-        // more than one entry per file if the file is large.
-        // Note that we deliberately ignore zcpm.log because that can get confusing.
+        // Iterate through cwd and store file info (not directories) into m_entries; there can be more than one entry per file if the file
+        // is large. Note that we deliberately ignore zcpm.log because that can get confusing.
         for (const auto& item : std::filesystem::directory_iterator(dir))
         {
             if (std::filesystem::is_regular_file(item.path()))
@@ -285,28 +279,26 @@ public:
 
     void read_disk_data(SectorData& buffer, std::uint16_t track, std::uint16_t sector) const
     {
-        // TODO: Given that the most common use case is to read sector N+1 of a given file immediately after
-        // sector N of that same file, we could optimise this by keeping the file handle open and the file
-        // position maintained from call to call, and only close it if the active file/position changes.
+        // TODO: Given that the most common use case is to read sector N+1 of a given file immediately after sector N of that same file, we
+        // could optimise this by keeping the file handle open and the file position maintained from call to call, and only close it if the
+        // active file/position changes.
 
         // Convert the track/sector into a block number.
         const auto [block, offset] = track_sector_to_block_and_offset(track, sector);
 
-        // Find that block number in the directory structure.  TODO: This uses a brute-force
-        // search, once this code matures we should add a new map from block number to File
-        // instance to avoid the need for this brute-force search.
+        // Find that block number in the directory structure.  TODO: This uses a brute-force search, once this code matures we should add a
+        // new map from block number to File instance to avoid the need for this brute-force search.
         for (const auto& f : m_entries)
         {
             for (const auto& b : f.m_blocks)
             {
                 if (block == b)
                 {
-                    // We've found that the block we're looking for is in this file.  Open the file and
-                    // read & return the right chunk from it.  We need to compare "this" block index against
-                    // the first block index for this file (not just for this entry!)
+                    // We've found that the block we're looking for is in this file.  Open the file and read & return the right chunk from
+                    // it.  We need to compare "this" block index against the first block index for this file (not just for this entry!)
                     const auto block_offset = block - f.m_first_block;
                     const auto chunk = (block_offset << BSH) + offset;
-                    if (auto fp = std::fopen(f.m_raw_name.c_str(), "r"); fp)
+                    if (auto* fp = std::fopen(f.m_raw_name.c_str(), "r"); fp)
                     {
                         std::fseek(fp, chunk * SectorSize, SEEK_SET);
                         std::fread(buffer.data(), 01, buffer.size(), fp);
@@ -345,10 +337,9 @@ public:
         }
     }
 
-    // Given a memory location, formats the nth (counting from zero) directory entry (of size EntrySize) into that
-    // location. Allows out of range values of 'n' which get mapped to E5 (inactive) file entries.  Note that this
-    // may actually cause more than one entry to be created, in the case where a file requires multiple
-    // entries/extents.
+    // Given a memory location, formats the nth (counting from zero) directory entry (of size EntrySize) into that location. Allows out of
+    // range values of 'n' which get mapped to E5 (inactive) file entries.  Note that this may actually cause more than one entry to be
+    // created, in the case where a file requires multiple entries/extents.
     void format_directory_entry(std::uint8_t* base, std::uint16_t n) const
     {
         if (n >= m_entries.size())
@@ -373,7 +364,7 @@ public:
             base[i] = 0x00;
         }
 
-        const std::uint8_t user = 0x00; // ZCPM only uses user 0 at this stage
+        constexpr std::uint8_t user = 0x00; // ZCPM only uses user 0 at this stage
         const bool exists = f.m_exists;
 
         // Byte 0: user code.  E5 means inactive (or deleted), 00..0F is a user code.
@@ -404,8 +395,8 @@ public:
     // BDOS appears to be modifying a directory sector; work out what has changed and what we need to do
     void check_for_directory_changes(const SectorData& buffer)
     {
-        // For each of the four entries in this directory sector build a 'pending' Entry for each,
-        // and then compare these against our 'real' entries to see what needs changing.
+        // For each of the four entries in this directory sector build a 'pending' Entry for each, and then compare these against our 'real'
+        // entries to see what needs changing.
 
         for (auto i = 0; i < SectorSize / EntrySize; i++)
         {
@@ -483,8 +474,7 @@ public:
         // First take care of any directory-level changes; i.e., new files, deleted files, ...
         flush_file_changes_to_host_filesystem();
 
-        // And then take care of any remaining dirty sectors in the cache; these typically are
-        // the result of a WRITERAND to existing files.
+        // And then take care of any remaining dirty sectors in the cache; these typically are the result of a WRITERAND to existing files.
         flush_changed_sectors_to_host_filesystem();
     }
 
@@ -500,14 +490,14 @@ public:
                 e.show();
                 if (e.m_exists)
                 {
-                    if (auto fp = std::fopen(e.m_raw_name.c_str(), "w"); fp)
+                    if (auto* fp = std::fopen(e.m_raw_name.c_str(), "w"); fp)
                     {
-                        auto sectors_remaining = e.m_sectors;
+                        const auto sectors_remaining = e.m_sectors;
                         for (const auto& b : e.m_blocks)
                         {
                             const auto sectors_this_block = std::min<std::uint16_t>(SectorsPerBlock, sectors_remaining);
                             spdlog::info("Writing {} sectors from block #{}", sectors_this_block, b);
-                            for (auto i = 0; i < sectors_this_block; i++)
+                            for (auto i = 0U; i < sectors_this_block; i++)
                             {
                                 const auto [track, sector] = find_location_within_block(b, i);
                                 spdlog::info("  Using data from TRACK:{:04X} SECTOR:{:04X}", track, sector);
@@ -537,11 +527,11 @@ public:
                 }
                 else
                 {
-                    // The modified flag has the 'exists' flag set to false, which means that is a deletion.
-                    // But we need to be careful where we have an entry for a newly-deleted file *and* one
-                    // for an existing file with the same name.  If this is the case, we don't delete anything.
-                    const auto has_existing_version = std::any_of(
-                        m_entries.begin(), m_entries.end(), [e](auto f) { return f.m_exists && (f.m_raw_name == e.m_raw_name); });
+                    // The modified flag has the 'exists' flag set to false, which means that is a deletion. But care is needed where there
+                    // is an entry for a newly-deleted file *and* one for an existing file with the same name. If this is the case, don't
+                    // delete anything.
+                    const auto has_existing_version =
+                        std::ranges::any_of(m_entries, [e](const auto& f) { return f.m_exists && (f.m_raw_name == e.m_raw_name); });
 
                     if (has_existing_version)
                     {
@@ -605,11 +595,11 @@ public:
     {
         const auto byte_offset = (((block - f.m_first_block) << BSH) + offset) * SectorSize;
 
-        // Note that we open/modify/close the file for *each* modified sector.  In a big system with lots of changes
-        // this is very inefficient, but in the typical use case for ZCPM we see just a handful of *modified*
-        // sectors, most file I/O is new files which uses different logic.
+        // Note that we open/modify/close the file for *each* modified sector.  In a big system with lots of changes this is very
+        // inefficient, but in the typical use case for ZCPM we see just a handful of *modified* sectors, most file I/O is new files which
+        // uses different logic.
 
-        if (auto fp = std::fopen(f.m_raw_name.c_str(), "rb+"); fp)
+        if (auto* fp = std::fopen(f.m_raw_name.c_str(), "rb+"); fp)
         {
             std::fseek(fp, byte_offset, SEEK_SET);
 

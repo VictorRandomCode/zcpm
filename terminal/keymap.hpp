@@ -2,7 +2,7 @@
 
 #include <list>
 #include <map>
-#include <string>
+#include <string_view>
 
 namespace zcpm
 {
@@ -19,7 +19,7 @@ public:
     explicit Keymap(std::string_view filename);
 
     // Return the mapping for a given key. If not known, then returns a single-element list with the same key.
-    std::list<char> translate(int key) const;
+    [[nodiscard]] std::list<char> translate(int key) const;
 
 private:
     std::map<int, std::list<char>> m_keymap;

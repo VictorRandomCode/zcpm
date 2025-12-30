@@ -38,4 +38,5 @@ target_link_libraries(${LIBNAME}
   PRIVATE
   ncurses
   spdlog::spdlog
+  project_warnings
 )

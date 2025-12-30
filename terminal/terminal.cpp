@@ -32,18 +32,18 @@ char Terminal::get_translated_char() const
     if (ch == 0x7F) // BACKSPACE/DELETE
     {
         // Backspace was pressed; Map a linux terminal 7F to a CP/M style 08
-        return static_cast<char>(0x08);
+        return 0x08;
     }
     if (ch == 0x0A)
     {
         // Enter was pressed, but that needs to be mapped to a CP/M style 0D
-        return static_cast<char>(0x0D);
+        return 0x0D;
     }
 
     auto mapped_keys = m_keymap.translate(ch);
     const auto next = mapped_keys.front();
     mapped_keys.pop_front();
     m_pending_keystrokes = mapped_keys; // Might now be empty
-    return static_cast<char>(next);
+    return next;
 }
 } // namespace zcpm::terminal

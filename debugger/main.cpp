@@ -8,6 +8,7 @@
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <print>
 #include <regex>
 #include <replxx.hxx>
 #include <string>
@@ -57,12 +58,6 @@ struct Command
         os << " : " << m_help;
     }
 };
-
-std::ostream& operator<<(std::ostream& os, const Command& command)
-{
-    command.describe(os);
-    return os;
-}
 
 // Given ("first second,third fourth") returns {"first","second,third","fourth"}
 // Given ("first second,third fourth",",") returns {"first second","third fourth"}
@@ -260,14 +255,13 @@ auto run(Writer& writer, zcpm::System* p_machine, zcpm::IDebuggable* p_debuggabl
                  [&p_debuggable](const TokenVector& input)
                  {
                      const auto number = std::strtoul(input[1].c_str(), nullptr, 0);
-                     const auto ok = p_debuggable->remove_action(number);
-                     if (ok)
+                     if (p_debuggable->remove_action(number))
                      {
                          std::println("Removed.");
                      }
                      else
                      {
-                         std::println("Not removed, an error occured.");
+                         std::println("Not removed, an error occurred.");
                      }
                      return false;
                  } },
@@ -321,7 +315,7 @@ auto run(Writer& writer, zcpm::System* p_machine, zcpm::IDebuggable* p_debuggabl
                  {
                      for (const auto& command : commands)
                      {
-                         std::cout << command << std::endl;
+                         command.describe(std::cout);
                      }
                      return false;
                  } },
@@ -373,10 +367,8 @@ auto run(Writer& writer, zcpm::System* p_machine, zcpm::IDebuggable* p_debuggabl
                  [&p_debuggable, &p_machine](const TokenVector& input)
                  {
                      assert(input.size() == 3);
-                     // Create the breakpoint/passpoint/watchpoint
-                     auto action = parse_and_create_debug_action(p_machine, input[1], input[2]);
-                     // And remember it if successful
-                     if (action)
+                     // Create the breakpoint/passpoint/watchpoint, and remember it if successful
+                     if (auto action = parse_and_create_debug_action(p_machine, input[1], input[2]))
                      {
                          p_debuggable->add_action(std::move(action));
                      }
@@ -430,7 +422,7 @@ auto run(Writer& writer, zcpm::System* p_machine, zcpm::IDebuggable* p_debuggabl
     rx.install_window_change_handler();
 
     // set the path to the history file
-    std::string history_file{ "./.zcpm_history.txt" };
+    constexpr std::string history_file{ "./.zcpm_history.txt" };
 
     // load the history file if it exists
     rx.history_load(history_file);
@@ -504,7 +496,7 @@ int main(int argc, char* argv[])
     }
 
     // And we'll need a Debuggable to help us query the system
-    auto p_debuggable = p_machine->m_hardware.get_idebuggable(); // Yuk.  TODO.
+    auto* p_debuggable = p_machine->m_hardware.get_idebuggable(); // Yuk.  TODO.
 
     // Create a Writer instance, that knows how to format the info into a particular form,
     // and where to write it.  In the future we will have different Writer instances for

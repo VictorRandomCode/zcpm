@@ -2,6 +2,7 @@
 
 #include "keymap.hpp"
 
+#include <list>
 #include <string>
 
 namespace zcpm::terminal

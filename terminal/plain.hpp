@@ -2,8 +2,6 @@
 
 #include "terminal.hpp"
 
-#include <string>
-
 namespace zcpm::terminal
 {
 

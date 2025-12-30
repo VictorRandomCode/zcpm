@@ -29,31 +29,29 @@ namespace zcpm
 
 Bios::Bios(Hardware* p_hardware, terminal::Terminal* p_terminal) : m_phardware(p_hardware), m_pterminal(p_terminal)
 {
-    const size_t table_size = 33; // As per "CP/M 3 System Guide", Table 2-1
+    constexpr size_t table_size = 33; // As per "CP/M 3 System Guide", Table 2-1
 
-    // Address 0 should be a JP, 1 and 2 are the destination. See "CP/M 3 System Guide", Table 2-3
-    // That destination should be the warm boot (WBOOT) in the BIOS. WBOOT is the second jump vector
-    // in the jump table, so subtract 3 bytes to get the actual start.
+    // Address 0 should be a JP, 1 and 2 are the destination. See "CP/M 3 System Guide", Table 2-3. That destination should be the warm boot
+    // (WBOOT) in the BIOS. WBOOT is the second jump vector in the jump table, so subtract 3 bytes to get the actual start.
     const std::uint16_t base = m_phardware->read_byte(1) + (m_phardware->read_byte(2) << 8) - 3;
     m_discovered_base = base;
 
-    // Sanity check; we expect to be modifying a jump table, i.e. a series of JP XXXX instructions.
-    // Make sure that it looks that way before proceeding.
+    // Sanity check; we expect to be modifying a jump table, i.e. a series of JP XXXX instructions. Make sure that it looks that way before
+    // proceeding.
     if ((m_phardware->read_byte(base + 0) != 0xC3) || (m_phardware->read_byte(base + 3) != 0xC3))
     {
         throw std::runtime_error("BIOS jump table not found");
     }
 
-    // Set up the BIOS stubs (which are just a series of RET instructions that are intercepted at runtime)
-    // to be 0x0100 above the BIOS jump table. The aim is to leave enough space for stack above that, although
-    // maybe stack should be elsewhere?
+    // Set up the BIOS stubs (which are just a series of RET instructions that are intercepted at runtime) to be 0x0100 above the BIOS jump
+    // table. The aim is to leave enough space for stack above that, although maybe stack should be elsewhere?
     m_stubs_base = base + 0x0100;
 
     spdlog::info("Rewriting BIOS jump table at {:04X}", base);
 
-    // Write our own jump table over the top of whatever is there currently, making it point to another
-    // one ("stubs") higher in memory, and that's the one that is intercepted (which should reduce the
-    // risk of someone peeking the 'main' jump table and then jumping to the destination code).
+    // Write our own jump table over the top of whatever is there currently, making it point to another one ("stubs") higher in memory, and
+    // that's the one that is intercepted (which should reduce the risk of someone peeking the 'main' jump table and then jumping to the
+    // destination code).
     for (size_t i = 0; i < table_size; i++)
     {
         // Modify the JP so that it points to the corresponding stub entry
@@ -69,16 +67,16 @@ Bios::Bios(Hardware* p_hardware, terminal::Terminal* p_terminal) : m_phardware(p
     // Remember the top of the stubs area
     m_stubs_top = m_stubs_base + table_size - 1;
 
-    // Write a known pattern into memory from the top of the BIOS jump table until the start
-    // of the BIOS stubs area. (i.e., between the two regions)
+    // Write a known pattern into memory from the top of the BIOS jump table until the start of the BIOS stubs area. (i.e., between the two
+    // regions)
     for (unsigned int i = m_discovered_base + table_size * 3; i < m_stubs_base; ++i)
     {
         m_phardware->write_byte(i, 0x00);
     }
 
-    // Set up a single DPH. Normally BIOS would have a different variant for each different disk type (e.g.
-    // one for a 8" floppy, one for a HDD, etc). But we're treating all "disks" the same, so we're basing
-    // this single one on a typical HDD implementation. DPH is always 16 bytes by definition.
+    // Set up a single DPH. Normally BIOS would have a different variant for each different disk type (e.g. one for a 8" floppy, one for a
+    // HDD, etc). But we're treating all "disks" the same, so we're basing this single one on a typical HDD implementation. DPH is always 16
+    // bytes by definition.
     m_dph_base = m_stubs_top + 1;
     const auto dirbf = m_dph_base + 0x10;
     const auto hdblk = dirbf + 0x80;
@@ -110,9 +108,8 @@ Bios::Bios(Hardware* p_hardware, terminal::Terminal* p_terminal) : m_phardware(p
                             0x0000);               // CKS: Check size (For a HDD, can have 0. Removable media would need non-zero)
     m_phardware->write_word(hdblk + 0x0D, 0x0000); // OFF: Track offset
 
-    // CHKHD1 is a scratch table for directory entries. But as our disk (a simulated HDD) is not
-    // removable media, this can be zero bytes. Reserve two bytes for it just for neatness.
-    // ALLHD1 is a scratch table for storage allocation. Seems to be 256 bytes; why?
+    // CHKHD1 is a scratch table for directory entries. But as our disk (a simulated HDD) is not removable media, this can be zero bytes.
+    // Reserve two bytes for it just for neatness. ALLHD1 is a scratch table for storage allocation. Seems to be 256 bytes; why?
 
     // Write a known pattern into memory from above the DPH stuff until top of 64K RAM
     for (unsigned int i = m_dph_top + 1; i <= 0xFFFF; ++i)
@@ -134,8 +131,7 @@ Bios::Bios(Hardware* p_hardware, terminal::Terminal* p_terminal) : m_phardware(p
     m_phardware->add_watch_read(m_dph_base, m_dph_top - m_dph_base + 1);
     m_phardware->add_watch_write(m_dph_base, m_dph_top - m_dph_base + 1);
 
-    // And add some pretend symbols to help make the run logs easier to read when something reads
-    // or writes that data
+    // And add some pretend symbols to help make the run logs easier to read when something reads or writes that data
     m_phardware->add_symbol(m_dph_base, "DPHBASE");
     m_phardware->add_symbol(dirbf, "DIRBF");
     m_phardware->add_symbol(hdblk, "HDBLK");
@@ -147,10 +143,9 @@ Bios::~Bios() = default;
 
 bool Bios::is_bios(std::uint16_t address) const
 {
-    // Check for the whole range including the jump table (whose address is already determined by
-    // the loaded binary memory image) as well as our set of targets of each of the jump vectors.
-    // Technically there's a range of bytes between those two sets that is actually spare memory,
-    // but that would be over-complicating things.
+    // Check for the whole range including the jump table (whose address is already determined by the loaded binary memory image) as well as
+    // our set of targets of each of the jump vectors. Technically there's a range of bytes between those two sets that is actually spare
+    // memory, but that would be over-complicating things.
     return (address >= m_discovered_base) && (address <= m_stubs_top);
 }
 
@@ -178,9 +173,8 @@ bool Bios::check_and_handle(std::uint16_t address)
     break;
     case 1:
     {
-        // WBOOT is called as part of initialisation, but if we get here it means that user
-        // code is trying to (either directly or indirectly) call it again, which is used as
-        // a termination condition.
+        // WBOOT is called as part of initialisation, but if we get here it means that user code is trying to (either directly or
+        // indirectly) call it again, which is used as a termination condition.
         msg = "WBOOT()";
         log_bios_call(prefix, msg);
         m_phardware->set_finished(true);
@@ -292,8 +286,7 @@ bool Bios::check_and_handle(std::uint16_t address)
     }
     }
 
-    // Typically we're returning to a 'RET' in the intercepted BIOS which will then
-    // let the user code carry on without further ado.
+    // Typically we're returning to a 'RET' in the intercepted BIOS which will then let the user code carry on without further ado.
 
     return true;
 }
@@ -316,8 +309,8 @@ void Bios::fn_wboot()
     fn_seldsk(0, 0); // Select the first drive
     fn_home();       // Go to track 00
 
-    // At this point in the sample BIOS, it loads CP/M CCP from disk and then jumps into CCP. So
-    // this probably means that there's nothing else to do here in our implementation.
+    // At this point in the sample BIOS, it loads CP/M CCP from disk and then jumps into CCP. So this probably means that there's nothing
+    // else to do here in our implementation.
 }
 
 void Bios::fn_home()
@@ -387,9 +380,8 @@ std::uint8_t Bios::fn_write(std::uint8_t /*deblocking*/)
 
     // Copy from emulated RAM into that chunk
     m_phardware->copy_from_ram(buffer.data(), buffer.size(), m_dma);
-    // Write from that chunk to the disk (this is double-handling but given that we're using this to
-    // access disk which is much slower it won't be an issue, and it's all memcpy() underneath
-    // anyway so it's not slow)
+    // Write from that chunk to the disk (this is double-handling but given that we're using this to access disk which is much slower it
+    // won't be an issue, and it's all memcpy() underneath anyway so it's not slow)
     m_disk.write(buffer, m_track, m_sector);
 
     return 0;
@@ -397,9 +389,8 @@ std::uint8_t Bios::fn_write(std::uint8_t /*deblocking*/)
 
 std::uint16_t Bios::fn_sectran(std::uint16_t logical_sector_number, std::uint16_t /*trans_table*/) const
 {
-    // Simplification: directly map a logical sector number to a physical sector number and
-    // ignore the translation table. (This is what the BIOS would do if skewing was implemented
-    // in hardware)
+    // Simplification: directly map a logical sector number to a physical sector number and ignore the translation table. (This is what the
+    // BIOS would do if skewing was implemented in hardware)
     return logical_sector_number;
 }
 

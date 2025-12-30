@@ -1,8 +1,8 @@
 // A program to allow us to run an arbitrary CP/M binary.  Very unfinished!
 
 #include <cstdlib>
+#include <exception>
 #include <memory>
-#include <stdexcept>
 
 #include <spdlog/spdlog.h>
 #include <zcpm/builder/builder.hpp>

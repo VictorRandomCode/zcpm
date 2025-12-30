@@ -5,7 +5,9 @@
 #include <fstream>
 #include <ncurses.h>
 #include <optional>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 
 #include <spdlog/spdlog.h>
 

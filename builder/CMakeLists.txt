@@ -18,4 +18,5 @@ target_link_libraries(${LIBNAME}
   core
   spdlog::spdlog
   terminal
+  project_warnings
 )

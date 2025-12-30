@@ -1,12 +1,12 @@
 #include "processor.hpp"
 
+#include "imemory.hpp"
 #include "instructions.hpp"
 #include "processordata.hpp"
 #include "registers.hpp"
 
 #include <algorithm>
 #include <array>
-#include <cstring>
 #include <ranges>
 #include <set>
 
@@ -14,20 +14,20 @@
 
 namespace
 {
-const std::uint8_t OPCODE_LD_A_I = 0x57;
-const std::uint8_t OPCODE_LD_I_A = 0x47;
-const std::uint8_t OPCODE_LDI = 0xa0;
-const std::uint8_t OPCODE_LDIR = 0xb0;
-const std::uint8_t OPCODE_CPI = 0xa1;
-const std::uint8_t OPCODE_CPIR = 0xb1;
-const std::uint8_t OPCODE_RLD = 0x6f;
+constexpr std::uint8_t OPCODE_LD_A_I = 0x57;
+constexpr std::uint8_t OPCODE_LD_I_A = 0x47;
+constexpr std::uint8_t OPCODE_LDI = 0xa0;
+constexpr std::uint8_t OPCODE_LDIR = 0xb0;
+constexpr std::uint8_t OPCODE_CPI = 0xa1;
+constexpr std::uint8_t OPCODE_CPIR = 0xb1;
+constexpr std::uint8_t OPCODE_RLD = 0x6f;
 #if defined(Z80_CATCH_RETI) && defined(Z80_CATCH_RETN)
-const std::uint8_t OPCODE_RETI = 0x4d;
+constexpr std::uint8_t OPCODE_RETI = 0x4d;
 #endif
-const std::uint8_t OPCODE_INI = 0xa2;
-const std::uint8_t OPCODE_INIR = 0xb2;
-const std::uint8_t OPCODE_OUTI = 0xa3;
-const std::uint8_t OPCODE_OTIR = 0xb3;
+constexpr std::uint8_t OPCODE_INI = 0xa2;
+constexpr std::uint8_t OPCODE_INIR = 0xb2;
+constexpr std::uint8_t OPCODE_OUTI = 0xa3;
+constexpr std::uint8_t OPCODE_OTIR = 0xb3;
 
 // Opcode decoding helpers.
 // Y() is bits 5-3 of the opcode, Z() is bits 2-0, P() bits 5-4, and Q() bits 4-3.
@@ -49,34 +49,34 @@ std::uint8_t Q(std::uint8_t opcode)
 }
 
 // Additional bitmasks for convenience
-const std::uint8_t SZC_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::C_FLAG_MASK;
-const std::uint8_t YX_FLAG_MASK = zcpm::Processor::Y_FLAG_MASK | zcpm::Processor::X_FLAG_MASK;
-const std::uint8_t SZ_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK;
-const std::uint8_t SZPV_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::PV_FLAG_MASK;
-const std::uint8_t SYX_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Y_FLAG_MASK | zcpm::Processor::X_FLAG_MASK;
-const std::uint8_t HC_FLAG_MASK = zcpm::Processor::H_FLAG_MASK | zcpm::Processor::C_FLAG_MASK;
+constexpr std::uint8_t SZC_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::C_FLAG_MASK;
+constexpr std::uint8_t YX_FLAG_MASK = zcpm::Processor::Y_FLAG_MASK | zcpm::Processor::X_FLAG_MASK;
+constexpr std::uint8_t SZ_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK;
+constexpr std::uint8_t SZPV_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Z_FLAG_MASK | zcpm::Processor::PV_FLAG_MASK;
+constexpr std::uint8_t SYX_FLAG_MASK = zcpm::Processor::S_FLAG_MASK | zcpm::Processor::Y_FLAG_MASK | zcpm::Processor::X_FLAG_MASK;
+constexpr std::uint8_t HC_FLAG_MASK = zcpm::Processor::H_FLAG_MASK | zcpm::Processor::C_FLAG_MASK;
 
 /* Indirect (HL) or prefixed indexed (IX + d) and (IY + d) memory operands are
  * encoded using the 3 bits "110" (0x06).
  */
-const std::uint8_t INDIRECT_HL = 0x06;
+constexpr std::uint8_t INDIRECT_HL = 0x06;
 
 /* Condition codes are encoded using 2 or 3 bits.  The xor table is needed for
  * negated conditions, it is used along with the and table.
  */
 
-const std::array<std::uint8_t, 8> XOR_CONDITION_TABLE{
+constexpr std::array<std::uint8_t, 8> XOR_CONDITION_TABLE{
     zcpm::Processor::Z_FLAG_MASK, 0, zcpm::Processor::C_FLAG_MASK, 0, zcpm::Processor::PV_FLAG_MASK, 0, zcpm::Processor::S_FLAG_MASK, 0,
 };
 
-const std::array<std::uint8_t, 8> AND_CONDITION_TABLE{
+constexpr std::array<std::uint8_t, 8> AND_CONDITION_TABLE{
     zcpm::Processor::Z_FLAG_MASK,  zcpm::Processor::Z_FLAG_MASK,  zcpm::Processor::C_FLAG_MASK, zcpm::Processor::C_FLAG_MASK,
     zcpm::Processor::PV_FLAG_MASK, zcpm::Processor::PV_FLAG_MASK, zcpm::Processor::S_FLAG_MASK, zcpm::Processor::S_FLAG_MASK,
 };
 
 /* RST instruction restart addresses, encoded by Y() bits of the opcode. */
 
-const std::array<std::uint8_t, 8> RST_TABLE{
+constexpr std::array<std::uint8_t, 8> RST_TABLE{
     0x00, 0x08, 0x10, 0x18, 0x20, 0x28, 0x30, 0x38,
 };
 
@@ -84,51 +84,49 @@ const std::array<std::uint8_t, 8> RST_TABLE{
  * significant bit is not zero.
  */
 
-const std::array<std::uint8_t, 4> OVERFLOW_TABLE{
+constexpr std::array<std::uint8_t, 4> OVERFLOW_TABLE{
     0,
     zcpm::Processor::PV_FLAG_MASK,
     zcpm::Processor::PV_FLAG_MASK,
     0,
 };
 
-// Register definitions. These are used as indexes into an array; the first enum Reg8 indexes into one view of a
-// union to that array, the second enum Reg16 indexes into another view of that union into that array. For that
-// reason it's not an 'enum class'.
+// Register definitions. These are used as indexes into an array; the first enum Reg8 indexes into one view of a union to that array, the
+// second enum Reg16 indexes into another view of that union into that array. For that reason it's not an 'enum class'.
 
 // clang-format off
-    enum Reg8
-    {
-        C, B, E, D, L, H, F, A,
-        IXL, IXH,
-        IYL, IYH,
-        // No 8-bit access to SP
-    };
+enum Reg8
+{
+    C, B, E, D, L, H, F, A,
+    IXL, IXH,
+    IYL, IYH,
+    // No 8-bit access to SP
+};
 
-    enum Reg16
-    {
-        BC, DE, HL, AF,
-        IX, IY,
-        SP
-    };
+enum Reg16
+{
+    BC, DE, HL, AF,
+    IX, IY,
+    SP
+};
 
-    const std::set<std::uint8_t> DdFdPrefixable = {
-        0x09,
-        0x19,
-        0x21, 0x22, 0x23, 0x24, 0x25, 0x26,             0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e,
-        0x34, 0x35, 0x36,             0x39,
-        0x44, 0x45, 0x46,                               0x4c, 0x4d, 0x4e,
-        0x54, 0x55, 0x56,                               0x5c, 0x5d, 0x5e,
-        0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
-        0x70, 0x71, 0x72, 0x73, 0x74, 0x75,       0x77,                         0x7c, 0x7d, 0x7e,
-        0x84, 0x85, 0x86,                               0x8c, 0x8d, 0x8e,
-        0x94, 0x95, 0x96,                               0x9c, 0x9d, 0x9e,
-        0xa4, 0xa5, 0xa6,                               0xac, 0xad, 0xae,
-        0xb4, 0xb5, 0xb6,                               0xbc, 0xbd, 0xbe,
-        0xcb,
-        0xe1,       0xe3,       0xe5,                   0xe9,
-        0xf9
-    };
-
+const std::set<std::uint8_t> DdFdPrefixable = {
+    0x09,
+    0x19,
+    0x21, 0x22, 0x23, 0x24, 0x25, 0x26,             0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e,
+    0x34, 0x35, 0x36,             0x39,
+    0x44, 0x45, 0x46,                               0x4c, 0x4d, 0x4e,
+    0x54, 0x55, 0x56,                               0x5c, 0x5d, 0x5e,
+    0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6a, 0x6b, 0x6c, 0x6d, 0x6e, 0x6f,
+    0x70, 0x71, 0x72, 0x73, 0x74, 0x75,       0x77,                         0x7c, 0x7d, 0x7e,
+    0x84, 0x85, 0x86,                               0x8c, 0x8d, 0x8e,
+    0x94, 0x95, 0x96,                               0x9c, 0x9d, 0x9e,
+    0xa4, 0xa5, 0xa6,                               0xac, 0xad, 0xae,
+    0xb4, 0xb5, 0xb6,                               0xbc, 0xbd, 0xbe,
+    0xcb,
+    0xe1,       0xe3,       0xe5,                   0xe9,
+    0xf9
+};
 // clang-format on
 
 } // namespace
@@ -139,8 +137,8 @@ namespace zcpm
 Processor::Processor(IMemory& memory, IProcessorObserver& processor_observer)
     : m_current_register_table(m_register_table), m_memory(memory), m_processor_observer(processor_observer)
 {
-    ::memset(m_registers.byte, 0, sizeof(m_registers));
-    ::memset(m_alternates, 0, sizeof(m_alternates));
+    memset(m_registers.byte, 0, sizeof(m_registers));
+    memset(m_alternates, 0, sizeof(m_alternates));
 
     reset_state();
 
@@ -225,7 +223,7 @@ size_t Processor::interrupt(std::uint8_t data_on_bus)
 
         case InterruptMode::IM1:
         {
-            size_t elapsed_cycles = 0;
+            const size_t elapsed_cycles = 0;
             reg_sp() -= 2;
             m_memory.write_word(reg_sp(), m_pc);
             m_pc = 0x0038;
@@ -234,7 +232,7 @@ size_t Processor::interrupt(std::uint8_t data_on_bus)
 
         case InterruptMode::IM2:
         {
-            size_t elapsed_cycles = 0;
+            const size_t elapsed_cycles = 0;
             reg_sp() -= 2;
             m_memory.write_word(reg_sp(), m_pc);
             const std::uint16_t vector = m_i << 8 | data_on_bus;
@@ -253,7 +251,7 @@ size_t Processor::non_maskable_interrupt()
     m_iff1 = 0;
     m_r = (m_r & 0x80) | ((m_r + 1) & 0x7f);
 
-    size_t elapsed_cycles = 0;
+    const size_t elapsed_cycles = 0;
     reg_sp() -= 2;
     m_memory.write_word(reg_sp(), m_pc);
     m_pc = 0x0066;
@@ -264,7 +262,7 @@ size_t Processor::non_maskable_interrupt()
 size_t Processor::emulate()
 {
     m_effective_pc = m_pc;
-    std::uint8_t opcode = m_memory.read_byte(m_pc++);
+    const auto opcode = m_memory.read_byte(m_pc++);
 
     return emulate(opcode, true, 0, 0);
 }
@@ -272,7 +270,7 @@ size_t Processor::emulate()
 size_t Processor::emulate_instruction()
 {
     m_effective_pc = m_pc;
-    std::uint8_t opcode = m_memory.read_byte(m_pc++);
+    const auto opcode = m_memory.read_byte(m_pc++);
 
     return emulate(opcode, false, 0, 0);
 }
@@ -2431,7 +2429,7 @@ size_t Processor::emulate(std::uint8_t opcode, bool unbounded, size_t elapsed_cy
         }
 
         // Do we have any debug actions for this address?
-        if (m_debug_actions.count(pc) > 0)
+        if (m_debug_actions.contains(pc))
         {
             // Yes, we have one or more, find them and evaluate them.  If any evaluate to false,
             // then we stop the emulation (typically to return to the debugger).
@@ -2482,8 +2480,8 @@ std::uint8_t Processor::read_indirect_hl(std::uint16_t& pc, size_t& elapsed_cycl
 void Processor::op_add(std::uint8_t x)
 {
     const std::uint8_t a = reg_a();
-    int z = a + x;
-    int c = a ^ x ^ z;
+    const int z = a + x;
+    const int c = a ^ x ^ z;
     int f = c & H_FLAG_MASK;
     f |= SZYX_FLAGS_TABLE[z & 0xff];
     f |= OVERFLOW_TABLE[c >> 7];
@@ -2495,8 +2493,8 @@ void Processor::op_add(std::uint8_t x)
 void Processor::op_adc(std::uint8_t x)
 {
     const std::uint8_t a = reg_a();
-    int z = a + x + (reg_f() & C_FLAG_MASK);
-    int c = a ^ x ^ z;
+    const int z = a + x + (reg_f() & C_FLAG_MASK);
+    const int c = a ^ x ^ z;
     int f = c & H_FLAG_MASK;
     f |= SZYX_FLAGS_TABLE[z & 0xff];
     f |= OVERFLOW_TABLE[c >> 7];
@@ -2508,7 +2506,7 @@ void Processor::op_adc(std::uint8_t x)
 void Processor::op_sub(std::uint8_t x)
 {
     const std::uint8_t a = reg_a();
-    int z = a - x;
+    const int z = a - x;
     int c = a ^ x ^ z;
     int f = N_FLAG_MASK | (c & H_FLAG_MASK);
     f |= SZYX_FLAGS_TABLE[z & 0xff];
@@ -2522,7 +2520,7 @@ void Processor::op_sub(std::uint8_t x)
 void Processor::op_sbc(std::uint8_t x)
 {
     const std::uint8_t a = reg_a();
-    int z = a - x - (reg_f() & C_FLAG_MASK);
+    const int z = a - x - (reg_f() & C_FLAG_MASK);
     int c = a ^ x ^ z;
     int f = N_FLAG_MASK | (c & H_FLAG_MASK);
     f |= SZYX_FLAGS_TABLE[z & 0xff];
@@ -2551,7 +2549,7 @@ void Processor::op_xor(std::uint8_t x)
 void Processor::op_cp(std::uint8_t x)
 {
     const std::uint8_t a = reg_a();
-    int z = a - x;
+    const int z = a - x;
 
     int c = a ^ x ^ z;
     int f = N_FLAG_MASK | (c & H_FLAG_MASK);
@@ -2566,8 +2564,8 @@ void Processor::op_cp(std::uint8_t x)
 
 void Processor::op_inc(std::uint8_t& x)
 {
-    int z = x + 1;
-    int c = x ^ z;
+    const int z = x + 1;
+    const int c = x ^ z;
 
     int f = reg_f() & C_FLAG_MASK;
     f |= c & H_FLAG_MASK;
@@ -2580,8 +2578,8 @@ void Processor::op_inc(std::uint8_t& x)
 
 void Processor::op_dec(std::uint8_t& x)
 {
-    int z = x - 1;
-    int c = x ^ z;
+    const int z = x - 1;
+    const int c = x ^ z;
 
     int f = N_FLAG_MASK | (reg_f() & C_FLAG_MASK);
     f |= c & H_FLAG_MASK;

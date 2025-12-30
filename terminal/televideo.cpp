@@ -1,5 +1,7 @@
 #include "televideo.hpp"
 
+#include "terminal.hpp"
+
 #include <cassert>
 #include <ncurses.h>
 #include <string>
@@ -27,26 +29,26 @@ namespace zcpm::terminal
 
 Televideo::Televideo(int rows, int columns, const std::string& keymap_filename) : Terminal(rows, columns, keymap_filename)
 {
-    ::initscr();
+    initscr();
 
-    ::raw(); // Make sure that we receive control sequences (e.g. ^C) verbatim
+    raw(); // Make sure that we receive control sequences (e.g. ^C) verbatim
 
-    ::timeout(KeyboardDelayMs); // Enables a 1ms timeout on non-blocking keyboard read
+    timeout(KeyboardDelayMs); // Enables a 1ms timeout on non-blocking keyboard read
 
-    ::noecho(); // We want to display characters ourselves, not have them automatically echoed
+    noecho(); // We want to display characters ourselves, not have them automatically echoed
 
-    ::idlok(stdscr, true);    // Allow insert/delete row
-    ::scrollok(stdscr, true); // Allow scrolling
-    ::keypad(stdscr, true);   // Ask curses to give us e.g. KEY_LEFT instead of <ESC>[D
+    idlok(stdscr, true);    // Allow insert/delete row
+    scrollok(stdscr, true); // Allow scrolling
+    keypad(stdscr, true);   // Ask curses to give us e.g. KEY_LEFT instead of <ESC>[D
 }
 
 Televideo::~Televideo()
 {
     // If there's been no user *input* and we don't block here, the user will
     // not see anything displayed at all, so we need to do this before teardown.
-    ::getch();
+    getch();
 
-    ::endwin();
+    endwin();
 
     if (!m_pending.empty())
     {
@@ -57,7 +59,7 @@ Televideo::~Televideo()
 void Televideo::print(char ch)
 {
     outch(ch);
-    ::refresh();
+    refresh();
 }
 
 bool Televideo::is_character_ready() const
@@ -221,22 +223,22 @@ void Televideo::process_pending()
         // Refer Televideo doc at 4.9.2.4; zcpm treats all 4 flavours the same, although in theory there should be
         // subtle differences with the way that spaces/nulls/protected fields are handled.
         spdlog::info("CURSES clear all");
-        ::clear();         // Note that this also homes the cursor
-        ::attrset(A_BOLD); // Televideo uses half/full intensity, default is full
+        clear();         // Note that this also homes the cursor
+        attrset(A_BOLD); // Televideo uses half/full intensity, default is full
         m_pending.erase();
         return;
     }
     if (first == 'T')
     {
         spdlog::info("CURSES erase EOL with spaces");
-        ::clrtoeol();
+        clrtoeol();
         m_pending.erase();
         return;
     }
     if (first == 'R')
     {
         spdlog::info("CURSES line delete");
-        ::deleteln();
+        deleteln();
         m_pending.erase();
         return;
     }
@@ -246,7 +248,7 @@ void Televideo::process_pending()
         // the cursor position. This causes the cursor to move to the start of the new line and all following lines
         // to move down one line"
         spdlog::info("CURSES line insert");
-        ::insertln();
+        insertln();
         move_to_column(0);
         m_pending.erase();
         return;
@@ -254,12 +256,12 @@ void Televideo::process_pending()
     if ((first == '=') && (m_pending.size() == 4))
     {
         // According to 4.5.1 in the Televideo reference, the row/col pair are offset by +31
-        auto row = static_cast<int>(m_pending[2]);
-        auto col = static_cast<int>(m_pending[3]);
+        const auto row = static_cast<int>(m_pending[2]);
+        const auto col = static_cast<int>(m_pending[3]);
         assert(row > 31);
         assert(col > 31);
         spdlog::info("CURSES address (row={:d} col={:d})", row - 31, col - 31);
-        ::move(row - 32, col - 32);
+        move(row - 32, col - 32);
         m_pending.erase();
         return;
     }
@@ -268,7 +270,7 @@ void Televideo::process_pending()
         // Half intensity off (which zcpm interprets as 'bold on')
         spdlog::info("CURSES half intensity off");
         m_pending.erase();
-        ::attron(A_BOLD);
+        attron(A_BOLD);
         return;
     }
     if (first == ')')
@@ -276,7 +278,7 @@ void Televideo::process_pending()
         // Half intensity on (which zcpm interprets as 'bold off')
         spdlog::info("CURSES half intensity on");
         m_pending.erase();
-        ::attroff(A_BOLD);
+        attroff(A_BOLD);
         return;
     }
     if (first == '>')
@@ -298,7 +300,7 @@ void Televideo::process_pending()
         // End of reverse video
         spdlog::info("CURSES reverse video");
         m_pending.erase();
-        ::attron(A_REVERSE);
+        attron(A_REVERSE);
         return;
     }
     if ((first == 'k') || (m_pending == "\x1BG0"))
@@ -306,7 +308,7 @@ void Televideo::process_pending()
         // End of reverse video
         spdlog::info("CURSES reverse video end");
         m_pending.erase();
-        ::attroff(A_REVERSE);
+        attroff(A_REVERSE);
         return;
     }
 

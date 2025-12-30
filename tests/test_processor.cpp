@@ -2,6 +2,7 @@
 #define BOOST_TEST_MAIN // in only one cpp file
 #include <boost/test/unit_test.hpp>
 
+#include <zcpm/core/imemory.hpp>
 #include <zcpm/core/processor.hpp>
 
 // This module tests some CPU/register functionality. Note that it's not practical to test all combinations, this
@@ -14,8 +15,8 @@ namespace
 // Define a local mock to assist with testing
 
 struct Hardware
-    : public zcpm::IMemory
-    , public zcpm::IProcessorObserver
+    : zcpm::IMemory
+    , zcpm::IProcessorObserver
 {
     Hardware() : m_processor(std::make_unique<zcpm::Processor>(*this, *this))
     {
@@ -29,7 +30,7 @@ struct Hardware
 
     // Implements IMemory
 
-    std::uint8_t read_byte(std::uint16_t address) const override
+    [[nodiscard]] std::uint8_t read_byte(std::uint16_t address) const override
     {
         const auto result = m_memory[address];
         return result;
@@ -42,7 +43,7 @@ struct Hardware
         return result;
     }
 
-    std::uint16_t read_word(std::uint16_t address) const override
+    [[nodiscard]] std::uint16_t read_word(std::uint16_t address) const override
     {
         const auto result_low = m_memory[address];
         const auto result_high = m_memory[(address + 1) & 0xffff];
@@ -109,13 +110,13 @@ struct Hardware
         return result;
     }
 
-    std::uint8_t input_byte(int port) override
+    std::uint8_t input_byte([[maybe_unused]] int port) override
     {
         // TODO
         return 0;
     }
 
-    void output_byte(int port, std::uint8_t x) override
+    void output_byte([[maybe_unused]] int port, [[maybe_unused]] std::uint8_t x) override
     {
         // TODO
     }
@@ -148,12 +149,12 @@ struct Hardware
         std::memcpy(buffer, m_memory.data() + base, count);
     }
 
-    void dump(std::uint16_t base, size_t count) const override
+    void dump([[maybe_unused]] std::uint16_t base, [[maybe_unused]] size_t count) const override
     {
         // TODO
     }
 
-    void check_memory_accesses(bool protect) override
+    void check_memory_accesses([[maybe_unused]] bool protect) override
     {
         // TODO
     }
@@ -169,7 +170,7 @@ struct Hardware
         return true;
     }
 
-    bool check_and_handle_bdos_and_bios(std::uint16_t address) const override
+    [[nodiscard]] bool check_and_handle_bdos_and_bios([[maybe_unused]] std::uint16_t address) const override
     {
         return false; // TODO
     }
@@ -193,7 +194,7 @@ void test_8bit_register_instruction(std::uint8_t instruction,
 
     hardware.load_memory_and_set_pc(0x0005, { instruction });
 
-    auto cycles = hardware.m_processor->emulate_instruction();
+    const auto cycles = hardware.m_processor->emulate_instruction();
     BOOST_CHECK_EQUAL(cycles, expected_cycles);
 
     // The only change should be an incremented PC
@@ -295,7 +296,7 @@ BOOST_AUTO_TEST_CASE(test_single_instruction_side_effects)
 
     hardware.load_memory_and_set_pc(0x0005, { 0x3C }); // INC A
 
-    auto cycles = hardware.m_processor->emulate_instruction();
+    const auto cycles = hardware.m_processor->emulate_instruction();
     BOOST_CHECK_EQUAL(cycles, 4);
 
     // The only change should be an incremented PC

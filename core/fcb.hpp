@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <string>
-#include <vector>
+#include <string_view>
 
 namespace zcpm
 {
@@ -33,17 +33,16 @@ public:
         return sizeof(U::m_bytes);
     }
 
-    // Return a brief human-readable summary of this FCB for logging purposes. If show_both_filenames is not set
-    // then just show the single filename, but if show_both_filenames is set then also show the filename at +10H etc
-    std::string describe(bool show_both_filenames) const;
+    // Return a brief human-readable summary of this FCB for logging purposes. If show_both_filenames is not set then just show the single
+    // filename, but if show_both_filenames is set then also show the filename at +10H etc
+    [[nodiscard]] std::string describe(bool show_both_filenames) const;
 
 private:
     void set_first(std::string_view s);
     void set_second(std::string_view s);
 
-    // This class overlays a FCB instance in the system's memory.  The FCB is a 36 byte
-    // structure, implemented as a fixed-size array with unions for the interesting
-    // bits.  The details are from the "CP/M 2.0 Interface Guide", page 7 (for example).
+    // This class overlays a FCB instance in the system's memory.  The FCB is a 36 byte structure, implemented as a fixed-size array with
+    // unions for the interesting bits.  The details are from the "CP/M 2.0 Interface Guide", page 7 (for example).
     struct Fields
     {
         std::uint8_t m_dr;    // Drive code (0-16)

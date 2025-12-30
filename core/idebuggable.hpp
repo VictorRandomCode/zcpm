@@ -17,12 +17,11 @@ public:
     virtual ~IDebuggable() = default;
 
     // Single getter for all registers in one step
-    virtual Registers get_registers() const = 0;
+    [[nodiscard]] virtual Registers get_registers() const = 0;
 
-    // Skip any redundant prefix bytes, and get the next 4 bytes that pc+offset is pointing at plus the skipped
-    // bytes. This "skipping" is to handle illegal DD/FD prefix byte combinations, to allow a debugger to have
-    // a sane picture of what has been discarded.
-    virtual std::tuple<std::uint8_t, std::uint8_t, std::uint8_t, std::uint8_t, std::vector<std::uint8_t>> get_opcodes_at(
+    // Skip any redundant prefix bytes, and get the next 4 bytes that pc+offset is pointing at plus the skipped bytes. This "skipping" is to
+    // handle illegal DD/FD prefix byte combinations, to allow a debugger to have a sane picture of what has been discarded.
+    [[nodiscard]] virtual std::tuple<std::uint8_t, std::uint8_t, std::uint8_t, std::uint8_t, std::vector<std::uint8_t>> get_opcodes_at(
         std::uint16_t pc,
         std::uint16_t offset) const = 0;
 
@@ -31,9 +30,8 @@ public:
 
     virtual void show_actions(std::ostream& os) const = 0;
 
-    // Remove the specified action (index is 1..count), removes true if successful.
-    // The index parameter is intended to correspond to that shown by show_actions()
-    // so that the user can view actions via show_actions() and erase them via remove_action().
+    // Remove the specified action (index is 1..count), removes true if successful. The index parameter is intended to correspond to that
+    // shown by show_actions() so that the user can view actions via show_actions() and erase them via remove_action().
     virtual bool remove_action(size_t index) = 0;
 };
 

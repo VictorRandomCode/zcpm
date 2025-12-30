@@ -29,8 +29,7 @@ void System::setup_bios(std::uint16_t fbase, std::uint16_t wboot)
     // Set up the key vectors
     m_hardware.set_fbase_and_wboot(fbase, wboot);
 
-    // Call the BIOS 'BOOT' & 'WBOOT' functions so that the various BIOS data structures are initialised
-    // before loading a user executable
+    // Call the BIOS 'BOOT' & 'WBOOT' functions so that the various BIOS data structures are initialised before loading a user executable
     m_hardware.call_bios_boot();
 }
 
@@ -39,7 +38,7 @@ void System::setup_bdos()
     m_hardware.check_memory_accesses(false);
 
     // Call BDOS:RSTDSK so that disk data structures are initialised
-    const auto rstdsk = 13;
+    constexpr auto rstdsk = 13;
     spdlog::info("Directly calling BDOS fn#{}", rstdsk);
     m_hardware.call_bdos(rstdsk);
 
@@ -61,9 +60,8 @@ bool System::load_binary(std::uint16_t base, std::string_view filename)
 
     spdlog::info("Reading {:d} bytes into memory at {:04X} from {}", filesize, base, filename);
 
-    // Ideally we'd fread() directly into the memory buffer, but to do that means having more coupling
-    // than is safe, so instead a temporary buffer is used here, which increases the peak RAM of this
-    // process.
+    // Ideally we'd fread() directly into the memory buffer, but to do that means having more coupling than is safe, so instead a temporary
+    // buffer is used here, which increases the peak RAM of this process.
     std::vector<std::uint8_t> buf(filesize, 0);
 
     std::fread(buf.data(), 1, buf.size(), fp);
@@ -77,7 +75,7 @@ bool System::load_binary(std::uint16_t base, std::string_view filename)
 
 bool System::load_fcb(const std::vector<std::string>& args)
 {
-    const std::uint16_t fcb_base = 0x005C; // Base of the FCB
+    constexpr std::uint16_t fcb_base = 0x005C; // Base of the FCB
 
     Fcb fcb;
     if (args.size() == 1)
@@ -91,11 +89,10 @@ bool System::load_fcb(const std::vector<std::string>& args)
     }
     m_hardware.copy_to_ram(fcb.get(), fcb.size(), fcb_base);
 
-    const std::uint16_t command_tail_base = 0x0080;
-    // Set up the command tail at 0x0080; for each parameter there is a leading space
-    // plus the parameter itself.  The parameters are stored as uppercase, and experiments
-    // show that they are always followed by a single null byte (not sure if that
-    // matters, but just in case...)
+    constexpr std::uint16_t command_tail_base = 0x0080;
+    // Set up the command tail at 0x0080; for each parameter there is a leading space plus the parameter itself.  The parameters are stored
+    // as uppercase, and experiments show that they are always followed by a single null byte (not sure if that matters, but just in
+    // case...)
     std::string tail;
     for (const auto& s : args)
     {
@@ -117,14 +114,12 @@ void System::reset()
     m_hardware.reset();
     m_hardware.m_processor->reg_pc() = 0x0100; // Standard CP/M start address for loaded binaries
 
-    // Set the stack such that a RET from the end of the loaded binary will cause a
-    // jump to 00000 hence abort.
+    // Set the stack such that a RET from the end of the loaded binary will cause a jump to 00000 hence abort.
 
-    // Note that the "CP/M 2.2 Operating System Manual" says that "upon entry to a transient
-    // program, the CCP leaves the stack pointer set to an eight-level stack area with the CCP
-    // return address pushed onto the stack, leaving seven levels before overflow occurs."
+    // Note that the "CP/M 2.2 Operating System Manual" says that "upon entry to a transient program, the CCP leaves the stack pointer set
+    // to an eight-level stack area with the CCP return address pushed onto the stack, leaving seven levels before overflow occurs."
 
-    const std::uint16_t sp = 0xF800; // Arbitrary free space
+    constexpr std::uint16_t sp = 0xF800; // Arbitrary free space
     m_hardware.m_processor->reg_sp() = sp;
     m_hardware.write_word(sp + 0, 0x0000);
     m_hardware.write_word(sp + 2, 0x0000);

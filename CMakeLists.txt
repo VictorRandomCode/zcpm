@@ -47,6 +47,21 @@ FetchContent_MakeAvailable(spdlog)
 
 include(functions.cmake)
 
+# Define an interface-only target that has the preferred set of compiler flags. All targets should depend on this. This
+# approach is cleaner than setting compiler flags globally which would leak into builds of third-party 'fetchcontent'
+# libraries.
+add_library(project_warnings INTERFACE)
+target_compile_options(project_warnings INTERFACE
+  -Wall
+  -Wextra
+  -Wnon-virtual-dtor
+  -Wold-style-cast
+  -Woverloaded-virtual
+  -Wmisleading-indentation
+  -pedantic
+  -Werror
+)
+
 add_subdirectory(builder)
 add_subdirectory(terminal)
 add_subdirectory(core)

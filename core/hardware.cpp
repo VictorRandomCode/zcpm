@@ -7,7 +7,6 @@
 
 #include <cstring>
 #include <format>
-#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -103,10 +102,10 @@ bool Hardware::running() const
 
 bool Hardware::check_and_handle_bdos_and_bios(std::uint16_t address) const
 {
-    // Note that BDOS calls are logged but not intercepted.  But BIOS calls are logged *and* intercepted. This is
-    // because our BDOS is implemented via a binary blob (a real BDOS implementation), which will in turn make calls
-    // into our own custom BIOS implementation. So BDOS calls are checked & logged but not intercepted, but BIOS
-    // calls need to be intercepted and translated to (e.g.) host system calls.
+    // Note that BDOS calls are logged but not intercepted.  But BIOS calls are logged *and* intercepted. This is because our BDOS is
+    // implemented via a binary blob (a real BDOS implementation), which will in turn make calls into our own custom BIOS implementation. So
+    // BDOS calls are checked & logged but not intercepted, but BIOS calls need to be intercepted and translated to (e.g.) host system
+    // calls.
 
     // Does this appear to be a BDOS call?  i.e., a jump to FBASE from 0005?
     if (address == m_fbase)
@@ -305,7 +304,7 @@ void Hardware::copy_from_ram(std::uint8_t* buffer, size_t count, std::uint16_t b
 
 void Hardware::dump(std::uint16_t base, size_t count) const
 {
-    const size_t bytes_per_line = 16;
+    constexpr size_t bytes_per_line = 16;
     size_t bytes_this_line = 0;
     std::string buf_address, buf_hex, buf_ascii;
     for (size_t i = 0; (i < count) && (base + i <= 0xFFFF); ++i)
@@ -350,16 +349,15 @@ void Hardware::check_memory_accesses(bool protect)
 
 std::string Hardware::format_stack_info() const
 {
-    // Ideally this method would simply iterate via SP back to user memory, but many programs manually set/restore
-    // SP, so this needs to be bounded.
+    // Ideally this method would simply iterate via SP back to user memory, but many programs manually set/restore SP, so this needs to be
+    // bounded.
 
-    // TODO: If the stack values are displayed as-is the user needs to keep in mind that they are the *return*
-    // addresses, which is normally 3 bytes after the *source* address, and that can be confusing. It is tempting
-    // to subtract 3 bytes from each value before display, but that also could be misleading.
-    // So for now, this is a compile-time option that one day could/should be configurable.
+    // TODO: If the stack values are displayed as-is the user needs to keep in mind that they are the *return* addresses, which is normally
+    // 3 bytes after the *source* address, and that can be confusing. It is tempting to subtract 3 bytes from each value before display, but
+    // that also could be misleading. So for now, this is a compile-time option that one day could/should be configurable.
     const bool use_source_value = true;
 
-    const int max_steps = 4;
+    constexpr int max_steps = 4;
 
     std::stringstream ss;
 
@@ -381,8 +379,8 @@ std::string Hardware::format_stack_info() const
         }
         if (ret >= 0xFFF0)
         {
-            // BDOS calls "manually" called on startup of ZCPM result in address such as these in the
-            // stack track, showing the stack past these values is of no value
+            // BDOS calls "manually" called on startup of ZCPM result in address such as these in the stack track, showing the stack past
+            // these values is of no value
             startup = true;
         }
         ss << " << " << describe_address(ret);
@@ -417,9 +415,8 @@ void Hardware::check_watched_memory_byte(std::uint16_t address, Access mode, std
         return;
     }
 
-    // FIXME! This can be misleading; when we display PC, that can be the
-    // wrong value because we're reading m_pc from the processor which "lags"
-    // the actual PC. Can be tricky, and not so easy to fix (I've had a quick try already).
+    // FIXME! This can be misleading; when we display PC, that can be the wrong value because we're reading m_pc from the processor which
+    // "lags" the actual PC. Can be tricky, and not so easy to fix (I've had a quick try already).
 
     if ((mode == Access::READ) && (m_watch_read.count(address)))
     {
@@ -447,14 +444,14 @@ void Hardware::check_watched_memory_word(std::uint16_t address, Access mode, std
         return;
     }
 
-    // FIXME!  This can be misleading; when we display PC, that can be the wrong value because we're reading
-    // m_pc from the processor which "lags" the actual PC.  Can be tricky, and not so easy to fix.
+    // FIXME!  This can be misleading; when we display PC, that can be the wrong value because we're reading m_pc from the processor which
+    // "lags" the actual PC.  Can be tricky, and not so easy to fix.
 
-    if ((mode == Access::READ) && (m_watch_read.count(address + 0) || m_watch_read.count(address + 1)))
+    if ((mode == Access::READ) && (m_watch_read.contains(address + 0) || m_watch_read.contains(address + 1)))
     {
         spdlog::info("  {:04X} <- {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
     }
-    if ((mode == Access::WRITE) && (m_watch_write.count(address) || m_watch_write.count(address + 1)))
+    if ((mode == Access::WRITE) && (m_watch_write.contains(address) || m_watch_write.contains(address + 1)))
     {
         spdlog::info("  {:04X} -> {} at PC={}", value, describe_address(address), describe_address(m_processor->get_pc()));
         if (is_fatal_write(address))
@@ -484,16 +481,16 @@ std::string Hardware::describe_address(std::uint16_t a) const
 
 bool Hardware::is_fatal_write(std::uint16_t address) const
 {
-    // A few programs will try to modify the warm start vector (at locations 0000,0001,0002)
-    // to hook in their own intercepts. For example Supercalc.
+    // A few programs will try to modify the warm start vector (at locations 0000,0001,0002) to hook in their own intercepts. For example
+    // Supercalc.
     if ((address <= 0x0002) && m_config.protect_warm_start_vector)
     {
         // Warm start vector
         return true;
     }
 
-    // CP/M debuggers will intercept the BDOS jump vector, which means that they'll
-    // try to modify address 0006 & 0007.  But normal programs won't.
+    // CP/M debuggers will intercept the BDOS jump vector, which means that they'll try to modify address 0006 & 0007.  But normal programs
+    // won't.
     if (((address >= 0x0005) && (address <= 0x0007)) && m_config.protect_bdos_jump)
     {
         // BDOS jump vector

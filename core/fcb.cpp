@@ -136,10 +136,9 @@ const std::uint8_t* Fcb::get() const
 std::string Fcb::describe(bool show_both_filenames) const
 {
     std::string name1;
-    const auto& dr = m_u.m_fields.m_dr;
-    if (dr)
+    if (const auto& dr = m_u.m_fields.m_dr)
     {
-        name1 += char('A' + dr - 1);
+        name1 += static_cast<char>('A' + dr - 1);
         name1 += ':';
     }
     for (unsigned char const ch : m_u.m_fields.m_f)
@@ -217,8 +216,8 @@ void Fcb::set_first(std::string_view s)
 
 void Fcb::set_second(std::string_view s)
 {
-    // This is a bit ugly.  According to the official docs we pretty much just overwrite
-    // EX/S1/S2/etc with the second filename info.  So we'll do exactly that.
+    // This is a bit ugly.  According to the official docs we pretty much just overwrite EX/S1/S2/etc with the second filename info.  So
+    // we'll do exactly that.
 
     auto [dr, name, extn] = parse_filename(s);
 

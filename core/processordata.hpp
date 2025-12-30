@@ -5,14 +5,13 @@
 #include <array>
 #include <cstdint>
 
-// Lookup tables used by the Z80 processor implementation.  These are only ever used within processor.cpp but they
-// are defined in this header to make maintenance easier; this header content should very rarely need changes,
-// whereas changes to processor.cpp are more likely.
+// Lookup tables used by the Z80 processor implementation.  These are only ever used within processor.cpp but they are defined in this
+// header to make maintenance easier; this header content should very rarely need changes, whereas changes to processor.cpp are more likely.
 
 namespace zcpm
 {
 
-inline static const std::array<std::uint8_t, 256> INSTRUCTION_TABLE = {
+inline static constexpr std::array<std::uint8_t, 256> INSTRUCTION_TABLE = {
     NOP,
     LD_RR_NN,
     LD_INDIRECT_BC_A,
@@ -271,7 +270,7 @@ inline static const std::array<std::uint8_t, 256> INSTRUCTION_TABLE = {
     RST_P,
 };
 
-inline static const std::array<std::uint8_t, 256> CB_INSTRUCTION_TABLE = {
+inline static constexpr std::array<std::uint8_t, 256> CB_INSTRUCTION_TABLE = {
     RLC_R,   RLC_R,   RLC_R,   RLC_R,   RLC_R,   RLC_R,   RLC_INDIRECT_HL,   RLC_R,
     RRC_R,   RRC_R,   RRC_R,   RRC_R,   RRC_R,   RRC_R,   RRC_INDIRECT_HL,   RRC_R,
     RL_R,    RL_R,    RL_R,    RL_R,    RL_R,    RL_R,    RL_INDIRECT_HL,    RL_R,
@@ -306,7 +305,7 @@ inline static const std::array<std::uint8_t, 256> CB_INSTRUCTION_TABLE = {
     SET_B_R, SET_B_R, SET_B_R, SET_B_R, SET_B_R, SET_B_R, SET_B_INDIRECT_HL, SET_B_R,
 };
 
-inline static const std::array<std::uint8_t, 256> ED_INSTRUCTION_TABLE = {
+inline static constexpr std::array<std::uint8_t, 256> ED_INSTRUCTION_TABLE = {
     ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED,      ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED,
     ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED,      ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED,
     ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED,      ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED,
@@ -341,7 +340,7 @@ inline static const std::array<std::uint8_t, 256> ED_INSTRUCTION_TABLE = {
     ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED,      ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED, ED_UNDEFINED,
 };
 
-inline static const std::array<std::uint8_t, 256> SZYX_FLAGS_TABLE = {
+inline static constexpr std::array<std::uint8_t, 256> SZYX_FLAGS_TABLE = {
     0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28,
     0x28, 0x28, 0x28, 0x28, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x28, 0x00, 0x00,
@@ -356,7 +355,7 @@ inline static const std::array<std::uint8_t, 256> SZYX_FLAGS_TABLE = {
     0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa0, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8, 0xa8,
 };
 
-inline static const std::array<std::uint8_t, 256> SZYXP_FLAGS_TABLE = {
+inline static constexpr std::array<std::uint8_t, 256> SZYXP_FLAGS_TABLE = {
     0x44, 0x00, 0x00, 0x04, 0x00, 0x04, 0x04, 0x00, 0x08, 0x0c, 0x0c, 0x08, 0x0c, 0x08, 0x08, 0x0c, 0x00, 0x04, 0x04, 0x00, 0x04, 0x00,
     0x00, 0x04, 0x0c, 0x08, 0x08, 0x0c, 0x08, 0x0c, 0x0c, 0x08, 0x20, 0x24, 0x24, 0x20, 0x24, 0x20, 0x20, 0x24, 0x2c, 0x28, 0x28, 0x2c,
     0x28, 0x2c, 0x2c, 0x28, 0x24, 0x20, 0x20, 0x24, 0x20, 0x24, 0x24, 0x20, 0x28, 0x2c, 0x2c, 0x28, 0x2c, 0x28, 0x28, 0x2c, 0x00, 0x04,

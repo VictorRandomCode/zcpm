@@ -5,8 +5,8 @@
 namespace zcpm
 {
 
-// This data structure is returned when querying the hardware for the current status, typically for displaying by
-// the debugger or for more involved logging
+// This data structure is returned when querying the hardware for the current status, typically for displaying by the debugger or for more
+// involved logging
 
 class Registers final
 {

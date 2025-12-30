@@ -4,6 +4,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 
 namespace zcpm
 {
@@ -32,9 +33,8 @@ public:
 
     [[nodiscard]] std::uint16_t get_address() const;
 
-    // Called each time we reach a new address.  This method should return true
-    // if the system should continue, false if it should break (returning to the
-    // debugger prompt)
+    // Called each time we reach a new address.  This method should return true if the system should continue, false if it should break
+    // (returning to the debugger prompt)
     [[nodiscard]] virtual bool evaluate(std::uint16_t address) const = 0;
 
     [[nodiscard]] virtual std::string describe() const = 0;
@@ -46,8 +46,7 @@ protected:
     const std::uint16_t m_address; // Binary equivalent of the above
 };
 
-// Each time we reach the specified address, indicate that we should
-// return control to the debugger.
+// Each time we reach the specified address, indicate that we should return control to the debugger.
 class Breakpoint : public DebugAction
 {
 public:

@@ -5,21 +5,23 @@
 #include <cstdint>
 #include <format>
 #include <ostream>
+#include <print>
 #include <string>
 #include <vector>
 
+#include <zcpm/core/imemory.hpp>
 #include <zcpm/core/processor.hpp>
 #include <zcpm/core/registers.hpp>
 
 namespace
 {
 
-const std::array<const char*, 8> ByteRegMask{ "B", "C", "D", "E", "H", "L", "(HL)", "A" };
-const std::array<const char*, 4> WordRegMask{ "BC", "DE", "HL", "SP" };
-const std::array<const char*, 4> WordRegMaskQq{ "BC", "DE", "HL", "AF" };
-const std::array<const char*, 8> CondMask{ "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
-const std::array<const char*, 8> DDByteRegMask{ "B", "C", "D", "E", "IXH", "IXL", "(HL)", "A" };
-const std::array<const char*, 8> FDByteRegMask{ "B", "C", "D", "E", "IYH", "IYL", "(HL)", "A" };
+constexpr std::array<const char*, 8> ByteRegMask{ "B", "C", "D", "E", "H", "L", "(HL)", "A" };
+constexpr std::array<const char*, 4> WordRegMask{ "BC", "DE", "HL", "SP" };
+constexpr std::array<const char*, 4> WordRegMaskQq{ "BC", "DE", "HL", "AF" };
+constexpr std::array<const char*, 8> CondMask{ "NZ", "Z", "NC", "C", "PO", "PE", "P", "M" };
+constexpr std::array<const char*, 8> DDByteRegMask{ "B", "C", "D", "E", "IXH", "IXL", "(HL)", "A" };
+constexpr std::array<const char*, 8> FDByteRegMask{ "B", "C", "D", "E", "IYH", "IYL", "(HL)", "A" };
 const std::map<std::uint8_t, const char*> DdFdCbLogicals = {
     { 0x06, "RLC" }, { 0x0E, "RRC" }, { 0x16, "RL" }, { 0x1E, "RR" }, { 0x26, "SLA" }, { 0x2E, "SRA" }, { 0x36, "SLL" }, { 0x3E, "SRL" },
 };
@@ -286,27 +288,24 @@ std::tuple<size_t, std::string, std::string> disassemble_ddfd(const std::string&
         {
             return { 4, DdFdCbLogicals.at(op4), std::format("({}+{:02X})", xy, op3) };
         }
-        else if ((op4 & 0xC0) == 0x80)
+        if ((op4 & 0xC0) == 0x80)
         {
             const auto b = (op4 >> 3) & 0x07;
             return { 4, "RES", std::format("{:d},({}+{:02X})", b, xy, op3) };
         }
-        else if ((op4 & 0xC0) == 0x40)
+        if ((op4 & 0xC0) == 0x40)
         {
             const auto b = (op4 >> 3) & 0x07;
             return { 4, "BIT", std::format("{:d},({}+{:02X})", b, xy, op3) };
         }
-        else if ((op4 & 0xC0) == 0xC0)
+        if ((op4 & 0xC0) == 0xC0)
         {
             const auto b = (op4 >> 3) & 0x07;
             return { 4, "SET", std::format("{:d},({}+{:02X})", b, xy, op3) };
         }
-        else
-        {
-            // Unimplemented sequence
-            const auto message = std::format("Unimplemented {:02X} {:02X} {:02X} {:02X}", op1, op2, op3, op4);
-            throw std::logic_error(message);
-        }
+        // Unimplemented sequence
+        const auto message = std::format("Unimplemented {:02X} {:02X} {:02X} {:02X}", op1, op2, op3, op4);
+        throw std::logic_error(message);
     }
     case 0xE1: return { 2, "POP", xy };
     case 0xE5: return { 2, "PUSH", xy };
@@ -624,7 +623,7 @@ void Writer::examine() const
 
         m_memory.check_memory_accesses(true);
     }
-    catch (const std::logic_error& e)
+    catch (const std::logic_error&)
     {
         // A failure to parse; display enough information to help the maintainer:
         // Memory content around the offending area, aligned on 16's
@@ -694,7 +693,7 @@ void Writer::display(std::uint16_t address, std::string_view s1, std::string_vie
     std::println(m_os, "{:04X}     {:<5}{}", address, s1, s2);
 }
 
-void Writer::display(const zcpm::Registers& registers, std::string_view s1, std::string_view s2, const std::uint16_t offset) const
+void Writer::display(const zcpm::Registers& registers, std::string_view s1, std::string_view s2, std::uint16_t offset) const
 {
     std::println(m_os,
                  "{} A={:02X} B={:04X} D={:04X} H={:04X} S={:04X} P={:04X}  {:<5}{}",

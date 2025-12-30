@@ -1,7 +1,11 @@
 #include "plain.hpp"
 
+#include "terminal.hpp"
+
+#include <cstdio>
 #include <iostream>
 #include <poll.h>
+#include <print>
 #include <termios.h>
 
 namespace zcpm::terminal
@@ -25,14 +29,14 @@ void Plain::print(char ch)
 
 bool Plain::is_character_ready() const
 {
-    struct pollfd fd[1] = { { 0, POLLIN, 0 } };
+    pollfd fd[1] = { { .fd = 0, .events = POLLIN, .revents = 0 } };
     return poll(fd, 1, 0) > 0;
 }
 
 char Plain::get_char()
 {
     // Temporarily disable both canonicalised input and echo on stdin
-    struct termios original_flags;
+    termios original_flags;
     tcgetattr(fileno(stdin), &original_flags);
     auto modified_flags = original_flags;
     modified_flags.c_lflag &= ~(ICANON | ECHO);

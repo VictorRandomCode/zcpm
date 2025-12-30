@@ -15,4 +15,5 @@ target_link_libraries(${EXENAME}
   core
   ${Boost_LIBRARIES}
   spdlog::spdlog
+  project_warnings
 )

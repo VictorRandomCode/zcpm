@@ -4,6 +4,7 @@ set(LIBNAME debugger)
 FetchContent_Declare(replxx
   GIT_REPOSITORY "https://github.com/AmokHuginnsson/replxx"
   GIT_TAG release-0.0.4
+  SYSTEM
 )
 FetchContent_MakeAvailable(replxx)
 
@@ -24,4 +25,5 @@ target_link_libraries(${LIBNAME}
   core
   replxx
   spdlog::spdlog
+  project_warnings
 )

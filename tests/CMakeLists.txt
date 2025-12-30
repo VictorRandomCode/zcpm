@@ -15,4 +15,5 @@ target_link_libraries(${EXENAME}
   builder
   core
   spdlog::spdlog
+  project_warnings
 )

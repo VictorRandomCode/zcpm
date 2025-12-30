@@ -7,8 +7,12 @@
 #include "symboltable.hpp"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <tuple>
 #include <unordered_set>
 
 namespace zcpm
@@ -20,7 +24,6 @@ namespace terminal
 }
 class Bios;
 class IDebuggable;
-class Processor;
 
 class Hardware final
     : public IProcessorObserver
@@ -43,8 +46,7 @@ public:
     // Configure where FBASE and WBOOT are (to help the system recognise BDOS & BIOS accesses)
     void set_fbase_and_wboot(std::uint16_t fbase, std::uint16_t wboot);
 
-    // Call the BIOS 'BOOT' & 'WBOOT' functions, in order to initialise BIOS data structures for subsequent BIOS
-    // operations
+    // Call the BIOS 'BOOT' & 'WBOOT' functions, in order to initialise BIOS data structures for subsequent BIOS operations
     void call_bios_boot();
 
     // Call the specified BDOS function.  This is needed as part of system initialisation.
@@ -55,8 +57,8 @@ public:
     // Implements IProcessorObserver
 
     void set_finished(bool finished) override;
-    bool running() const override;
-    bool check_and_handle_bdos_and_bios(std::uint16_t address) const override;
+    [[nodiscard]] bool running() const override;
+    [[nodiscard]] bool check_and_handle_bdos_and_bios(std::uint16_t address) const override;
 
     //
 
@@ -69,9 +71,9 @@ public:
 
     // Implements IMemory
 
-    std::uint8_t read_byte(std::uint16_t address) const override;
+    [[nodiscard]] std::uint8_t read_byte(std::uint16_t address) const override;
     std::uint8_t read_byte(std::uint16_t address, size_t& elapsed_cycles) const override;
-    std::uint16_t read_word(std::uint16_t address) const override;
+    [[nodiscard]] std::uint16_t read_word(std::uint16_t address) const override;
     std::uint16_t read_word(std::uint16_t address, size_t& elapsed_cycles) const override;
     void write_byte(std::uint16_t address, std::uint8_t x) override;
     void write_byte(std::uint16_t address, std::uint8_t x, size_t& elapsed_cycles) override;
@@ -91,18 +93,18 @@ public:
     //
 
     // Return human-readable info about the stack state
-    std::string format_stack_info() const;
+    [[nodiscard]] std::string format_stack_info() const;
 
     void dump_symbol_table() const;
 
-    // Try to evaluate an expression such as 'foo1' where 'foo1' is a known label or perhaps 'foo2+23'.  Note that
-    // all values are hexadecimal.  Returns a (success,value) pair, success=false means an evaluation failure.
-    std::tuple<bool, std::uint16_t> evaluate_address_expression(std::string_view s) const;
+    // Try to evaluate an expression such as 'foo1' where 'foo1' is a known label or perhaps 'foo2+23'.  Note that all values are
+    // hexadecimal.  Returns a (success,value) pair, success=false means an evaluation failure.
+    [[nodiscard]] std::tuple<bool, std::uint16_t> evaluate_address_expression(std::string_view s) const;
 
-    IDebuggable* get_idebuggable() const;
+    [[nodiscard]] IDebuggable* get_idebuggable() const;
 
-    // This is public, and is an ugly hack. The underlying problem is that the system we're emulated is tightly
-    // coupled, so it's hard to avoid the same patterns in emulation.
+    // This is public, and is an ugly hack. The underlying problem is that the system we're emulated is tightly coupled, so it's hard to
+    // avoid the same patterns in emulation.
     std::unique_ptr<Processor> m_processor;
 
 private:
@@ -115,10 +117,10 @@ private:
     void check_watched_memory_byte(std::uint16_t address, Access mode, std::uint8_t value) const;
     void check_watched_memory_word(std::uint16_t address, Access mode, std::uint16_t value) const;
 
-    std::string describe_address(std::uint16_t a) const;
+    [[nodiscard]] std::string describe_address(std::uint16_t a) const;
 
     // Returns true if an attempted write to the specified address should be fatal for ZCPM
-    bool is_fatal_write(std::uint16_t address) const;
+    [[nodiscard]] bool is_fatal_write(std::uint16_t address) const;
 
     // Runtime options from commandline switches
     const Config m_config;
@@ -139,12 +141,10 @@ private:
 
     bool m_check_memory_accesses{ false }; // Indicates if we have temporarily allowed/disallowed memory checks
 
-    // Addresses that we are watching; for now we just log their access, but longer-term we'll invoke a
-    // user-supplied handler
+    // Addresses that we are watching; for now we just log their access, but longer-term we'll invoke a user-supplied handler
     std::unordered_set<std::uint16_t> m_watch_read;
 
-    // Addresses that we are watching; for now we just log their access, but longer-term we'll invoke a
-    // user-supplied handler
+    // Addresses that we are watching; for now we just log their access, but longer-term we'll invoke a user-supplied handler
     std::unordered_set<std::uint16_t> m_watch_write;
 
     std::uint16_t m_fbase{ 0 };

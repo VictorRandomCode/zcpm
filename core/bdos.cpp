@@ -15,9 +15,9 @@ namespace
     // Given a CP/M-style string terminated by '$' at addr in memory, return a version of it suitable for logging
     std::string cpm_string_at(const IMemory& memory, std::uint16_t address)
     {
-        // Build the result, but limit the length in case the CP/M code is trying to print something particularly
-        // long or is pointing at rubbish (which isn't our problem, but we don't want logging of that to break us!).
-        // This function also escapes any non-printables so as not to mess up the logfile.
+        // Build the result, but limit the length in case the CP/M code is trying to print something particularly long or is pointing at
+        // rubbish (which isn't our problem, but we don't want logging of that to break us!). This function also escapes any non-printables
+        // so as not to mess up the logfile.
         std::string result;
         for (auto offset = 0; offset < 30; ++offset)
         {
@@ -63,7 +63,7 @@ std::tuple<std::string, std::string> describe_call(const Registers& registers, c
     case 2:
     {
         auto ch = static_cast<char>(Registers::low_byte_of(registers.DE));
-        auto description = std::format("Console output '{:c}' (ASCII 0x{:02X})", (std::isprint(ch) ? ch : '?'), ch);
+        auto description = std::format("Console output '{:c}' (ASCII 0x{:02X})", std::isprint(ch) ? ch : '?', ch);
         return { prefix + "C_WRITE", description };
     }
     case 6: return { prefix + "C_RAWIO", "Direct console I/O" };
@@ -75,7 +75,7 @@ std::tuple<std::string, std::string> describe_call(const Registers& registers, c
     }
     case 10:
     {
-        auto& buffer = registers.DE;
+        const auto& buffer = registers.DE;
         auto max = memory.read_byte(buffer);
         auto description = std::format("Read console buffer (buffer at {:04X}, {:d} bytes max)", buffer, max);
         return { prefix + "C_READSTR", description };
@@ -147,7 +147,7 @@ std::tuple<std::string, std::string> describe_call(const Registers& registers, c
     case 32:
     {
         auto e = Registers::low_byte_of(registers.DE);
-        auto description = std::format("(E={:02X} means '{}')", e, ((e == 0xFF) ? "get" : "set"));
+        auto description = std::format("(E={:02X} means '{}')", e, (e == 0xFF) ? "get" : "set");
         return { prefix + "F_USERNUM", "Set/get user code " + description };
     }
     case 33:
